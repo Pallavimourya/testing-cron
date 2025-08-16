@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { getMinimumSchedulingTime } from "@/lib/timezone-utils"
 import { Badge } from "@/components/ui/badge"
 import { CalendarIcon, Clock, Edit, Trash2, CheckCircle, Zap, Settings, Activity, Plus, Eye, ExternalLink, CalendarDays } from 'lucide-react'
 import { Calendar } from "@/components/ui/calendar"
@@ -294,22 +295,22 @@ export default function CalendarPage() {
 
     setLoading(true)
     try {
+      // Create IST datetime string in format YYYY-MM-DDTHH:MM
       const scheduledDateTime = new Date(individualScheduleDate)
       const [hours, minutes] = individualScheduleTime.split(":")
       scheduledDateTime.setHours(Number.parseInt(hours), Number.parseInt(minutes))
-
-      // Convert to IST timezone
-      const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC+5:30
-      const scheduledDateTimeIST = new Date(scheduledDateTime.getTime() - istOffset)
+      
+      // Format as IST datetime string
+      const scheduledIST = scheduledDateTime.toISOString().slice(0, 16)
 
       console.log(`📅 Scheduling for IST: ${scheduledDateTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
-      console.log(`📅 UTC time being sent: ${scheduledDateTimeIST.toISOString()}`)
+      console.log(`📅 IST datetime string: ${scheduledIST}`)
 
       const response = await fetch(`/api/approved-content/${selectedApprovedPost._id}/schedule`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          scheduledFor: scheduledDateTimeIST.toISOString(),
+          scheduledFor: scheduledIST,
         }),
       })
 
@@ -341,18 +342,17 @@ export default function CalendarPage() {
       const [hours, minutes] = editTime.split(":")
       scheduledDateTime.setHours(Number.parseInt(hours), Number.parseInt(minutes))
 
-      // Convert to IST timezone
-      const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC+5:30
-      const scheduledDateTimeIST = new Date(scheduledDateTime.getTime() - istOffset)
+      // Format as IST datetime string
+      const scheduledIST = scheduledDateTime.toISOString().slice(0, 16)
 
       console.log(`📅 Editing schedule for IST: ${scheduledDateTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
-      console.log(`📅 UTC time being sent: ${scheduledDateTimeIST.toISOString()}`)
+      console.log(`📅 IST datetime string: ${scheduledIST}`)
 
       const response = await fetch(`/api/content/${selectedPost._id}/schedule`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          scheduledFor: scheduledDateTimeIST.toISOString(),
+          scheduledFor: scheduledIST,
         }),
       })
 
@@ -1298,15 +1298,23 @@ export default function CalendarPage() {
                 selected={individualScheduleDate}
                 onSelect={(date) => date && setIndividualScheduleDate(date)}
                 className="rounded-md border"
+                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} // Allow today and future dates
               />
+              <p className="text-xs text-gray-500 mt-1">
+                📅 You can schedule for today or future dates
+              </p>
             </div>
             <div>
-              <Label>Time</Label>
+              <Label>Time (IST)</Label>
               <Input
                 type="time"
                 value={individualScheduleTime}
                 onChange={(e) => setIndividualScheduleTime(e.target.value)}
+                min={getMinimumSchedulingTime().slice(11, 16)} // Set minimum time to 5 minutes from now
               />
+              <p className="text-xs text-gray-500 mt-1">
+                ⏰ Minimum scheduling time: 5 minutes from now (IST)
+              </p>
             </div>
           </div>
           <DialogFooter>

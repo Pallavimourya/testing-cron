@@ -4,6 +4,7 @@ import { authOptions } from "../../auth/[...nextauth]/auth"
 import connectDB from "@/lib/mongodb"
 import User from "@/models/User"
 import mongoose from "mongoose"
+import { convertISTToUTC, isScheduledTimeValid } from "@/lib/timezone-utils"
 
 export async function POST(req: Request) {
   try {
@@ -146,13 +147,18 @@ export async function POST(req: Request) {
 
     // If scheduleFor is provided, set it as scheduled
     if (scheduleFor) {
-      const scheduleDate = new Date(scheduleFor)
-      if (scheduleDate > new Date()) {
+      // Convert IST datetime string to UTC Date object
+      const scheduleDate = convertISTToUTC(scheduleFor)
+      
+      // Validate that the scheduled time is at least 5 minutes in the future
+      if (isScheduledTimeValid(scheduleFor)) {
         updateData.status = "scheduled"
         updateData.scheduledFor = scheduleDate
         console.log(`📅 Content scheduled for: ${scheduleDate.toISOString()}`)
       } else {
-        return NextResponse.json({ error: "Schedule time must be in the future" }, { status: 400 })
+        return NextResponse.json({ 
+          error: "Schedule time must be at least 5 minutes in the future (IST)" 
+        }, { status: 400 })
       }
     }
 

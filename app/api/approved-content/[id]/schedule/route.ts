@@ -4,6 +4,7 @@ import { authOptions } from "../../../auth/[...nextauth]/auth"
 import connectDB from "@/lib/mongodb"
 import User from "@/models/User"
 import mongoose from "mongoose"
+import { convertISTToUTC, isScheduledTimeValid } from "@/lib/timezone-utils"
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -26,19 +27,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: "Scheduled date is required" }, { status: 400 })
     }
 
-          const scheduledDate = new Date(scheduledFor)
-      
-      // Validate that the scheduled time is in the future
-      const now = new Date()
-      if (scheduledDate <= now) {
-        return NextResponse.json({ error: "Scheduled date must be in the future" }, { status: 400 })
-      }
+    // Convert IST datetime string to UTC Date object
+    const scheduledDate = convertISTToUTC(scheduledFor)
+    
+    // Validate that the scheduled time is at least 5 minutes in the future
+    if (!isScheduledTimeValid(scheduledFor)) {
+      return NextResponse.json({ 
+        error: "Scheduled time must be at least 5 minutes in the future (IST)" 
+      }, { status: 400 })
+    }
 
-          console.log("📅 Scheduling individual post:", id)
-      console.log("📅 Scheduled time (UTC):", scheduledDate.toISOString())
-      console.log("📅 Scheduled time (IST):", scheduledDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }))
-      console.log("📅 Current time (UTC):", now.toISOString())
-      console.log("📅 Current time (IST):", now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }))
+    console.log("📅 Scheduling individual post:", id)
+    console.log("📅 Scheduled time (IST input):", scheduledFor)
+    console.log("📅 Scheduled time (UTC):", scheduledDate.toISOString())
+    console.log("📅 Scheduled time (IST):", scheduledDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }))
+    console.log("📅 Current time (UTC):", new Date().toISOString())
+    console.log("📅 Current time (IST):", new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }))
 
     if (!mongoose.connection.db) {
       throw new Error("Database connection not established")

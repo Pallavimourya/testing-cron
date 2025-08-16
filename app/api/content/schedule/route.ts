@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "../../auth/[...nextauth]/auth"
 import connectDB from "@/lib/mongodb"
 import GeneratedContent from "@/models/GeneratedContent"
+import { convertISTToUTC, isScheduledTimeValid } from "@/lib/timezone-utils"
 
 export async function POST(req: Request) {
   try {
@@ -18,9 +19,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Content ID and schedule time are required" }, { status: 400 })
     }
 
-    const scheduleDate = new Date(scheduledFor)
-    if (scheduleDate <= new Date()) {
-      return NextResponse.json({ error: "Schedule time must be in the future" }, { status: 400 })
+    // Convert IST datetime string to UTC Date object
+    const scheduleDate = convertISTToUTC(scheduledFor)
+    
+    // Validate that the scheduled time is at least 5 minutes in the future
+    if (!isScheduledTimeValid(scheduledFor)) {
+      return NextResponse.json({ 
+        error: "Schedule time must be at least 5 minutes in the future (IST)" 
+      }, { status: 400 })
     }
 
     await connectDB()
