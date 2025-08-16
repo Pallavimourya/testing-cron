@@ -28,26 +28,6 @@ function shouldRunAutoPosting() {
   return timeSinceLastRun >= oneMinute
 }
 
-// Function to check if a post is due for posting based on Indian Standard Time
-function isPostDue(scheduledFor: string | Date) {
-  const now = new Date()
-  const scheduled = new Date(scheduledFor)
-  
-  // Convert both times to Indian Standard Time (IST)
-  const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC+5:30
-  const nowIST = new Date(now.getTime() + istOffset)
-  const scheduledIST = new Date(scheduled.getTime() + istOffset)
-  
-  // Add 1 minute buffer for processing time
-  const bufferTime = new Date(nowIST.getTime() + 1 * 60 * 1000)
-  
-  console.log(`⏰ Time check - Now (IST): ${nowIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
-  console.log(`⏰ Time check - Scheduled (IST): ${scheduledIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
-  console.log(`⏰ Time check - Buffer (IST): ${bufferTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
-  
-  return scheduledIST <= bufferTime
-}
-
 export async function GET(request: Request) {
   try {
     // Security check for external cron jobs
@@ -63,7 +43,10 @@ export async function GET(request: Request) {
     
     if (!isExternalCron && !hasValidSecret && !hasValidToken && !isManualTest) {
       console.log('🚫 Unauthorized external cron job access attempt')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ 
+        status: "error",
+        message: "Unauthorized" 
+      }, { status: 401 })
     }
     
     console.log('✅ Authorized external cron job request', { isExternalCron, hasValidSecret, hasValidToken, isManualTest })
@@ -75,10 +58,8 @@ export async function GET(request: Request) {
       
       return NextResponse.json({
         status: "ok",
-        success: true,
         message: `Auto-posting is running. Next check in ${secondsUntilNextRun} seconds.`,
-        lastRun: lastRunTime?.toISOString(),
-        nextRun: lastRunTime ? new Date(lastRunTime.getTime() + 1 * 60 * 1000).toISOString() : null,
+        timestamp: new Date().toISOString(),
         isRunning: isAutoPostingRunning,
       })
     }
@@ -87,8 +68,8 @@ export async function GET(request: Request) {
     if (isAutoPostingRunning) {
       return NextResponse.json({
         status: "ok",
-        success: true,
         message: "Auto-posting already in progress",
+        timestamp: new Date().toISOString(),
         isRunning: true,
       })
     }
@@ -96,7 +77,7 @@ export async function GET(request: Request) {
     isAutoPostingRunning = true
     lastRunTime = new Date()
 
-    console.log("🚀 EXTERNAL CRON Job: Auto-post started at", new Date().toISOString())
+    console.log("🚀 SIMPLE CRON Job: Auto-post started at", new Date().toISOString())
 
     await connectDB()
 
@@ -111,9 +92,8 @@ export async function GET(request: Request) {
     let totalProcessed = 0
     let totalPosted = 0
     let totalErrors = 0
-    const results = []
 
-    console.log("🔍 Starting external auto-post process...")
+    console.log("🔍 Starting simple auto-post process...")
 
     for (const collectionName of collections) {
       try {
@@ -124,9 +104,6 @@ export async function GET(request: Request) {
         const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC+5:30
         const nowIST = new Date(now.getTime() + istOffset)
         const bufferTime = new Date(nowIST.getTime() + 1 * 60 * 1000) // 1 minute buffer
-
-        console.log(`🕐 Current time (IST): ${nowIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
-        console.log(`🕐 Buffer time (IST): ${bufferTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
 
         const dueQuery = {
           $and: [
@@ -148,27 +125,12 @@ export async function GET(request: Request) {
           ],
         }
 
-        console.log(`🔍 Checking ${collectionName} for due posts...`)
-        console.log(`⏰ Current time: ${now.toISOString()}`)
-        console.log(`⏰ Buffer time: ${bufferTime.toISOString()}`)
-        
         const duePosts = await collection.find(dueQuery).toArray()
         console.log(`📊 Found ${duePosts.length} posts due for posting in ${collectionName}`)
 
         if (duePosts.length === 0) {
-          console.log(`⏭️  No due posts in ${collectionName}, continuing...`)
           continue
         }
-
-        // Log details of each due post
-        duePosts.forEach((post, index) => {
-          console.log(`📋 Due post ${index + 1}:`)
-          console.log(`   - ID: ${post._id}`)
-          console.log(`   - Title: ${post.topicTitle || 'Untitled'}`)
-          console.log(`   - Scheduled for: ${post.scheduledFor || post.scheduled_for}`)
-          console.log(`   - User: ${post.email || post.userId}`)
-          console.log(`   - Status: ${post.status || post.Status}`)
-        })
 
         for (const post of duePosts) {
           totalProcessed++
@@ -196,11 +158,10 @@ export async function GET(request: Request) {
             // Also try to find user by email
             if (!user && post.email) {
               user = await usersCollection.findOne({ email: post.email })
-              console.log(`🔍 Found user by email: ${post.email} - ${user ? 'Yes' : 'No'}`)
             }
 
             if (!user) {
-              console.log(`❌ User not found for post ${post._id}, userId: ${userId}, email: ${post.email}`)
+              console.log(`❌ User not found for post ${post._id}`)
               await collection.updateOne(
                 { _id: post._id },
                 {
@@ -218,23 +179,12 @@ export async function GET(request: Request) {
                 },
               )
               totalErrors++
-              results.push({
-                postId: post._id,
-                collection: collectionName,
-                status: "error",
-                error: "User not found",
-              })
               continue
             }
 
-            console.log(`✅ Found user: ${user.email}`)
-
-            // Check if user has LinkedIn access token in User model
+            // Check if user has LinkedIn access token
             if (!user.linkedinAccessToken || !user.linkedinTokenExpiry || new Date(user.linkedinTokenExpiry) <= new Date()) {
               console.log(`❌ LinkedIn access token not found or expired for user ${user._id}`)
-              console.log(`   - Has token: ${!!user.linkedinAccessToken}`)
-              console.log(`   - Token expiry: ${user.linkedinTokenExpiry}`)
-              console.log(`   - Token expired: ${user.linkedinTokenExpiry ? new Date(user.linkedinTokenExpiry) <= new Date() : 'No expiry date'}`)
               
               await collection.updateOne(
                 { _id: post._id },
@@ -254,16 +204,8 @@ export async function GET(request: Request) {
                 },
               )
               totalErrors++
-              results.push({
-                postId: post._id,
-                collection: collectionName,
-                status: "error",
-                error: "LinkedIn not connected",
-              })
               continue
             }
-
-            console.log(`✅ LinkedIn token valid for user ${user.email}`)
 
             // Prepare post content
             const postContent = post.content || post.Content || post.text || ""
@@ -286,16 +228,8 @@ export async function GET(request: Request) {
                 },
               )
               totalErrors++
-              results.push({
-                postId: post._id,
-                collection: collectionName,
-                status: "error",
-                error: "Empty content",
-              })
               continue
             }
-
-            console.log(`📝 Post content length: ${postContent.length} characters`)
 
             // Prepare LinkedIn post data
             const postBody: any = {
@@ -389,13 +323,6 @@ export async function GET(request: Request) {
               )
 
               totalPosted++
-              results.push({
-                postId: post._id,
-                collection: collectionName,
-                status: "posted",
-                linkedinPostId: linkedinData.id,
-                linkedinUrl: linkedinUrl,
-              })
             } else {
               const errorText = await linkedinResponse.text()
               console.log(`❌ LinkedIn API error for post ${post._id}:`, errorText)
@@ -434,12 +361,6 @@ export async function GET(request: Request) {
               }
 
               totalErrors++
-              results.push({
-                postId: post._id,
-                collection: collectionName,
-                status: "error",
-                error: errorText,
-              })
             }
           } catch (error) {
             console.error(`❌ Error processing post ${post._id}:`, error)
@@ -463,12 +384,6 @@ export async function GET(request: Request) {
             )
 
             totalErrors++
-            results.push({
-              postId: post._id,
-              collection: collectionName,
-              status: "error",
-              error: getErrorMessage(error),
-            })
           }
         }
       } catch (collectionError) {
@@ -477,7 +392,7 @@ export async function GET(request: Request) {
     }
 
     console.log(
-      `🎯 EXTERNAL CRON Job completed: ${totalPosted} posted, ${totalErrors} errors, ${totalProcessed} total processed`,
+      `🎯 SIMPLE CRON Job completed: ${totalPosted} posted, ${totalErrors} errors, ${totalProcessed} total processed`,
     )
 
     // Reset the running flag
@@ -485,26 +400,21 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       status: "ok",
-      success: true,
-      message: `External cron processed ${totalProcessed} posts across all collections`,
+      message: `Cron job executed successfully. Processed ${totalProcessed} posts, posted ${totalPosted}, errors ${totalErrors}`,
       posted: totalPosted,
       errors: totalErrors,
       totalProcessed,
-      results,
       timestamp: new Date().toISOString(),
-      lastRun: lastRunTime.toISOString(),
-      nextRun: new Date(lastRunTime.getTime() + 1 * 60 * 1000).toISOString(),
     })
   } catch (error) {
     // Reset the running flag on error
     isAutoPostingRunning = false
     
-    console.error("❌ EXTERNAL CRON Job error:", error)
+    console.error("❌ SIMPLE CRON Job error:", error)
     return NextResponse.json(
       {
         status: "error",
-        success: false,
-        error: getErrorMessage(error),
+        message: getErrorMessage(error),
         timestamp: new Date().toISOString(),
       },
       { status: 500 },
