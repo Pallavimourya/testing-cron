@@ -295,15 +295,17 @@ export default function CalendarPage() {
 
     setLoading(true)
     try {
-      // Create IST datetime string in format YYYY-MM-DDTHH:MM
-      const scheduledDateTime = new Date(individualScheduleDate)
+      // Create proper IST datetime string
+      const year = individualScheduleDate.getFullYear()
+      const month = String(individualScheduleDate.getMonth() + 1).padStart(2, '0')
+      const day = String(individualScheduleDate.getDate()).padStart(2, '0')
       const [hours, minutes] = individualScheduleTime.split(":")
-      scheduledDateTime.setHours(Number.parseInt(hours), Number.parseInt(minutes))
       
-      // Format as IST datetime string
-      const scheduledIST = scheduledDateTime.toISOString().slice(0, 16)
+      // Format as IST datetime string: YYYY-MM-DDTHH:MM
+      const scheduledIST = `${year}-${month}-${day}T${hours}:${minutes}`
 
-      console.log(`📅 Scheduling for IST: ${scheduledDateTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
+      console.log(`📅 Date selected: ${individualScheduleDate.toDateString()}`)
+      console.log(`📅 Time selected: ${individualScheduleTime}`)
       console.log(`📅 IST datetime string: ${scheduledIST}`)
 
       const response = await fetch(`/api/approved-content/${selectedApprovedPost._id}/schedule`, {
@@ -338,14 +340,17 @@ export default function CalendarPage() {
 
     setLoading(true)
     try {
-      const scheduledDateTime = new Date(editDate)
+      // Create proper IST datetime string
+      const year = editDate.getFullYear()
+      const month = String(editDate.getMonth() + 1).padStart(2, '0')
+      const day = String(editDate.getDate()).padStart(2, '0')
       const [hours, minutes] = editTime.split(":")
-      scheduledDateTime.setHours(Number.parseInt(hours), Number.parseInt(minutes))
+      
+      // Format as IST datetime string: YYYY-MM-DDTHH:MM
+      const scheduledIST = `${year}-${month}-${day}T${hours}:${minutes}`
 
-      // Format as IST datetime string
-      const scheduledIST = scheduledDateTime.toISOString().slice(0, 16)
-
-      console.log(`📅 Editing schedule for IST: ${scheduledDateTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
+      console.log(`📅 Edit date selected: ${editDate.toDateString()}`)
+      console.log(`📅 Edit time selected: ${editTime}`)
       console.log(`📅 IST datetime string: ${scheduledIST}`)
 
       const response = await fetch(`/api/content/${selectedPost._id}/schedule`, {
@@ -1310,10 +1315,12 @@ export default function CalendarPage() {
                 type="time"
                 value={individualScheduleTime}
                 onChange={(e) => setIndividualScheduleTime(e.target.value)}
-                min={getMinimumSchedulingTime().slice(11, 16)} // Set minimum time to 5 minutes from now
               />
               <p className="text-xs text-gray-500 mt-1">
                 ⏰ Minimum scheduling time: 5 minutes from now (IST)
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                💡 Current time: {new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false })} IST
               </p>
             </div>
           </div>

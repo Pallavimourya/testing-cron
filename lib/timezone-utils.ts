@@ -14,12 +14,17 @@ export function getCurrentISTTime(): string {
  */
 export function convertISTToUTC(istDateTimeString: string): Date {
   // Parse the IST datetime string (format: YYYY-MM-DDTHH:MM)
-  // When we create a Date from a string without timezone, it's treated as local time
-  // Since we're working with IST, we need to handle this properly
-  const istDate = new Date(istDateTimeString + ':00+05:30') // Add seconds and IST timezone
+  const [datePart, timePart] = istDateTimeString.split('T')
+  const [year, month, day] = datePart.split('-').map(Number)
+  const [hours, minutes] = timePart.split(':').map(Number)
   
-  // Convert to UTC
-  return new Date(istDate.getTime())
+  // Create a date string in ISO format with IST timezone
+  const istDateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+05:30`
+  
+  // Parse the IST date string
+  const istDate = new Date(istDateString)
+  
+  return istDate
 }
 
 /**
