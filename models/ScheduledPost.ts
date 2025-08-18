@@ -19,7 +19,7 @@ const scheduledPostSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  scheduledAt: {
+  scheduledTime: {
     type: Date,
     required: true,
     index: true, // Index for efficient querying
@@ -34,7 +34,7 @@ const scheduledPostSchema = new mongoose.Schema({
     default: "pending",
     index: true,
   },
-  retries: {
+  attempts: {
     type: Number,
     default: 0,
     max: 3,
@@ -51,11 +51,11 @@ const scheduledPostSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  errorMessage: {
+  error: {
     type: String,
     default: null,
   },
-  lastAttemptAt: {
+  lastAttempt: {
     type: Date,
     default: null,
   },
@@ -70,7 +70,7 @@ const scheduledPostSchema = new mongoose.Schema({
 })
 
 // Compound index for efficient cron queries
-scheduledPostSchema.index({ scheduledAt: 1, status: 1 })
+scheduledPostSchema.index({ scheduledTime: 1, status: 1 })
 
 // Update timestamp on save
 scheduledPostSchema.pre("save", function (next) {

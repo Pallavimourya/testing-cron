@@ -31,16 +31,25 @@ interface ApprovedPost {
 
 interface ScheduledPost {
   _id: string
-  id: string
-  topicTitle: string
+  userId: string
+  userEmail: string
   content: string
-  platform: string
-  scheduledFor: string
-  status: string
-  contentType: string
-  postedAt?: string
-  linkedinUrl?: string
   imageUrl?: string
+  scheduledTime: string
+  scheduledAtIST: string
+  status: string
+  attempts: number
+  postedAt?: string
+  linkedinPostId?: string
+  linkedinUrl?: string
+  error?: string
+  lastAttempt?: string
+  createdAt: string
+  updatedAt: string
+  // Legacy fields for compatibility
+  topicTitle?: string
+  platform?: string
+  contentType?: string
 }
 
 interface CronStatus {
@@ -155,21 +164,24 @@ export default function CalendarPage() {
   const fetchPosts = async () => {
     setLoading(true)
     try {
-      const [approvedRes, scheduledRes, postedRes, failedRes] = await Promise.all([
-        fetch("/api/approved-content?status=approved&limit=100"),
-        fetch("/api/approved-content?status=scheduled&limit=100"),
-        fetch("/api/approved-content?status=posted&limit=100"),
-        fetch("/api/approved-content?status=failed&limit=100"),
+      // Fetch approved content (still using the old endpoint for approved posts)
+      const approvedRes = await fetch("/api/approved-content?status=approved&limit=100")
+      const approvedData = await approvedRes.json()
+      setApprovedPosts(approvedData.content || [])
+
+      // Fetch scheduled posts using the new ScheduledPost model
+      const [scheduledRes, postedRes, failedRes] = await Promise.all([
+        fetch("/api/scheduled-posts?status=pending&limit=100"),
+        fetch("/api/scheduled-posts?status=posted&limit=100"),
+        fetch("/api/scheduled-posts?status=failed&limit=100"),
       ])
 
-      const approvedData = await approvedRes.json()
       const scheduledData = await scheduledRes.json()
       const postedData = await postedRes.json()
       const failedData = await failedRes.json()
 
-      setApprovedPosts(approvedData.content || [])
-      setScheduledPosts(scheduledData.content || [])
-      setPostedPosts([...postedData.content || [], ...failedData.content || []])
+      setScheduledPosts(scheduledData.posts || [])
+      setPostedPosts([...postedData.posts || [], ...failedData.posts || []])
     } catch (error) {
       console.error("Error fetching posts:", error)
       toast.error("Failed to load posts")
@@ -225,7 +237,11 @@ export default function CalendarPage() {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success(`Overdue posts processed! ${data.stats.totalProcessed}/${data.stats.totalOverdue} posts sent to cron.`)
+        if (data.success) {
+          toast.success(data.message || `Failed posts processed! ${data.stats.totalProcessed} posts reset to pending.`)
+        } else {
+          toast.warning(data.message || "Some posts were processed but cron trigger failed")
+        }
         fetchPosts()
         fetchCronStatus()
       } else {
@@ -242,7 +258,7 @@ export default function CalendarPage() {
 
   // Get scheduled dates for calendar highlighting
   const scheduledDates = scheduledPosts
-    .map((post) => (post.scheduledFor ? new Date(post.scheduledFor) : null))
+    .map((post) => (post.scheduledTime ? new Date(post.scheduledTime) : null))
     .filter(Boolean) as Date[]
 
   const postedDates = postedPosts
@@ -251,8 +267,8 @@ export default function CalendarPage() {
 
   // Posts for selected date
   const postsForSelectedDate = scheduledPosts.filter((post) => {
-    if (!post.scheduledFor || !selectedDate) return false
-    const postDate = new Date(post.scheduledFor)
+    if (!post.scheduledTime || !selectedDate) return false
+    const postDate = new Date(post.scheduledTime)
     return postDate.toDateString() === selectedDate.toDateString()
   })
 
@@ -428,8 +444,8 @@ export default function CalendarPage() {
 
   const openEditModal = (post: ScheduledPost) => {
     setSelectedPost(post)
-    setEditDate(new Date(post.scheduledFor))
-    const date = new Date(post.scheduledFor)
+    setEditDate(new Date(post.scheduledTime))
+    const date = new Date(post.scheduledTime)
     setEditTime(`${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`)
     setShowEditModal(true)
   }
@@ -761,20 +777,20 @@ export default function CalendarPage() {
                                     <div className="flex items-center gap-2 mb-1">
                                                                       <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                                   <Clock className="w-3 h-3 mr-1" />
-                                  {new Date(post.scheduledFor).toLocaleTimeString("en-IN", {
+                                  {new Date(post.scheduledTime).toLocaleTimeString("en-IN", {
                                     timeZone: "Asia/Kolkata",
                                     hour: "2-digit",
                                     minute: "2-digit",
                                   })}
                                 </Badge>
                                       <Badge variant="outline" className="text-xs">
-                                        {getTimeUntilPost(post.scheduledFor)}
+                                        {getTimeUntilPost(post.scheduledTime)}
                                       </Badge>
                                     </div>
                                     <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
-                                      {post.topicTitle || "Untitled Post"}
+                                      {post.content.substring(0, 50) || "Untitled Post"}
                                     </h4>
-                                    <p className="text-xs text-gray-600 capitalize">{post.platform}</p>
+                                    <p className="text-xs text-gray-600 capitalize">LinkedIn</p>
                                   </div>
                                   <div className="flex gap-1 ml-2">
                                     <Button
@@ -842,9 +858,9 @@ export default function CalendarPage() {
                                       </Badge>
                                     </div>
                                     <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
-                                      {post.topicTitle || "Untitled Post"}
+                                      {post.content.substring(0, 50) || "Untitled Post"}
                                     </h4>
-                                    <p className="text-xs text-gray-600 capitalize">{post.platform}</p>
+                                    <p className="text-xs text-gray-600 capitalize">LinkedIn</p>
                                   </div>
                                   <div className="flex gap-1 ml-2">
                                     <Button
@@ -983,7 +999,7 @@ export default function CalendarPage() {
                 ) : (
                   <div className="space-y-4">
                     {scheduledPosts
-                      .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime())
+                      .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime())
                       .map((post) => (
                         <div
                           key={post._id}
@@ -994,7 +1010,7 @@ export default function CalendarPage() {
                               <div className="flex items-center gap-3 mb-2">
                                 <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                                   <Clock className="w-3 h-3 mr-1" />
-                                  {new Date(post.scheduledFor).toLocaleString("en-IN", {
+                                  {new Date(post.scheduledTime).toLocaleString("en-IN", {
                                     timeZone: "Asia/Kolkata",
                                     weekday: "short",
                                     month: "short",
@@ -1004,7 +1020,7 @@ export default function CalendarPage() {
                                   })}
                                 </Badge>
                                 <Badge variant="outline" className="text-xs">
-                                  {getTimeUntilPost(post.scheduledFor)}
+                                  {getTimeUntilPost(post.scheduledTime)}
                                 </Badge>
                               </div>
                               {post.imageUrl && (
