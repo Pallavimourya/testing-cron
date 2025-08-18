@@ -118,7 +118,7 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(false)
   const [testLoading, setTestLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("calendar")
-  const [currentTime, setCurrentTime] = useState(new Date())
+
 
   // Modal states
   const [showScheduleModal, setShowScheduleModal] = useState(false)
@@ -150,13 +150,7 @@ export default function CalendarPage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Update current time every second
-  useEffect(() => {
-    const timeInterval = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-    return () => clearInterval(timeInterval)
-  }, [])
+
 
   const fetchPosts = async () => {
     setLoading(true)
@@ -511,19 +505,7 @@ export default function CalendarPage() {
     })
   }
 
-  // Helper function to format current time in IST
-  const formatCurrentTimeIST = (date: Date) => {
-    return date.toLocaleString('en-IN', { 
-      timeZone: 'Asia/Kolkata',
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    })
-  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -644,20 +626,7 @@ export default function CalendarPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">Current Time (IST):</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-blue-600">
-                      {formatCurrentTimeIST(currentTime)}
-                    </div>
-                    <div className="text-xs text-gray-500">Live Clock</div>
-                  </div>
-                </div>
-              </div>
+
 
               {cronStatus.nextScheduledPosts && cronStatus.nextScheduledPosts.length > 0 && (
                 <div className="mt-4">
@@ -725,12 +694,7 @@ export default function CalendarPage() {
                   <Clock className="w-5 h-5 text-green-600" />
                   <span className="text-sm font-medium text-gray-700">Current Time (IST):</span>
                 </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-green-600">
-                    {formatCurrentTimeIST(currentTime)}
-                  </div>
-                  <div className="text-xs text-gray-500">Live Clock</div>
-                </div>
+
               </div>
             </div>
             
@@ -1032,10 +996,7 @@ export default function CalendarPage() {
                       <span className="text-sm font-medium text-gray-700">Current Time (IST):</span>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold text-blue-600">
-                        {formatCurrentTimeIST(currentTime)}
-                      </div>
-                      <div className="text-xs text-gray-500">Live Clock</div>
+
                     </div>
                   </div>
                 </div>

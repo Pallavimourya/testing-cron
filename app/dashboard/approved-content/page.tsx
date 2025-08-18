@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { FileText, Copy, Edit, Trash2, CheckCircle, XCircle, Clock, Eye, Share2, RefreshCw, Loader2, Search, MessageSquare, Layout, Quote, ArrowUpDown, HelpCircle, Linkedin, MoreHorizontal, ImageIcon, Plus, Upload, Wand2, X, Calendar } from 'lucide-react'
+import { FileText, Copy, Edit, Trash2, CheckCircle, XCircle, Eye, Share2, RefreshCw, Loader2, Search, MessageSquare, Layout, Quote, ArrowUpDown, HelpCircle, Linkedin, MoreHorizontal, ImageIcon, Plus, Upload, Wand2, X, Calendar } from 'lucide-react'
 import { toast } from "sonner"
 import Image from "next/image"
 import { useSubscription } from "@/hooks/use-subscription"
@@ -40,7 +40,7 @@ export default function ApprovedContentPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [contentTypeFilter, setContentTypeFilter] = useState("all")
-  const [currentTime, setCurrentTime] = useState(new Date())
+
   const [editForm, setEditForm] = useState({
     id: "",
     topicTitle: "",
@@ -231,19 +231,7 @@ export default function ApprovedContentPage() {
     return labels[contentType as keyof typeof labels] || contentType
   }
 
-  // Helper function to format current time in IST
-  const formatCurrentTimeIST = (date: Date) => {
-    return date.toLocaleString('en-IN', { 
-      timeZone: 'Asia/Kolkata',
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    })
-  }
+
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -583,13 +571,7 @@ export default function ApprovedContentPage() {
     loadApprovedContent()
   }, [])
 
-  // Update current time every second
-  useEffect(() => {
-    const timeInterval = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-    return () => clearInterval(timeInterval)
-  }, [])
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
@@ -618,21 +600,7 @@ export default function ApprovedContentPage() {
           </div>
         </div>
 
-        {/* Current Time Display */}
-        <div className="mb-4 bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-purple-600" />
-              <span className="text-sm font-medium text-gray-700">Current Time (IST):</span>
-            </div>
-            <div className="text-right">
-              <div className="text-lg font-bold text-purple-600">
-                {formatCurrentTimeIST(currentTime)}
-              </div>
-              <div className="text-xs text-gray-500">Live Clock</div>
-            </div>
-          </div>
-        </div>
+
 
         {/* Filters */}
         <div className="mb-4 sm:mb-6">

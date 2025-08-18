@@ -840,7 +840,6 @@ export default function UnifiedProfilePage() {
                       <Badge variant="secondary" className="bg-green-100 text-green-700">
                         Unique Story Generated
                       </Badge>
-                      {currentStoryId && <span className="text-xs text-gray-500">ID: {currentStoryId.slice(-8)}</span>}
                     </div>
                     <Button size="sm" variant="outline" onClick={() => setIsEditingStory(!isEditingStory)}>
                       <Edit className="h-3 w-3 mr-1" />

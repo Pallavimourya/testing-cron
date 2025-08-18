@@ -21,7 +21,6 @@ import {
   BarChart3,
   Zap,
   RefreshCw,
-  Clock,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useSubscription } from "@/hooks/use-subscription"
@@ -71,7 +70,6 @@ export default function TopicBankPage() {
   const [isGeneratingManual, setIsGeneratingManual] = useState(false)
   const [isGeneratingContent, setIsGeneratingContent] = useState<string | null>(null)
   const [isCleaningUp, setIsCleaningUp] = useState(false)
-  const [currentTime, setCurrentTime] = useState(new Date())
 
   // Filters and search
   const [searchTerm, setSearchTerm] = useState("")
@@ -100,13 +98,7 @@ export default function TopicBankPage() {
     loadMonthlyUsage()
   }, [])
 
-  // Update current time every second
-  useEffect(() => {
-    const timeInterval = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-    return () => clearInterval(timeInterval)
-  }, [])
+
 
   useEffect(() => {
     filterTopics()
@@ -310,19 +302,7 @@ export default function TopicBankPage() {
     }
   }
 
-  // Helper function to format current time in IST
-  const formatCurrentTimeIST = (date: Date) => {
-    return date.toLocaleString('en-IN', { 
-      timeZone: 'Asia/Kolkata',
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    })
-  }
+
 
   const generateContent = async (topicId: string) => {
     if (!isActive) {
@@ -466,21 +446,7 @@ export default function TopicBankPage() {
         </div>
       </div>
 
-      {/* Current Time Display */}
-      <div className="mb-6 bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg border border-orange-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-orange-600" />
-            <span className="text-sm font-medium text-gray-700">Current Time (IST):</span>
-          </div>
-          <div className="text-right">
-            <div className="text-lg font-bold text-orange-600">
-              {formatCurrentTimeIST(currentTime)}
-            </div>
-            <div className="text-xs text-gray-500">Live Clock</div>
-          </div>
-        </div>
-      </div>
+
 
       {/* Monthly Usage Stats */}
       {monthlyUsage && (
