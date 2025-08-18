@@ -34,9 +34,9 @@ export default function HomePage() {
         <div className="relative z-10 text-center text-white max-w-6xl mx-auto px-4 sm:px-6">
           <div className="pt-20 sm:pt-32">
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-black mb-6 sm:mb-8 leading-tight tracking-tighter animate-slide-up">
-              Elevate Your
+              Adarsh Ka
               <span className="block bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent mt-2 pb-3">
-                Digital Presence
+                Jaadu
               </span>
             </h1>
 
@@ -92,7 +92,7 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed px-4">
-              Elevate your professional brand with our specialized LinkedIn personal branding service
+              Experience the magic of professional branding with our specialized LinkedIn personal branding service
             </p>
           </div>
 

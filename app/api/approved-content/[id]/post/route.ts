@@ -22,42 +22,106 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const contentId = id
 
     console.log("📤 Posting approved content to LinkedIn, ID:", contentId)
+    console.log("👤 User email:", user.email)
+    console.log("👤 User ID:", user._id.toString())
 
-    // Find content in approvedcontents collection
+    // Find content in approvedcontents collection with improved query
     let contentData = null
     if (mongoose.connection.db) {
       const collection = mongoose.connection.db.collection("approvedcontents")
 
-      contentData = await collection.findOne({
-        $and: [
-          {
-            $or: [{ _id: new mongoose.Types.ObjectId(contentId) }, { id: contentId }, { ID: contentId }],
-          },
-          {
-            $or: [
-              { email: user.email },
-              { "user id": user._id.toString() },
-              { user_id: user._id.toString() },
-              { userId: user._id.toString() },
-              { userId: user._id },
+      // Try multiple query strategies
+      const queries = [
+        // Strategy 1: Direct ID match
+        {
+          $or: [
+            { _id: new mongoose.Types.ObjectId(contentId) },
+            { id: contentId },
+            { ID: contentId }
+          ]
+        },
+        // Strategy 2: String ID match
+        {
+          $or: [
+            { _id: contentId },
+            { id: contentId },
+            { ID: contentId }
+          ]
+        }
+      ]
+
+      for (const query of queries) {
+        try {
+          contentData = await collection.findOne({
+            $and: [
+              query,
+              {
+                $or: [
+                  { email: user.email },
+                  { "user id": user._id.toString() },
+                  { user_id: user._id.toString() },
+                  { userId: user._id.toString() },
+                  { userId: user._id },
+                  { userEmail: user.email },
+                  { user_email: user.email }
+                ],
+              },
             ],
-          },
-        ],
-      })
+          })
+
+          if (contentData) {
+            console.log(`✅ Found content using query strategy:`, query)
+            break
+          }
+        } catch (error) {
+          console.log(`❌ Query strategy failed:`, error)
+          continue
+        }
+      }
+
+      // If still not found, try a broader search
+      if (!contentData) {
+        console.log("🔍 Trying broader search...")
+        contentData = await collection.findOne({
+          $or: [
+            { _id: new mongoose.Types.ObjectId(contentId) },
+            { id: contentId },
+            { ID: contentId },
+            { _id: contentId }
+          ]
+        })
+      }
 
       console.log("📊 Found content in approvedcontents:", !!contentData)
+      if (contentData) {
+        console.log("📋 Content details:", {
+          id: contentData._id,
+          status: contentData.status,
+          email: contentData.email,
+          userId: contentData.userId,
+          contentLength: (contentData.content || contentData.Content || contentData["generated content"] || "").length
+        })
+      }
     }
 
     if (!contentData) {
+      console.error("❌ Content not found. Available fields in collection:")
+      if (mongoose.connection.db) {
+        const collection = mongoose.connection.db.collection("approvedcontents")
+        const sampleDoc = await collection.findOne({})
+        if (sampleDoc) {
+          console.log("📋 Sample document structure:", Object.keys(sampleDoc))
+        }
+      }
       return NextResponse.json({ error: "Approved content not found" }, { status: 404 })
     }
 
-    // Extract content details
-    const content = contentData.content || contentData.Content || contentData["generated content"] || ""
-    const imageUrl = contentData.imageUrl || contentData.Image || contentData.image_url || null
-    const topicTitle = contentData.topicTitle || contentData.Topic || contentData.topic_title || ""
+    // Extract content details with fallbacks
+    const content = contentData.content || contentData.Content || contentData["generated content"] || contentData.content || ""
+    const imageUrl = contentData.imageUrl || contentData.Image || contentData.image_url || contentData.image || null
+    const topicTitle = contentData.topicTitle || contentData.Topic || contentData.topic_title || contentData.title || ""
 
-    if (!content) {
+    if (!content || !content.trim()) {
       return NextResponse.json({ error: "No content to post" }, { status: 400 })
     }
 
@@ -96,19 +160,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
         await collection.updateOne(
           {
-            $and: [
-              {
-                $or: [{ _id: new mongoose.Types.ObjectId(contentId) }, { id: contentId }, { ID: contentId }],
-              },
-              {
-                $or: [
-                  { email: user.email },
-                  { "user id": user._id.toString() },
-                  { user_id: user._id.toString() },
-                  { userId: user._id.toString() },
-                  { userId: user._id },
-                ],
-              },
+            $or: [
+              { _id: new mongoose.Types.ObjectId(contentId) },
+              { id: contentId },
+              { ID: contentId },
+              { _id: contentId }
             ],
           },
           {
@@ -144,19 +200,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
         await collection.updateOne(
           {
-            $and: [
-              {
-                $or: [{ _id: new mongoose.Types.ObjectId(contentId) }, { id: contentId }, { ID: contentId }],
-              },
-              {
-                $or: [
-                  { email: user.email },
-                  { "user id": user._id.toString() },
-                  { user_id: user._id.toString() },
-                  { userId: user._id.toString() },
-                  { userId: user._id },
-                ],
-              },
+            $or: [
+              { _id: new mongoose.Types.ObjectId(contentId) },
+              { id: contentId },
+              { ID: contentId },
+              { _id: contentId }
             ],
           },
           {

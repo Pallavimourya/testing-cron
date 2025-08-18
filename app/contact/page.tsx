@@ -71,7 +71,7 @@ export default function ContactPage() {
               </span>
             </h1>
             <p className="text-xl text-slate-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Ready to elevate your online impact? We&apos;re here to help you succeed. Get in touch and let&apos;s discuss how
+              Ready to experience the magic of your online impact? We&apos;re here to help you succeed. Get in touch and let&apos;s discuss how
               we can transform your digital strategy.
             </p>
             <div className="flex flex-wrap gap-4 justify-center">

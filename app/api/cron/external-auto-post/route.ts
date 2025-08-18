@@ -129,7 +129,7 @@ export async function GET(request: Request) {
             }
           ],
         }
-
+        
         const duePosts = await collection.find(dueQuery).toArray()
         console.log(`📊 Found ${duePosts.length} posts due for posting in ${collectionName}`)
 
@@ -139,7 +139,7 @@ export async function GET(request: Request) {
 
         for (const post of duePosts) {
           try {
-            totalProcessed++
+          totalProcessed++
             console.log(`📤 Processing post ${totalProcessed}: ${post.topicTitle || post.Topic || 'Untitled'}`)
 
             // Get user information
@@ -230,16 +230,16 @@ export async function GET(request: Request) {
               totalErrors++
 
               // Update content status to failed
-              await collection.updateOne(
-                { _id: post._id },
-                {
-                  $set: {
+                await collection.updateOne(
+                  { _id: post._id },
+                  {
+                    $set: {
                     status: "failed",
                     Status: "failed",
                     error: linkedinResult.error || "Failed to post to LinkedIn",
-                    updatedAt: new Date(),
-                    updated_at: new Date(),
-                  },
+                      updatedAt: new Date(),
+                      updated_at: new Date(),
+                    },
                 }
               )
 
@@ -259,16 +259,16 @@ export async function GET(request: Request) {
 
             // Update content status to failed
             try {
-              await collection.updateOne(
-                { _id: post._id },
-                {
-                  $set: {
+            await collection.updateOne(
+              { _id: post._id },
+              {
+                $set: {
                     status: "failed",
                     Status: "failed",
                     error: error instanceof Error ? error.message : "Unknown error",
-                    updatedAt: new Date(),
-                    updated_at: new Date(),
-                  },
+                  updatedAt: new Date(),
+                  updated_at: new Date(),
+                },
                 }
               )
             } catch (updateError) {
@@ -294,7 +294,7 @@ export async function GET(request: Request) {
       success: true,
       message: `Auto-post completed: ${totalPosted} posted, ${totalErrors} errors`,
       stats: {
-        totalProcessed,
+      totalProcessed,
         totalPosted,
         totalErrors,
       },

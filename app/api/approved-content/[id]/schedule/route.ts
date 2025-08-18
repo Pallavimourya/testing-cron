@@ -43,12 +43,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     console.log("📅 Scheduled time (IST):", scheduledDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }))
     console.log("📅 Current time (UTC):", new Date().toISOString())
     console.log("📅 Current time (IST):", new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }))
+    console.log("👤 User email:", user.email)
+    console.log("👤 User ID:", user._id.toString())
 
     if (!mongoose.connection.db) {
       throw new Error("Database connection not established")
     }
 
-    // Try to update in multiple collections
+    // Try to update in multiple collections with improved query logic
     const collections = ["approvedcontents", "linkdin-content-generation", "generatedcontents"]
     let updated = false
 
@@ -56,11 +58,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       try {
         const collection = mongoose.connection.db.collection(collectionName)
 
-        const result = await collection.updateOne(
+        // Try multiple query strategies
+        const queries = [
+          // Strategy 1: Direct ID match with user filter
           {
             $and: [
               {
-                $or: [{ _id: new mongoose.Types.ObjectId(id) }, { id: id }, { ID: id }],
+                $or: [
+                  { _id: new mongoose.Types.ObjectId(id) },
+                  { id: id },
+                  { ID: id }
+                ]
               },
               {
                 $or: [
@@ -69,34 +77,94 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
                   { user_id: user._id.toString() },
                   { userId: user._id.toString() },
                   { userId: user._id },
+                  { userEmail: user.email },
+                  { user_email: user.email }
                 ],
               },
-            ],
+            ]
           },
+          // Strategy 2: String ID match with user filter
           {
-            $set: {
-              status: "scheduled",
-              Status: "scheduled",
-              scheduledFor: scheduledDate,
-              scheduled_for: scheduledDate,
-              updatedAt: new Date(),
-              updated_at: new Date(),
-              modifiedTime: new Date(),
-            },
+            $and: [
+              {
+                $or: [
+                  { _id: id },
+                  { id: id },
+                  { ID: id }
+                ]
+              },
+              {
+                $or: [
+                  { email: user.email },
+                  { "user id": user._id.toString() },
+                  { user_id: user._id.toString() },
+                  { userId: user._id.toString() },
+                  { userId: user._id },
+                  { userEmail: user.email },
+                  { user_email: user.email }
+                ],
+              },
+            ]
           },
-        )
+          // Strategy 3: Broader search without user filter
+          {
+            $or: [
+              { _id: new mongoose.Types.ObjectId(id) },
+              { id: id },
+              { ID: id },
+              { _id: id }
+            ]
+          }
+        ]
 
-        if (result.matchedCount > 0) {
-          console.log(`✅ Scheduled post in ${collectionName}`)
-          updated = true
-          break
+        for (const query of queries) {
+          try {
+            const result = await collection.updateOne(
+              query,
+              {
+                $set: {
+                  status: "scheduled",
+                  Status: "scheduled",
+                  scheduledFor: scheduledDate,
+                  scheduled_for: scheduledDate,
+                  updatedAt: new Date(),
+                  updated_at: new Date(),
+                  modifiedTime: new Date(),
+                },
+              },
+            )
+
+            if (result.matchedCount > 0) {
+              console.log(`✅ Scheduled post in ${collectionName} using query strategy`)
+              updated = true
+              break
+            }
+          } catch (error) {
+            console.log(`❌ Query strategy failed in ${collectionName}:`, error)
+            continue
+          }
         }
+
+        if (updated) break
+
       } catch (error) {
         console.error(`❌ Error scheduling in ${collectionName}:`, error)
       }
     }
 
     if (!updated) {
+      console.error("❌ Content not found in any collection. Available fields in collections:")
+      for (const collectionName of collections) {
+        try {
+          const collection = mongoose.connection.db.collection(collectionName)
+          const sampleDoc = await collection.findOne({})
+          if (sampleDoc) {
+            console.log(`📋 ${collectionName} sample document structure:`, Object.keys(sampleDoc))
+          }
+        } catch (error) {
+          console.log(`❌ Could not check ${collectionName}:`, error)
+        }
+      }
       return NextResponse.json({ error: "Content not found" }, { status: 404 })
     }
 
