@@ -477,7 +477,7 @@ export default function CalendarPage() {
     
     const diffMs = scheduledIST.getTime() - nowIST.getTime()
 
-    if (diffMs <= 0) return "Due now"
+    if (diffMs <= 0) return "Scheduled time passed"
 
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
@@ -533,7 +533,7 @@ export default function CalendarPage() {
 
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-orange-600" />
-                  <span>{cronStatus?.stats.dueNow || 0} Due Now</span>
+                  <span>{cronStatus?.stats.totalScheduled || 0} Scheduled</span>
                 </div>
               </div>
             </div>
@@ -603,19 +603,11 @@ export default function CalendarPage() {
                   <div className="text-xs text-gray-600">Total Scheduled</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">{cronStatus.stats.dueNow}</div>
-                  <div className="text-xs text-gray-600">Due Now</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{cronStatus.stats.futureScheduled}</div>
-                  <div className="text-xs text-gray-600">Future Scheduled</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{cronStatus.stats.totalPosted}</div>
+                  <div className="text-2xl font-bold text-orange-600">{cronStatus.stats.totalPosted}</div>
                   <div className="text-xs text-gray-600">Posted</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-600">{cronStatus.stats.totalApproved}</div>
+                  <div className="text-2xl font-bold text-purple-600">{cronStatus.stats.totalApproved}</div>
                   <div className="text-xs text-gray-600">Approved</div>
                 </div>
               </div>

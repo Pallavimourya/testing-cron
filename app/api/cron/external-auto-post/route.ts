@@ -86,6 +86,13 @@ function getCurrentISTString() {
   return istTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
 }
 
+// Helper function to get current IST time as Date object
+function getCurrentIST() {
+  const now = new Date()
+  const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC+5:30
+  return new Date(now.getTime() + istOffset)
+}
+
 export async function GET(req: Request) {
   try {
     console.log("🔄 External cron job triggered at", getCurrentISTString())
@@ -116,75 +123,79 @@ export async function GET(req: Request) {
     if (!mongoose.connection.db) throw new Error("Database connection not established")
 
     const collection = mongoose.connection.db.collection("approvedcontents")
+    const currentIST = getCurrentIST()
 
-    const now = new Date()
+    console.log(`🕐 Current time (IST): ${currentIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
 
-    // 1) Mark due scheduled posts as OVERDUE
-    const markResult = await collection.updateMany(
-      {
-        $and: [
-          { $or: [{ status: "scheduled" }, { Status: "scheduled" }] },
-          { $or: [{ scheduledFor: { $lte: now } }, { scheduled_for: { $lte: now } }] },
-          { $or: [
-            { postedAt: { $exists: false } },
-            { posted_at: { $exists: false } },
-            { linkedinPostId: { $exists: false } },
-            { linkedin_post_id: { $exists: false } }
-          ] }
-        ]
-      },
-      { $set: { status: "overdue", Status: "overdue", overdueSince: new Date(), updatedAt: new Date(), updated_at: new Date() }, $setOnInsert: {} }
-    )
-
-    console.log(`⚠️ Marked ${markResult.modifiedCount || 0} scheduled posts as overdue`)
-
-    // 2) Process OVERDUE posts with limited retries
-    const MAX_ATTEMPTS = 3
-    const overduePosts = await collection.find({
+    // Find scheduled posts that are due for posting (within 1 minute buffer)
+    const bufferTime = new Date(currentIST.getTime() + 1 * 60 * 1000) // 1 minute buffer
+    
+    const dueQuery = {
       $and: [
-        { $or: [{ status: "overdue" }, { Status: "overdue" }] },
+        { $or: [{ status: "scheduled" }, { Status: "scheduled" }] },
+        { $or: [{ scheduledFor: { $lte: bufferTime } }, { scheduled_for: { $lte: bufferTime } }] },
         { $or: [
           { postedAt: { $exists: false } },
           { posted_at: { $exists: false } },
           { linkedinPostId: { $exists: false } },
           { linkedin_post_id: { $exists: false } }
-        ] },
-        { $or: [ { attempts: { $lt: MAX_ATTEMPTS } }, { attempts: { $exists: false } } ] }
+        ] }
       ]
-    }).toArray()
+    }
 
-    console.log(`📋 Found ${overduePosts.length} overdue posts to process`)
+    const duePosts = await collection.find(dueQuery).toArray()
+    console.log(`📋 Found ${duePosts.length} scheduled posts due for posting`)
 
-    if (overduePosts.length === 0) {
-      return NextResponse.json({ success: true, message: "No posts to process", markedOverdue: markResult.modifiedCount || 0, processed: 0, currentTime: getCurrentISTString(), authStatus: "authenticated" })
+    if (duePosts.length === 0) {
+      return NextResponse.json({ 
+        success: true, 
+        message: "No posts to process", 
+        processed: 0, 
+        currentTime: getCurrentISTString(), 
+        authStatus: "authenticated" 
+      })
     }
 
     let successCount = 0
     let failureCount = 0
     const results: any[] = []
 
-    for (const post of overduePosts) {
+    for (const post of duePosts) {
       try {
+        console.log(`📝 Processing scheduled post: ${post._id}`)
+
         // Get user with LinkedIn credentials
         const user = await User.findById(post.userId || post["user id"] || post.user_id).select("+linkedinAccessToken +linkedinTokenExpiry +linkedinProfile")
 
-        // Increment attempts and set lastAttempt early to avoid double-processing
-        const currentAttempts = (post.attempts as number) || 0
-        await collection.updateOne({ _id: post._id }, { $set: { lastAttempt: new Date(), attempts: currentAttempts + 1, updatedAt: new Date(), updated_at: new Date() } })
-
         if (!user) {
           console.error(`❌ User not found for post ${post._id}`)
-          await collection.updateOne({ _id: post._id }, { $set: { error: "User not found" } })
+          await collection.updateOne({ _id: post._id }, { 
+            $set: { 
+              status: "failed", 
+              Status: "failed",
+              error: "User not found",
+              updatedAt: new Date(), 
+              updated_at: new Date() 
+            } 
+          })
           failureCount++
-          results.push({ postId: post._id, status: "overdue", error: "User not found" })
+          results.push({ postId: post._id, status: "failed", error: "User not found" })
           continue
         }
 
         // Check LinkedIn connection
         if (!user.linkedinAccessToken || !user.linkedinTokenExpiry || new Date(user.linkedinTokenExpiry) <= new Date()) {
-          await collection.updateOne({ _id: post._id }, { $set: { error: "LinkedIn account not connected or token expired" } })
+          await collection.updateOne({ _id: post._id }, { 
+            $set: { 
+              status: "failed", 
+              Status: "failed",
+              error: "LinkedIn account not connected or token expired",
+              updatedAt: new Date(), 
+              updated_at: new Date() 
+            } 
+          })
           failureCount++
-          results.push({ postId: post._id, status: "overdue", error: "LinkedIn not connected" })
+          results.push({ postId: post._id, status: "failed", error: "LinkedIn not connected" })
           continue
         }
 
@@ -192,59 +203,81 @@ export async function GET(req: Request) {
         const imageUrl = post.imageUrl || post.Image || post.image_url || post.image || null
 
         if (!content || !content.trim()) {
-          await collection.updateOne({ _id: post._id }, { $set: { error: "No content to post" } })
+          await collection.updateOne({ _id: post._id }, { 
+            $set: { 
+              status: "failed", 
+              Status: "failed",
+              error: "No content to post",
+              updatedAt: new Date(), 
+              updated_at: new Date() 
+            } 
+          })
           failureCount++
-          results.push({ postId: post._id, status: "overdue", error: "No content to post" })
+          results.push({ postId: post._id, status: "failed", error: "No content to post" })
           continue
         }
 
-        console.log(`📝 Posting overdue content: ${content.substring(0, 100)}...`)
+        console.log(`📤 Posting content: ${content.substring(0, 100)}...`)
         const postResult = await postToLinkedIn(content, imageUrl, user)
 
         if (postResult.success) {
-          await collection.updateOne({ _id: post._id }, { $set: {
-            status: "posted", Status: "posted",
-            postedAt: new Date(), posted_at: new Date(),
-            linkedinPostId: postResult.linkedinPostId, linkedin_post_id: postResult.linkedinPostId,
-            linkedinUrl: postResult.linkedinUrl, linkedin_url: postResult.linkedinUrl,
-            error: null, updatedAt: new Date(), updated_at: new Date()
-          } })
+          await collection.updateOne({ _id: post._id }, { 
+            $set: {
+              status: "posted", 
+              Status: "posted",
+              postedAt: new Date(), 
+              posted_at: new Date(),
+              linkedinPostId: postResult.linkedinPostId, 
+              linkedin_post_id: postResult.linkedinPostId,
+              linkedinUrl: postResult.linkedinUrl, 
+              linkedin_url: postResult.linkedinUrl,
+              error: null, 
+              updatedAt: new Date(), 
+              updated_at: new Date()
+            } 
+          })
           successCount++
-          results.push({ postId: post._id, status: "posted", linkedinPostId: postResult.linkedinPostId, linkedinUrl: postResult.linkedinUrl })
+          results.push({ 
+            postId: post._id, 
+            status: "posted", 
+            linkedinPostId: postResult.linkedinPostId, 
+            linkedinUrl: postResult.linkedinUrl 
+          })
+          console.log(`✅ Successfully posted post: ${post._id}`)
         } else {
-          const newAttempts = currentAttempts + 1
-          const reachedLimit = newAttempts >= MAX_ATTEMPTS
-          await collection.updateOne({ _id: post._id }, { $set: {
-            status: reachedLimit ? "failed" : "overdue",
-            Status: reachedLimit ? "failed" : "overdue",
-            error: postResult.error || "Failed to post to LinkedIn",
-            updatedAt: new Date(), updated_at: new Date()
-          } })
-          if (reachedLimit) failureCount++
-          results.push({ postId: post._id, status: reachedLimit ? "failed" : "overdue", error: postResult.error })
+          await collection.updateOne({ _id: post._id }, { 
+            $set: {
+              status: "failed", 
+              Status: "failed",
+              error: postResult.error || "Failed to post to LinkedIn",
+              updatedAt: new Date(), 
+              updated_at: new Date()
+            } 
+          })
+          failureCount++
+          results.push({ postId: post._id, status: "failed", error: postResult.error })
+          console.log(`❌ Failed to post post: ${post._id} - ${postResult.error}`)
         }
       } catch (error: any) {
-        const currentAttempts = (post as any).attempts || 0
-        const newAttempts = currentAttempts + 1
-        const reachedLimit = newAttempts >= MAX_ATTEMPTS
-        await collection.updateOne({ _id: post._id }, { $set: {
-          status: reachedLimit ? "failed" : "overdue",
-          Status: reachedLimit ? "failed" : "overdue",
-          error: error.message || "Unknown error occurred",
-          attempts: newAttempts,
-          lastAttempt: new Date(),
-          updatedAt: new Date(), updated_at: new Date()
-        } })
-        if (reachedLimit) failureCount++
-        results.push({ postId: post._id, status: reachedLimit ? "failed" : "overdue", error: error.message })
+        console.error(`❌ Error processing post ${post._id}:`, error)
+        await collection.updateOne({ _id: post._id }, { 
+          $set: {
+            status: "failed", 
+            Status: "failed",
+            error: error.message || "Unknown error occurred",
+            updatedAt: new Date(), 
+            updated_at: new Date()
+          } 
+        })
+        failureCount++
+        results.push({ postId: post._id, status: "failed", error: error.message })
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: `Processed ${overduePosts.length} overdue posts` ,
-      markedOverdue: markResult.modifiedCount || 0,
-      processed: overduePosts.length,
+      message: `Processed ${duePosts.length} scheduled posts`,
+      processed: duePosts.length,
       successCount,
       failureCount,
       results,

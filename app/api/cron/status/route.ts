@@ -24,15 +24,10 @@ export async function GET() {
 
     const collections = ["approvedcontents", "linkdin-content-generation", "generatedcontents"]
     const now = new Date()
-    const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC+5:30
-    const nowIST = new Date(now.getTime() + istOffset)
-    const bufferTime = new Date(nowIST.getTime() + 1 * 60 * 1000) // 1 minute buffer
 
-    console.log(`🕐 Status check - Current time (IST): ${nowIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
+    console.log(`🕐 Status check - Current time: ${now.toISOString()}`)
 
     let totalScheduled = 0
-    let dueNow = 0
-    let futureScheduled = 0
     let totalPosted = 0
     let totalApproved = 0
     const nextScheduledPosts = []
@@ -61,34 +56,6 @@ export async function GET() {
 
         const scheduledPosts = await collection.find(scheduledQuery).toArray()
         totalScheduled += scheduledPosts.length
-
-        // Count due now
-        const dueNowQuery = {
-          ...scheduledQuery,
-          $and: [
-            ...scheduledQuery.$and,
-            {
-              $or: [{ scheduledFor: { $lte: bufferTime } }, { scheduled_for: { $lte: bufferTime } }],
-            },
-          ],
-        }
-
-        const dueNowPosts = await collection.find(dueNowQuery).toArray()
-        dueNow += dueNowPosts.length
-
-        // Count future scheduled
-        const futureQuery = {
-          ...scheduledQuery,
-          $and: [
-            ...scheduledQuery.$and,
-            {
-              $or: [{ scheduledFor: { $gt: bufferTime } }, { scheduled_for: { $gt: bufferTime } }],
-            },
-          ],
-        }
-
-        const futurePosts = await collection.find(futureQuery).toArray()
-        futureScheduled += futurePosts.length
 
         // Get next scheduled posts
         for (const post of scheduledPosts) {
@@ -161,8 +128,6 @@ export async function GET() {
       success: true,
       stats: {
         totalScheduled,
-        dueNow,
-        futureScheduled,
         totalPosted,
         totalApproved,
       },

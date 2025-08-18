@@ -4,6 +4,13 @@ import { authOptions } from "../../auth/[...nextauth]/auth"
 import connectDB from "@/lib/mongodb"
 import mongoose from "mongoose"
 
+// Helper function to get current IST time
+function getCurrentIST() {
+  const now = new Date()
+  const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC+5:30
+  return new Date(now.getTime() + istOffset)
+}
+
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
@@ -17,13 +24,10 @@ export async function POST(request: Request) {
       throw new Error("Database connection not established")
     }
 
-    // Find overdue posts (scheduled but not posted, and past their scheduled time)
-    const now = new Date()
-    const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC+5:30
-    const nowIST = new Date(now.getTime() + istOffset)
+    const currentIST = getCurrentIST()
+    console.log(`🕐 Current time (IST): ${currentIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
 
-    console.log(`🕐 Current time (IST): ${nowIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
-
+    // Find posts that are scheduled but past their time and not posted
     const collections = ["approvedcontents", "linkdin-content-generation", "generatedcontents"]
     let totalOverdue = 0
     let totalProcessed = 0
@@ -32,14 +36,14 @@ export async function POST(request: Request) {
       try {
         const collection = mongoose.connection.db.collection(collectionName)
 
-        // Find overdue posts
+        // Find overdue posts (scheduled but not posted, and past their scheduled time)
         const overdueQuery = {
           $and: [
             {
               $or: [{ status: "scheduled" }, { Status: "scheduled" }],
             },
             {
-              $or: [{ scheduledFor: { $lt: now } }, { scheduled_for: { $lt: now } }],
+              $or: [{ scheduledFor: { $lt: currentIST } }, { scheduled_for: { $lt: currentIST } }],
             },
             // Ensure the post hasn't been posted already
             {
@@ -62,37 +66,24 @@ export async function POST(request: Request) {
 
         totalOverdue += overduePosts.length
 
-        // Send each overdue post to the external cron job
+        // Mark these posts as failed so they can be retried
         for (const post of overduePosts) {
           try {
-            console.log(`🔄 Processing overdue post: ${post.topicTitle || post.Topic || 'Untitled'}`)
-
-            // Get the host from the request
-            const host = request.headers.get("host") || "localhost:3000"
-            const protocol = request.headers.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https")
-
-            // Call the external cron job to post this content
-            const cronResponse = await fetch(`${protocol}://${host}/api/cron/external-auto-post`, {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                Cookie: request.headers.get("cookie") || "",
-              },
-            })
-
-            if (cronResponse.ok) {
-              const cronResult = await cronResponse.json()
-              console.log(`✅ Overdue post sent to cron: ${post._id}`)
-              totalProcessed++
-            } else {
-              console.error(`❌ Failed to send overdue post to cron: ${post._id}`)
-            }
-
-            // Add a small delay between requests
-            await new Promise(resolve => setTimeout(resolve, 500))
-
+            await collection.updateOne(
+              { _id: post._id },
+              {
+                $set: {
+                  status: "failed",
+                  Status: "failed",
+                  error: "Post was overdue and not processed",
+                  updatedAt: new Date(),
+                  updated_at: new Date(),
+                },
+              }
+            )
+            totalProcessed++
           } catch (error) {
-            console.error(`❌ Error processing overdue post ${post._id}:`, error)
+            console.error(`❌ Error marking post ${post._id} as failed:`, error)
           }
         }
       } catch (error) {
@@ -100,25 +91,39 @@ export async function POST(request: Request) {
       }
     }
 
-    console.log(`🎉 Overdue posts processing completed: ${totalProcessed}/${totalOverdue} processed`)
+    // Now trigger the external cron to process these failed posts
+    try {
+      const cronUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/cron/external-auto-post`
+      const response = await fetch(cronUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${process.env.EXTERNAL_CRON_TOKEN}`,
+        },
+      })
+
+      if (response.ok) {
+        const cronResult = await response.json()
+        console.log("✅ External cron triggered successfully:", cronResult)
+      } else {
+        console.error("❌ Failed to trigger external cron:", response.status)
+      }
+    } catch (error) {
+      console.error("❌ Error triggering external cron:", error)
+    }
 
     return NextResponse.json({
       success: true,
-      message: `Overdue posts processed: ${totalProcessed}/${totalOverdue}`,
+      message: `Processed ${totalProcessed} overdue posts`,
       stats: {
         totalOverdue,
         totalProcessed,
+        currentTime: currentIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
       },
-      timestamp: new Date().toISOString(),
     })
-
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error handling overdue posts:", error)
     return NextResponse.json(
-      {
-        error: "Failed to handle overdue posts",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: error.message || "Failed to handle overdue posts" },
       { status: 500 }
     )
   }
