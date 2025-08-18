@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI!;
+const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env');
+// During build time, we don't need to connect to the database
+if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !MONGODB_URI) {
+  console.warn('MONGODB_URI not found in environment variables');
 }
 
 interface MongooseCache {
@@ -22,6 +23,10 @@ if (!global.mongoose) {
 }
 
 async function connectDB() {
+  if (!MONGODB_URI) {
+    throw new Error('Please define the MONGODB_URI environment variable inside .env');
+  }
+
   if (cached.conn) {
     return cached.conn;
   }

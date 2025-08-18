@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { FileText, Copy, Edit, Trash2, CheckCircle, XCircle, Eye, Share2, RefreshCw, Loader2, Search, MessageSquare, Layout, Quote, ArrowUpDown, HelpCircle, Linkedin, MoreHorizontal, ImageIcon, Plus, Upload, Wand2, X, Calendar } from 'lucide-react'
+import { FileText, Copy, Edit, Trash2, CheckCircle, XCircle, Clock, Eye, Share2, RefreshCw, Loader2, Search, MessageSquare, Layout, Quote, ArrowUpDown, HelpCircle, Linkedin, MoreHorizontal, ImageIcon, Plus, Upload, Wand2, X, Calendar } from 'lucide-react'
 import { toast } from "sonner"
 import Image from "next/image"
 import { useSubscription } from "@/hooks/use-subscription"

@@ -3,11 +3,16 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 
-const openai = new OpenAI({
+// Only create OpenAI client if API key is available
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
-})
+}) : null
 
 export async function transcribeAudio(base64Audio: string): Promise<string> {
+  if (!openai) {
+    throw new Error('OpenAI API key not configured')
+  }
+  
   try {
     console.log('Starting transcription process...')
     
