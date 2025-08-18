@@ -58,69 +58,65 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       try {
         const collection = mongoose.connection.db.collection(collectionName)
 
-        // Try multiple query strategies
-        const queries = [
-          // Strategy 1: Direct ID match with user filter
-          {
-            $and: [
+        // Try multiple query strategies with proper ObjectId handling
+        const updateQueries = [
+          // Strategy 1: Try as ObjectId with user filter
+          async () => {
+            try {
+              return await collection.updateOne(
+                {
+                  _id: new mongoose.Types.ObjectId(id),
+                  $or: [
+                    { email: user.email },
+                    { "user id": user._id.toString() },
+                    { user_id: user._id.toString() },
+                    { userId: user._id.toString() },
+                    { userId: user._id },
+                    { userEmail: user.email },
+                    { user_email: user.email }
+                  ]
+                },
+                {
+                  $set: {
+                    status: "scheduled",
+                    Status: "scheduled",
+                    scheduledFor: scheduledDate,
+                    scheduled_for: scheduledDate,
+                    updatedAt: new Date(),
+                    updated_at: new Date(),
+                    modifiedTime: new Date(),
+                  },
+                }
+              )
+            } catch (error) {
+              console.log("❌ ObjectId strategy failed:", error)
+              return null
+            }
+          },
+          // Strategy 2: Try as string ID with user filter
+          async () => {
+            return await collection.updateOne(
               {
-                $or: [
-                  { _id: new mongoose.Types.ObjectId(id) },
-                  { id: id },
-                  { ID: id }
+                $and: [
+                  {
+                    $or: [
+                      { id: id },
+                      { ID: id }
+                    ]
+                  },
+                  {
+                    $or: [
+                      { email: user.email },
+                      { "user id": user._id.toString() },
+                      { user_id: user._id.toString() },
+                      { userId: user._id.toString() },
+                      { userId: user._id },
+                      { userEmail: user.email },
+                      { user_email: user.email }
+                    ]
+                  }
                 ]
               },
-              {
-                $or: [
-                  { email: user.email },
-                  { "user id": user._id.toString() },
-                  { user_id: user._id.toString() },
-                  { userId: user._id.toString() },
-                  { userId: user._id },
-                  { userEmail: user.email },
-                  { user_email: user.email }
-                ],
-              },
-            ]
-          },
-          // Strategy 2: String ID match with user filter
-          {
-            $and: [
-              {
-                $or: [
-                  { _id: id },
-                  { id: id },
-                  { ID: id }
-                ]
-              },
-              {
-                $or: [
-                  { email: user.email },
-                  { "user id": user._id.toString() },
-                  { user_id: user._id.toString() },
-                  { userId: user._id.toString() },
-                  { userId: user._id },
-                  { userEmail: user.email },
-                  { user_email: user.email }
-                ],
-              },
-            ]
-          },
-          // Strategy 3: Broader search without user filter
-          {
-            $or: [
-              { _id: new mongoose.Types.ObjectId(id) },
-              { id: id },
-              { ID: id },
-              { _id: id }
-            ]
-          }
-        ]
-
-        for (const query of queries) {
-          try {
-            const result = await collection.updateOne(
-              query,
               {
                 $set: {
                   status: "scheduled",
@@ -131,10 +127,54 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
                   updated_at: new Date(),
                   modifiedTime: new Date(),
                 },
-              },
+              }
             )
+          },
+          // Strategy 3: Broader search without user filter
+          async () => {
+            try {
+              return await collection.updateOne(
+                { _id: new mongoose.Types.ObjectId(id) },
+                {
+                  $set: {
+                    status: "scheduled",
+                    Status: "scheduled",
+                    scheduledFor: scheduledDate,
+                    scheduled_for: scheduledDate,
+                    updatedAt: new Date(),
+                    updated_at: new Date(),
+                    modifiedTime: new Date(),
+                  },
+                }
+              )
+            } catch (error) {
+              return await collection.updateOne(
+                {
+                  $or: [
+                    { id: id },
+                    { ID: id }
+                  ]
+                },
+                {
+                  $set: {
+                    status: "scheduled",
+                    Status: "scheduled",
+                    scheduledFor: scheduledDate,
+                    scheduled_for: scheduledDate,
+                    updatedAt: new Date(),
+                    updated_at: new Date(),
+                    modifiedTime: new Date(),
+                  },
+                }
+              )
+            }
+          }
+        ]
 
-            if (result.matchedCount > 0) {
+        for (const updateFn of updateQueries) {
+          try {
+            const result = await updateFn()
+            if (result && result.matchedCount > 0) {
               console.log(`✅ Scheduled post in ${collectionName} using query strategy`)
               updated = true
               break

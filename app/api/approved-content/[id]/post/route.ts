@@ -30,31 +30,38 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (mongoose.connection.db) {
       const collection = mongoose.connection.db.collection("approvedcontents")
 
-      // Try multiple query strategies
+      // Try multiple query strategies with proper ObjectId handling
       const queries = [
-        // Strategy 1: Direct ID match
-        {
-          $or: [
-            { _id: new mongoose.Types.ObjectId(contentId) },
-            { id: contentId },
-            { ID: contentId }
-          ]
+        // Strategy 1: Try as ObjectId first
+        async () => {
+          try {
+            return await collection.findOne({
+              _id: new mongoose.Types.ObjectId(contentId),
+              $or: [
+                { email: user.email },
+                { "user id": user._id.toString() },
+                { user_id: user._id.toString() },
+                { userId: user._id.toString() },
+                { userId: user._id },
+                { userEmail: user.email },
+                { user_email: user.email }
+              ]
+            })
+          } catch (error) {
+            console.log("❌ ObjectId strategy failed:", error)
+            return null
+          }
         },
-        // Strategy 2: String ID match
-        {
-          $or: [
-            { _id: contentId },
-            { id: contentId },
-            { ID: contentId }
-          ]
-        }
-      ]
-
-      for (const query of queries) {
-        try {
-          contentData = await collection.findOne({
+        // Strategy 2: Try as string ID
+        async () => {
+          return await collection.findOne({
             $and: [
-              query,
+              {
+                $or: [
+                  { id: contentId },
+                  { ID: contentId }
+                ]
+              },
               {
                 $or: [
                   { email: user.email },
@@ -64,32 +71,39 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
                   { userId: user._id },
                   { userEmail: user.email },
                   { user_email: user.email }
-                ],
-              },
-            ],
+                ]
+              }
+            ]
           })
+        },
+        // Strategy 3: Broader search without user filter
+        async () => {
+          try {
+            return await collection.findOne({
+              _id: new mongoose.Types.ObjectId(contentId)
+            })
+          } catch (error) {
+            return await collection.findOne({
+              $or: [
+                { id: contentId },
+                { ID: contentId }
+              ]
+            })
+          }
+        }
+      ]
 
+      for (const queryFn of queries) {
+        try {
+          contentData = await queryFn()
           if (contentData) {
-            console.log(`✅ Found content using query strategy:`, query)
+            console.log(`✅ Found content using query strategy`)
             break
           }
         } catch (error) {
           console.log(`❌ Query strategy failed:`, error)
           continue
         }
-      }
-
-      // If still not found, try a broader search
-      if (!contentData) {
-        console.log("🔍 Trying broader search...")
-        contentData = await collection.findOne({
-          $or: [
-            { _id: new mongoose.Types.ObjectId(contentId) },
-            { id: contentId },
-            { ID: contentId },
-            { _id: contentId }
-          ]
-        })
       }
 
       console.log("📊 Found content in approvedcontents:", !!contentData)
@@ -158,31 +172,70 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       if (mongoose.connection.db) {
         const collection = mongoose.connection.db.collection("approvedcontents")
 
-        await collection.updateOne(
-          {
-            $or: [
-              { _id: new mongoose.Types.ObjectId(contentId) },
-              { id: contentId },
-              { ID: contentId },
-              { _id: contentId }
-            ],
+        // Try multiple update strategies
+        const updateQueries = [
+          // Strategy 1: Try as ObjectId
+          async () => {
+            try {
+              return await collection.updateOne(
+                { _id: new mongoose.Types.ObjectId(contentId) },
+                {
+                  $set: {
+                    status: "posted",
+                    postedAt: new Date(),
+                    posted_at: new Date(),
+                    linkedinPostId: linkedinResult.postId || linkedinResult.linkedinPostId,
+                    linkedin_post_id: linkedinResult.postId || linkedinResult.linkedinPostId,
+                    linkedinUrl: linkedinResult.url,
+                    linkedin_url: linkedinResult.url,
+                    updatedAt: new Date(),
+                    updated_at: new Date(),
+                  },
+                }
+              )
+            } catch (error) {
+              console.log("❌ ObjectId update failed:", error)
+              return null
+            }
           },
-          {
-            $set: {
-              status: "posted",
-              postedAt: new Date(),
-              posted_at: new Date(),
-              linkedinPostId: linkedinResult.postId || linkedinResult.linkedinPostId,
-              linkedin_post_id: linkedinResult.postId || linkedinResult.linkedinPostId,
-              linkedinUrl: linkedinResult.url,
-              linkedin_url: linkedinResult.url,
-              updatedAt: new Date(),
-              updated_at: new Date(),
-            },
-          },
-        )
+          // Strategy 2: Try as string ID
+          async () => {
+            return await collection.updateOne(
+              {
+                $or: [
+                  { id: contentId },
+                  { ID: contentId }
+                ]
+              },
+              {
+                $set: {
+                  status: "posted",
+                  postedAt: new Date(),
+                  posted_at: new Date(),
+                  linkedinPostId: linkedinResult.postId || linkedinResult.linkedinPostId,
+                  linkedin_post_id: linkedinResult.postId || linkedinResult.linkedinPostId,
+                  linkedinUrl: linkedinResult.url,
+                  linkedin_url: linkedinResult.url,
+                  updatedAt: new Date(),
+                  updated_at: new Date(),
+                },
+              }
+            )
+          }
+        ]
 
-        console.log("✅ Updated content status to 'posted' in approvedcontents collection")
+        for (const updateFn of updateQueries) {
+          try {
+            const result = await updateFn()
+            if (result && result.matchedCount > 0) {
+              console.log("✅ Updated content status to 'posted' in approvedcontents collection")
+              break
+            }
+          } catch (error) {
+            console.log("❌ Update strategy failed:", error)
+            continue
+          }
+        }
       }
 
       return NextResponse.json({
@@ -198,26 +251,60 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       if (mongoose.connection.db) {
         const collection = mongoose.connection.db.collection("approvedcontents")
 
-        await collection.updateOne(
-          {
-            $or: [
-              { _id: new mongoose.Types.ObjectId(contentId) },
-              { id: contentId },
-              { ID: contentId },
-              { _id: contentId }
-            ],
+        // Try multiple update strategies for failed status
+        const updateQueries = [
+          // Strategy 1: Try as ObjectId
+          async () => {
+            try {
+              return await collection.updateOne(
+                { _id: new mongoose.Types.ObjectId(contentId) },
+                {
+                  $set: {
+                    status: "failed",
+                    error: linkedinResult.error || "Failed to post to LinkedIn",
+                    updatedAt: new Date(),
+                    updated_at: new Date(),
+                  },
+                }
+              )
+            } catch (error) {
+              console.log("❌ ObjectId update failed:", error)
+              return null
+            }
           },
-          {
-            $set: {
-              status: "failed",
-              error: linkedinResult.error || "Failed to post to LinkedIn",
-              updatedAt: new Date(),
-              updated_at: new Date(),
-            },
-          },
-        )
+          // Strategy 2: Try as string ID
+          async () => {
+            return await collection.updateOne(
+              {
+                $or: [
+                  { id: contentId },
+                  { ID: contentId }
+                ]
+              },
+              {
+                $set: {
+                  status: "failed",
+                  error: linkedinResult.error || "Failed to post to LinkedIn",
+                  updatedAt: new Date(),
+                  updated_at: new Date(),
+                },
+              }
+            )
+          }
+        ]
 
-        console.log("❌ Updated content status to 'failed' in approvedcontents collection")
+        for (const updateFn of updateQueries) {
+          try {
+            const result = await updateFn()
+            if (result && result.matchedCount > 0) {
+              console.log("❌ Updated content status to 'failed' in approvedcontents collection")
+              break
+            }
+          } catch (error) {
+            console.log("❌ Update strategy failed:", error)
+            continue
+          }
+        }
       }
 
       return NextResponse.json(
