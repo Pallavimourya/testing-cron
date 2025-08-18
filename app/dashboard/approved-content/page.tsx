@@ -268,27 +268,22 @@ export default function ApprovedContentPage() {
 
     setSchedulingLoading(true)
     try {
-      // Create a proper date string in IST timezone
-      const dateTimeString = `${scheduleDate}T${scheduleTime}:00`
-      
-      // Create date object and treat it as IST, then convert to UTC
-      const scheduledDateTime = new Date(dateTimeString + '+05:30') // Explicitly set IST timezone
-      const utcTime = new Date(scheduledDateTime.getTime() - (5.5 * 60 * 60 * 1000)) // Convert to UTC
+      // Create a proper IST datetime string
+      const scheduledIST = `${scheduleDate}T${scheduleTime}`
 
-      console.log(`📅 User selected (IST): ${dateTimeString}`)
-      console.log(`📅 UTC time being sent: ${utcTime.toISOString()}`)
-      console.log(`📅 Will be posted at (IST): ${utcTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
+      console.log(`📅 User selected (IST): ${scheduledIST}`)
+      console.log(`📅 Will be posted at (IST): ${new Date(scheduledIST + '+05:30').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
 
       const response = await fetch(`/api/approved-content/${selectedContentForSchedule.id}/schedule`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          scheduledFor: utcTime.toISOString(),
+          scheduledFor: scheduledIST,
         }),
       })
 
       if (response.ok) {
-        toast.success("Content scheduled successfully!")
+        toast.success("Content scheduled successfully! It will be posted automatically at the scheduled time.")
         setShowScheduleModal(false)
         setSelectedContentForSchedule(null)
         loadApprovedContent()
@@ -1637,7 +1632,7 @@ export default function ApprovedContentPage() {
                   
                   <div>
                     <label htmlFor="schedule-time" className="block text-sm font-medium text-gray-700 mb-2">
-                      Time (IST)
+                      Time (IST - Indian Standard Time)
                     </label>
                     <input
                       id="schedule-time"
@@ -1646,7 +1641,10 @@ export default function ApprovedContentPage() {
                       onChange={(e) => setScheduleTime(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Select a time at least 2 minutes from now</p>
+                    <p className="text-xs text-gray-500 mt-1">Select a time at least 5 minutes from now (IST)</p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      💡 Current time: {new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false })} IST
+                    </p>
                   </div>
                 </div>
 
@@ -1655,7 +1653,7 @@ export default function ApprovedContentPage() {
                   <div className="bg-blue-50 p-3 rounded-lg">
                     <div className="flex items-center gap-2 text-blue-800">
                       <Calendar className="w-4 h-4" />
-                      <span className="text-sm font-medium">Scheduled for:</span>
+                      <span className="text-sm font-medium">Scheduled for (IST):</span>
                     </div>
                     <p className="text-sm text-blue-700 mt-1">
                       {new Date(`${scheduleDate}T${scheduleTime}`).toLocaleString('en-IN', {
@@ -1668,6 +1666,15 @@ export default function ApprovedContentPage() {
                         minute: '2-digit'
                       })}
                     </p>
+                    <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
+                      <div className="flex items-center gap-2 text-green-800">
+                        <Clock className="w-3 h-3" />
+                        <span className="text-xs font-medium">Auto-posting enabled</span>
+                      </div>
+                      <p className="text-xs text-green-700 mt-1">
+                        This post will be automatically published on LinkedIn at the scheduled time using our external cron system.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>

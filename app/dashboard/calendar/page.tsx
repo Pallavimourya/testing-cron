@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { getMinimumSchedulingTime } from "@/lib/timezone-utils"
 import { Badge } from "@/components/ui/badge"
-import { CalendarIcon, Clock, Edit, Trash2, CheckCircle, Zap, Settings, Activity, Plus, Eye, ExternalLink, CalendarDays } from 'lucide-react'
+import { CalendarIcon, Clock, Edit, Trash2, CheckCircle, XCircle, Zap, Settings, Activity, Plus, Eye, ExternalLink, CalendarDays } from 'lucide-react'
 import { Calendar } from "@/components/ui/calendar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -161,19 +161,21 @@ export default function CalendarPage() {
   const fetchPosts = async () => {
     setLoading(true)
     try {
-      const [approvedRes, scheduledRes, postedRes] = await Promise.all([
+      const [approvedRes, scheduledRes, postedRes, failedRes] = await Promise.all([
         fetch("/api/approved-content?status=approved&limit=100"),
         fetch("/api/approved-content?status=scheduled&limit=100"),
         fetch("/api/approved-content?status=posted&limit=100"),
+        fetch("/api/approved-content?status=failed&limit=100"),
       ])
 
       const approvedData = await approvedRes.json()
       const scheduledData = await scheduledRes.json()
       const postedData = await postedRes.json()
+      const failedData = await failedRes.json()
 
       setApprovedPosts(approvedData.content || [])
       setScheduledPosts(scheduledData.content || [])
-      setPostedPosts(postedData.content || [])
+      setPostedPosts([...postedData.content || [], ...failedData.content || []])
     } catch (error) {
       console.error("Error fetching posts:", error)
       toast.error("Failed to load posts")
@@ -214,6 +216,31 @@ export default function CalendarPage() {
     } catch (error) {
       console.error("Error testing auto-post:", error)
       toast.error("Failed to test auto-post")
+    } finally {
+      setTestLoading(false)
+    }
+  }
+
+  // Handle overdue posts
+  const handleOverduePosts = async () => {
+    setTestLoading(true)
+    try {
+      const response = await fetch("/api/cron/handle-overdue-posts", {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast.success(`Overdue posts processed! ${data.stats.totalProcessed}/${data.stats.totalOverdue} posts sent to cron.`)
+        fetchPosts()
+        fetchCronStatus()
+      } else {
+        const error = await response.json()
+        toast.error(error.message || "Failed to handle overdue posts")
+      }
+    } catch (error) {
+      console.error("Error handling overdue posts:", error)
+      toast.error("Failed to handle overdue posts")
     } finally {
       setTestLoading(false)
     }
@@ -432,12 +459,14 @@ export default function CalendarPage() {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "approved":
+      case "posted":
         return "bg-green-100 text-green-800 border-green-200"
+      case "failed":
+        return "bg-red-100 text-red-800 border-red-200"
       case "scheduled":
         return "bg-blue-100 text-blue-800 border-blue-200"
-      case "posted":
-        return "bg-purple-100 text-purple-800 border-purple-200"
+      case "approved":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
       default:
         return "bg-gray-100 text-gray-800 border-gray-200"
     }
@@ -540,6 +569,23 @@ export default function CalendarPage() {
                   <>
                     <Zap className="w-4 h-4 mr-2" />
                     Test Auto-Post
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleOverduePosts}
+                disabled={testLoading}
+                className="bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg hover:shadow-xl transition-all"
+              >
+                {testLoading ? (
+                  <>
+                    <Zap className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Handle Overdue Posts
                   </>
                 )}
               </Button>
@@ -666,7 +712,7 @@ export default function CalendarPage() {
             </TabsTrigger>
             <TabsTrigger value="posted" className="flex items-center gap-2">
               <Activity className="w-4 h-4" />
-              Posted ({postedPosts.length})
+              Posted/Failed ({postedPosts.length})
             </TabsTrigger>
           </TabsList>
 
@@ -815,28 +861,37 @@ export default function CalendarPage() {
                         </div>
                       )}
 
-                      {/* Posted Posts */}
+                                            {/* Posted Posts */}
                       {postedPostsForSelectedDate.length > 0 && (
                         <div>
-                          <h4 className="font-medium text-sm text-purple-900 mb-3 flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4" />
-                            Posted ({postedPostsForSelectedDate.length})
+                          <h4 className="font-medium text-sm text-gray-900 mb-3 flex items-center gap-2">
+                            <Activity className="w-4 h-4" />
+                            Posted/Failed ({postedPostsForSelectedDate.length})
                           </h4>
                           <div className="space-y-3">
                             {postedPostsForSelectedDate.map((post) => (
-                              <div key={post._id} className="p-3 border rounded-lg bg-purple-50 border-purple-200">
+                              <div key={post._id} className={`p-3 border rounded-lg ${post.status === 'posted' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                                 <div className="flex justify-between items-start mb-2">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
-                                                                      <Badge className="bg-purple-100 text-purple-800 border-purple-200">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Posted at{" "}
-                                  {new Date(post.postedAt!).toLocaleTimeString("en-IN", {
-                                    timeZone: "Asia/Kolkata",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </Badge>
+                                      <Badge className={post.status === 'posted' ? "bg-green-100 text-green-800 border-green-200" : "bg-red-100 text-red-800 border-red-200"}>
+                                        {post.status === 'posted' ? (
+                                          <>
+                                            <CheckCircle className="w-3 h-3 mr-1" />
+                                            Posted at{" "}
+                                            {new Date(post.postedAt!).toLocaleTimeString("en-IN", {
+                                              timeZone: "Asia/Kolkata",
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })}
+                                          </>
+                                        ) : (
+                                          <>
+                                            <XCircle className="w-3 h-3 mr-1" />
+                                            Failed
+                                          </>
+                                        )}
+                                      </Badge>
                                     </div>
                                     <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
                                       {post.topicTitle || "Untitled Post"}
@@ -1081,7 +1136,7 @@ export default function CalendarPage() {
               <CardHeader className="border-b border-gray-200/50">
                 <CardTitle className="flex items-center gap-2 text-gray-900">
                   <Activity className="w-5 h-5 text-purple-600" />
-                  Posted Content ({postedPosts.length})
+                  Posted & Failed Content ({postedPosts.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -1103,18 +1158,27 @@ export default function CalendarPage() {
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
-                                <Badge className="bg-purple-100 text-purple-800 border-purple-200">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Posted{" "}
-                                  {post.postedAt &&
-                                    new Date(post.postedAt).toLocaleString("en-IN", {
-                                      timeZone: "Asia/Kolkata",
-                                      weekday: "short",
-                                      month: "short",
-                                      day: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })}
+                                <Badge className={post.status === 'posted' ? "bg-green-100 text-green-800 border-green-200" : "bg-red-100 text-red-800 border-red-200"}>
+                                  {post.status === 'posted' ? (
+                                    <>
+                                      <CheckCircle className="w-3 h-3 mr-1" />
+                                      Posted{" "}
+                                      {post.postedAt &&
+                                        new Date(post.postedAt).toLocaleString("en-IN", {
+                                          timeZone: "Asia/Kolkata",
+                                          weekday: "short",
+                                          month: "short",
+                                          day: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <XCircle className="w-3 h-3 mr-1" />
+                                      Failed
+                                    </>
+                                  )}
                                 </Badge>
                                 {post.linkedinUrl && (
                                   <Badge variant="outline" className="text-xs text-blue-600">
