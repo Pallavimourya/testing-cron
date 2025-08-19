@@ -23,7 +23,6 @@ import {
   ArrowRight,
   Mic,
   MicOff,
-
 } from "lucide-react"
 import { toast } from "sonner"
 import AudioRecorder from "@/components/audio-recorder"
@@ -73,8 +72,6 @@ export default function UnifiedProfilePage() {
   const [isEditingStory, setIsEditingStory] = useState(false)
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [activeRecordingField, setActiveRecordingField] = useState<string | null>(null)
-  
-
 
   // Form data
   const [baseStoryData, setBaseStoryData] = useState<BaseStoryData>({
@@ -137,7 +134,6 @@ export default function UnifiedProfilePage() {
           console.log("✅ Setting customization data")
           setCustomizationData(data.customizationData)
         }
-
       } else {
         console.log("⚠️ No profile data found or error loading")
       }
@@ -397,10 +393,6 @@ export default function UnifiedProfilePage() {
     toast.success("Topic rejected")
   }
 
-
-
-
-
   const baseStoryQuestions = [
     {
       id: "earlyLife",
@@ -577,7 +569,7 @@ export default function UnifiedProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto py-6 px-4">
+      <div className="container mx-auto py-4 px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -586,13 +578,15 @@ export default function UnifiedProfilePage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="container mx-auto py-4 px-4 sm:px-6 lg:px-8 max-w-7xl">
+      <div className="mb-6 flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-                          <p className="text-gray-600 mt-2">Create your unique brand story and automatically generate 5 story-related content topics</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Profile</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">
+            Create your unique brand story and automatically generate 5 story-related content topics
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button onClick={saveProfileData} disabled={isSaving} variant="outline">
             {isSaving ? (
               <>
@@ -623,17 +617,14 @@ export default function UnifiedProfilePage() {
               </>
             )}
           </Button>
-
         </div>
       </div>
 
-      
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
         {/* Main Content - Profile Form */}
-        <div className="lg:col-span-2">
+        <div className="xl:col-span-2">
           {/* Language Toggle */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-gray-700">Language:</span>
               <div className="flex bg-gray-100 rounded-lg p-1">
@@ -704,18 +695,14 @@ export default function UnifiedProfilePage() {
                             id={question.id}
                             value={baseStoryData[question.id as keyof BaseStoryData]}
                             onChange={(e) => handleBaseStoryChange(question.id as keyof BaseStoryData, e.target.value)}
-                            placeholder={
-                              language === "english"
-                                ? question.placeholder
-                                : question.placeholderHindi
-                            }
-                            className="min-h-[100px] resize-none pr-12"
+                            placeholder={language === "english" ? question.placeholder : question.placeholderHindi}
+                            className="min-h-[80px] sm:min-h-[100px] resize-none pr-12 text-sm sm:text-base"
                           />
                           <Button
                             type="button"
                             size="sm"
                             variant="outline"
-                            className="absolute right-2 top-2 h-8 w-8 p-0"
+                            className="absolute right-2 top-2 h-8 w-8 p-0 bg-transparent"
                             onClick={() => setActiveRecordingField(`base-${question.id}`)}
                             disabled={isTranscribing}
                           >
@@ -729,7 +716,7 @@ export default function UnifiedProfilePage() {
                         {activeRecordingField === `base-${question.id}` && (
                           <div className="mt-2">
                             <AudioRecorder
-                              onRecordingComplete={(audioBlob, duration) => 
+                              onRecordingComplete={(audioBlob, duration) =>
                                 handleVoiceRecording(audioBlob, duration, `base-${question.id}`)
                               }
                               disabled={isTranscribing}
@@ -754,7 +741,7 @@ export default function UnifiedProfilePage() {
                   <p className="text-sm text-gray-600">Customize how your content should be created and presented</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                     {customizationQuestions.map((question) => (
                       <div key={question.id} className="space-y-3">
                         <div className="space-y-1">
@@ -783,9 +770,7 @@ export default function UnifiedProfilePage() {
                               <div key={option} className="flex items-center space-x-2">
                                 <RadioGroupItem value={option} id={`${question.id}-${option}`} />
                                 <Label htmlFor={`${question.id}-${option}`} className="text-sm cursor-pointer">
-                                  {language === "english"
-                                    ? option
-                                    : question.optionsHindi?.[index] || option}
+                                  {language === "english" ? option : question.optionsHindi?.[index] || option}
                                 </Label>
                               </div>
                             ))}
@@ -849,7 +834,6 @@ export default function UnifiedProfilePage() {
                       <Badge variant="secondary" className="bg-green-100 text-green-700">
                         Unique Story Generated
                       </Badge>
-
                     </div>
                     <Button size="sm" variant="outline" onClick={() => setIsEditingStory(!isEditingStory)}>
                       <Edit className="h-3 w-3 mr-1" />
@@ -870,7 +854,7 @@ export default function UnifiedProfilePage() {
                           type="button"
                           size="sm"
                           variant="outline"
-                          className="absolute right-2 top-2 h-8 w-8 p-0"
+                          className="absolute right-2 top-2 h-8 w-8 p-0 bg-transparent"
                           onClick={() => setActiveRecordingField("story-edit")}
                           disabled={isTranscribing}
                         >
@@ -884,7 +868,7 @@ export default function UnifiedProfilePage() {
                       {activeRecordingField === "story-edit" && (
                         <div className="mt-2">
                           <AudioRecorder
-                            onRecordingComplete={(audioBlob, duration) => 
+                            onRecordingComplete={(audioBlob, duration) =>
                               handleVoiceRecording(audioBlob, duration, "story-edit")
                             }
                             disabled={isTranscribing}
@@ -897,9 +881,9 @@ export default function UnifiedProfilePage() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
+                    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg max-h-80 sm:max-h-96 overflow-y-auto">
                       <div className="prose prose-sm max-w-none">
-                        <pre className="text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                        <pre className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans">
                           {editedStory || generatedStory}
                         </pre>
                       </div>
@@ -922,9 +906,7 @@ export default function UnifiedProfilePage() {
                 <div className="text-center py-8">
                   <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-600 mb-2">Generating New Story</h3>
-                  <p className="text-gray-500 mb-4 text-sm">
-                    Generating new story please wait...
-                  </p>
+                  <p className="text-gray-500 mb-4 text-sm">Generating new story please wait...</p>
                 </div>
               )}
             </CardContent>
@@ -939,10 +921,9 @@ export default function UnifiedProfilePage() {
                   {isGeneratingStory ? "Generating Topics..." : `Generated Topics (${generatedTopics.length})`}
                 </CardTitle>
                 <p className="text-sm text-gray-600">
-                  {isGeneratingStory 
-                    ? "Creating 5 story-related topics..." 
-                    : "Approve topics to add them to your Topic Bank"
-                  }
+                  {isGeneratingStory
+                    ? "Creating 5 story-related topics..."
+                    : "Approve topics to add them to your Topic Bank"}
                 </p>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -956,47 +937,47 @@ export default function UnifiedProfilePage() {
                   </div>
                 ) : (
                   generatedTopics.map((topic) => (
-                  <div key={topic.id} className="border rounded-lg p-3 space-y-2">
-                    <div className="flex items-start justify-between">
-                      <p className="text-sm font-medium leading-tight flex-1 pr-2">{topic.title}</p>
-                      <div className="flex gap-1">
-                        {topic.status === "pending" && (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => approveTopic(topic.id)}
-                              className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700"
-                            >
+                    <div key={topic.id} className="border rounded-lg p-3 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <p className="text-sm font-medium leading-tight flex-1 pr-2">{topic.title}</p>
+                        <div className="flex gap-1">
+                          {topic.status === "pending" && (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => approveTopic(topic.id)}
+                                className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700"
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => rejectTopic(topic.id)}
+                                className="h-6 px-2 text-xs"
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                          {topic.status === "approved" && (
+                            <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
                               <CheckCircle className="h-3 w-3 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => rejectTopic(topic.id)}
-                              className="h-6 px-2 text-xs"
-                            >
+                              Approved
+                            </Badge>
+                          )}
+                          {topic.status === "rejected" && (
+                            <Badge variant="secondary" className="bg-red-100 text-red-700 text-xs">
                               <X className="h-3 w-3 mr-1" />
-                              Reject
-                            </Button>
-                          </>
-                        )}
-                        {topic.status === "approved" && (
-                          <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Approved
-                          </Badge>
-                        )}
-                        {topic.status === "rejected" && (
-                          <Badge variant="secondary" className="bg-red-100 text-red-700 text-xs">
-                            <X className="h-3 w-3 mr-1" />
-                            Rejected
-                          </Badge>
-                        )}
+                              Rejected
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  ))
                 )}
 
                 {generatedTopics.filter((t) => t.status === "approved").length > 0 && (
@@ -1032,7 +1013,10 @@ export default function UnifiedProfilePage() {
                 <div className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
                   2
                 </div>
-                <p>Click &quot;Generate Unique Story&quot; to create your personalized story with 5 automatically generated story-related topics</p>
+                <p>
+                  Click &quot;Generate Unique Story&quot; to create your personalized story with 5 automatically
+                  generated story-related topics
+                </p>
               </div>
               <div className="flex items-start gap-3">
                 <div className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">

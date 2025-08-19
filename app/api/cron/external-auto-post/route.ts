@@ -265,16 +265,16 @@ export async function GET(req: Request) {
         
         // Find scheduled posts that are due
         const dueQuery = {
-          $and: [
-            { $or: [{ status: "scheduled" }, { Status: "scheduled" }] },
+        $and: [
+          { $or: [{ status: "scheduled" }, { Status: "scheduled" }] },
             { $or: [{ scheduledFor: { $lte: currentUTC } }, { scheduled_for: { $lte: currentUTC } }] },
-            { $or: [
-              { postedAt: { $exists: false } },
-              { posted_at: { $exists: false } },
-              { linkedinPostId: { $exists: false } },
-              { linkedin_post_id: { $exists: false } }
-            ] }
-          ]
+          { $or: [
+            { postedAt: { $exists: false } },
+            { posted_at: { $exists: false } },
+            { linkedinPostId: { $exists: false } },
+            { linkedin_post_id: { $exists: false } }
+          ] }
+        ]
         }
 
         const duePosts = await collection.find(dueQuery).toArray()
@@ -284,12 +284,12 @@ export async function GET(req: Request) {
           try {
             console.log(`🔄 Processing ${collectionName} post: ${post._id}`)
 
-            // Get user with LinkedIn credentials
+        // Get user with LinkedIn credentials
             const userId = post.userId || post["user id"] || post.user_id
             const user = await User.findById(userId).select("+linkedinAccessToken +linkedinTokenExpiry +linkedinProfile")
 
-            if (!user) {
-              console.error(`❌ User not found for post ${post._id}`)
+        if (!user) {
+          console.error(`❌ User not found for post ${post._id}`)
               await collection.updateOne({ _id: post._id }, { 
                 $set: { 
                   status: "failed", 
@@ -299,7 +299,7 @@ export async function GET(req: Request) {
                   updated_at: new Date() 
                 } 
               })
-              failureCount++
+          failureCount++
               totalProcessed++
               results.push({ 
                 postId: post._id, 
@@ -307,11 +307,11 @@ export async function GET(req: Request) {
                 status: "failed", 
                 error: "User not found" 
               })
-              continue
-            }
+          continue
+        }
 
-            // Check LinkedIn connection
-            if (!user.linkedinAccessToken || !user.linkedinTokenExpiry || new Date(user.linkedinTokenExpiry) <= new Date()) {
+        // Check LinkedIn connection
+        if (!user.linkedinAccessToken || !user.linkedinTokenExpiry || new Date(user.linkedinTokenExpiry) <= new Date()) {
               await collection.updateOne({ _id: post._id }, { 
                 $set: { 
                   status: "failed", 
@@ -321,7 +321,7 @@ export async function GET(req: Request) {
                   updated_at: new Date() 
                 } 
               })
-              failureCount++
+          failureCount++
               totalProcessed++
               results.push({ 
                 postId: post._id, 
@@ -329,13 +329,13 @@ export async function GET(req: Request) {
                 status: "failed", 
                 error: "LinkedIn not connected" 
               })
-              continue
-            }
+          continue
+        }
 
-            const content = post.content || post.Content || post["generated content"] || ""
-            const imageUrl = post.imageUrl || post.Image || post.image_url || post.image || null
+        const content = post.content || post.Content || post["generated content"] || ""
+        const imageUrl = post.imageUrl || post.Image || post.image_url || post.image || null
 
-            if (!content || !content.trim()) {
+        if (!content || !content.trim()) {
               await collection.updateOne({ _id: post._id }, { 
                 $set: { 
                   status: "failed", 
@@ -345,7 +345,7 @@ export async function GET(req: Request) {
                   updated_at: new Date() 
                 } 
               })
-              failureCount++
+          failureCount++
               totalProcessed++
               results.push({ 
                 postId: post._id, 
@@ -353,13 +353,13 @@ export async function GET(req: Request) {
                 status: "failed", 
                 error: "No content to post" 
               })
-              continue
-            }
+          continue
+        }
 
             console.log(`📤 Posting content: ${content.substring(0, 100)}...`)
-            const postResult = await postToLinkedIn(content, imageUrl, user)
+        const postResult = await postToLinkedIn(content, imageUrl, user)
 
-            if (postResult.success) {
+        if (postResult.success) {
               await collection.updateOne({ _id: post._id }, { 
                 $set: {
                   status: "posted", 
@@ -375,7 +375,7 @@ export async function GET(req: Request) {
                   updated_at: new Date()
                 } 
               })
-              successCount++
+          successCount++
               totalProcessed++
               results.push({ 
                 postId: post._id, 
@@ -385,12 +385,12 @@ export async function GET(req: Request) {
                 linkedinUrl: postResult.linkedinUrl 
               })
               console.log(`✅ Successfully posted ${collectionName} post: ${post._id}`)
-            } else {
+        } else {
               await collection.updateOne({ _id: post._id }, { 
                 $set: {
                   status: "failed", 
                   Status: "failed",
-                  error: postResult.error || "Failed to post to LinkedIn",
+            error: postResult.error || "Failed to post to LinkedIn",
                   updatedAt: new Date(), 
                   updated_at: new Date()
                 } 
@@ -404,14 +404,14 @@ export async function GET(req: Request) {
                 error: postResult.error 
               })
               console.log(`❌ Failed to post ${collectionName} post: ${post._id} - ${postResult.error}`)
-            }
-          } catch (error: any) {
+        }
+      } catch (error: any) {
             console.error(`❌ Error processing ${collectionName} post ${post._id}:`, error)
             await collection.updateOne({ _id: post._id }, { 
               $set: {
                 status: "failed", 
                 Status: "failed",
-                error: error.message || "Unknown error occurred",
+          error: error.message || "Unknown error occurred",
                 updatedAt: new Date(), 
                 updated_at: new Date()
               } 

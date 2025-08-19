@@ -101,14 +101,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadDashboardStats()
-    // Note: Removed blocked status check for regular users
-    // Admin users can check blocked status through admin panel
   }, [session])
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
             <span className="ml-2 text-gray-600">Loading dashboard...</span>
@@ -121,7 +119,7 @@ export default function DashboardPage() {
   if (!stats) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           <div className="text-center py-12">
             <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-600 mb-2">No Data Available</h3>
@@ -175,72 +173,69 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-              <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <div className="mb-6 lg:mb-8">
+          <div className="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
+            <div className="space-y-2">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-sm sm:text-base lg:text-lg text-gray-600">
                 Welcome back! Here&apos;s your personal content overview.
               </p>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <Button
                 onClick={handleRefresh}
                 variant="outline"
-                className="flex items-center gap-2 bg-transparent flex-1 sm:flex-none"
+                className="flex items-center justify-center gap-2 bg-white/80 backdrop-blur-sm border-gray-200 hover:bg-gray-50 flex-1 sm:flex-none"
                 disabled={refreshing}
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-                <span className="hidden sm:inline">Refresh</span>
+                <span>Refresh</span>
               </Button>
               <Link href="/dashboard/topic-bank" className="flex-1 sm:flex-none">
-                <Button className="flex items-center gap-2 w-full">
+                <Button className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700">
                   <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Generate Content</span>
-                  <span className="sm:hidden">Generate</span>
+                  <span>Generate Content</span>
                 </Button>
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">Total Topics</CardTitle>
-              <Target className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+              <CardTitle className="text-sm font-medium text-gray-600">Total Topics</CardTitle>
+              <Target className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{stats.totalTopics}</div>
+              <div className="text-2xl font-bold text-gray-900">{stats.totalTopics}</div>
               <p className="text-xs text-gray-500 mt-1">
                 {stats.approvedTopics} approved, {stats.pendingTopics} pending
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">Total Content</CardTitle>
-              <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+              <CardTitle className="text-sm font-medium text-gray-600">Total Content</CardTitle>
+              <FileText className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{stats.totalContent}</div>
+              <div className="text-2xl font-bold text-gray-900">{stats.totalContent}</div>
               <p className="text-xs text-gray-500 mt-1">
                 {stats.postedContent} posted, {stats.generatedContent} generated
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">Monthly Usage</CardTitle>
-              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
+              <CardTitle className="text-sm font-medium text-gray-600">Monthly Usage</CardTitle>
+              <Calendar className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-gray-900">
                 {stats.monthlyContent}/{stats.monthlyLimit}
               </div>
               <Progress value={stats.monthlyProgress} className="mt-2" />
@@ -248,13 +243,13 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">Engagement Rate</CardTitle>
-              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
+              <CardTitle className="text-sm font-medium text-gray-600">Engagement Rate</CardTitle>
+              <TrendingUp className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{stats.engagementRate}%</div>
+              <div className="text-2xl font-bold text-gray-900">{stats.engagementRate}%</div>
               <div className="flex items-center text-xs text-gray-500 mt-1">
                 {stats.weeklyGrowth >= 0 ? (
                   <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
@@ -267,28 +262,27 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Charts and Analytics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6 lg:mb-8">
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
-                <PieChartIcon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+              <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                <PieChartIcon className="h-5 w-5 text-blue-600" />
                 Content by Status
               </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
+              <CardDescription className="text-sm">
                 Distribution of your content across different statuses
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-48 sm:h-64">
+              <div className="h-64 lg:h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={contentStatusData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={40}
-                      outerRadius={80}
+                      innerRadius={50}
+                      outerRadius={100}
                       paddingAngle={5}
                       dataKey="value"
                     >
@@ -300,11 +294,11 @@ export default function DashboardPage() {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex flex-wrap gap-2 sm:gap-4 mt-4">
+              <div className="grid grid-cols-2 gap-2 mt-4">
                 {contentStatusData.map((item, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                    <span className="text-xs sm:text-sm text-gray-600">
+                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }}></div>
+                    <span className="text-sm text-gray-600 truncate">
                       {item.name}: {item.value}
                     </span>
                   </div>
@@ -315,16 +309,14 @@ export default function DashboardPage() {
 
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
-                <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+              <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                <BarChart3 className="h-5 w-5 text-green-600" />
                 Weekly Activity
               </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                Your content generation activity over the past week
-              </CardDescription>
+              <CardDescription className="text-sm">Your content generation activity over the past week</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-48 sm:h-64">
+              <div className="h-64 lg:h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={weeklyData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -339,37 +331,34 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6 lg:mb-8">
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
-                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+              <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                <Activity className="h-5 w-5 text-purple-600" />
                 Recent Topics
               </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">Your latest topic activities</CardDescription>
+              <CardDescription className="text-sm">Your latest topic activities</CardDescription>
             </CardHeader>
             <CardContent>
               {stats.recentActivity.topics.length > 0 ? (
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3">
                   {stats.recentActivity.topics.map((topic, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 truncate text-xs sm:text-sm">{topic.title}</h4>
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex-1 min-w-0 pr-3">
+                        <h4 className="font-medium text-gray-900 truncate text-sm">{topic.title}</h4>
                         <p className="text-xs text-gray-500">{formatDate(topic.createdAt)}</p>
                       </div>
-                      <Badge className={`${getStatusColor(topic.status)} text-xs ml-2`}>{topic.status}</Badge>
+                      <Badge className={`${getStatusColor(topic.status)} text-xs flex-shrink-0`}>{topic.status}</Badge>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 sm:py-8">
-                  <Target className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 text-sm">No recent topics</p>
+                <div className="text-center py-8">
+                  <Target className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm mb-3">No recent topics</p>
                   <Link href="/dashboard/topic-bank">
-                    <Button size="sm" className="mt-2">
-                      Create Topics
-                    </Button>
+                    <Button size="sm">Create Topics</Button>
                   </Link>
                 </div>
               )}
@@ -378,33 +367,33 @@ export default function DashboardPage() {
 
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
-                <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+              <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                <Zap className="h-5 w-5 text-orange-600" />
                 Recent Content
               </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">Your latest generated content</CardDescription>
+              <CardDescription className="text-sm">Your latest generated content</CardDescription>
             </CardHeader>
             <CardContent>
               {stats.recentActivity.content.length > 0 ? (
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3">
                   {stats.recentActivity.content.map((content, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 truncate text-xs sm:text-sm">{content.topicTitle}</h4>
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex-1 min-w-0 pr-3">
+                        <h4 className="font-medium text-gray-900 truncate text-sm">{content.topicTitle}</h4>
                         <p className="text-xs text-gray-500">{formatDate(content.createdAt)}</p>
                       </div>
-                      <Badge className={`${getStatusColor(content.status)} text-xs ml-2`}>{content.status}</Badge>
+                      <Badge className={`${getStatusColor(content.status)} text-xs flex-shrink-0`}>
+                        {content.status}
+                      </Badge>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 sm:py-8">
-                  <FileText className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 text-sm">No recent content</p>
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm mb-3">No recent content</p>
                   <Link href="/dashboard/approved-content">
-                    <Button size="sm" className="mt-2">
-                      View Content
-                    </Button>
+                    <Button size="sm">View Content</Button>
                   </Link>
                 </div>
               )}
@@ -412,37 +401,43 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-6 sm:mt-8">
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-sm sm:text-base">Quick Actions</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">Get started with these common tasks</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                <Link href="/dashboard/topic-bank">
-                  <Button variant="outline" className="w-full h-16 sm:h-20 flex flex-col gap-2 bg-transparent">
-                    <Target className="h-5 w-5 sm:h-6 sm:w-6" />
-                    <span className="text-xs sm:text-sm">Generate Topics</span>
-                  </Button>
-                </Link>
-                <Link href="/dashboard/approved-content">
-                  <Button variant="outline" className="w-full h-16 sm:h-20 flex flex-col gap-2 bg-transparent">
-                    <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
-                    <span className="text-xs sm:text-sm">View Content</span>
-                  </Button>
-                </Link>
-                <Link href="/dashboard/ai-story">
-                  <Button variant="outline" className="w-full h-16 sm:h-20 flex flex-col gap-2 bg-transparent">
-                    <Zap className="h-5 w-5 sm:h-6 sm:w-6" />
-                    <span className="text-xs sm:text-sm">AI Story Builder</span>
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-base lg:text-lg">Quick Actions</CardTitle>
+            <CardDescription className="text-sm">Get started with these common tasks</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Link href="/dashboard/topic-bank">
+                <Button
+                  variant="outline"
+                  className="w-full h-20 flex flex-col gap-2 bg-white/50 hover:bg-gray-50 border-gray-200"
+                >
+                  <Target className="h-6 w-6" />
+                  <span className="text-sm font-medium">Generate Topics</span>
+                </Button>
+              </Link>
+              <Link href="/dashboard/approved-content">
+                <Button
+                  variant="outline"
+                  className="w-full h-20 flex flex-col gap-2 bg-white/50 hover:bg-gray-50 border-gray-200"
+                >
+                  <FileText className="h-6 w-6" />
+                  <span className="text-sm font-medium">View Content</span>
+                </Button>
+              </Link>
+              <Link href="/dashboard/ai-story" className="sm:col-span-2 lg:col-span-1">
+                <Button
+                  variant="outline"
+                  className="w-full h-20 flex flex-col gap-2 bg-white/50 hover:bg-gray-50 border-gray-200"
+                >
+                  <Zap className="h-6 w-6" />
+                  <span className="text-sm font-medium">AI Story Builder</span>
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

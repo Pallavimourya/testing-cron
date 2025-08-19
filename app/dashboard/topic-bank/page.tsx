@@ -21,7 +21,6 @@ import {
   BarChart3,
   Zap,
   RefreshCw,
-  Clock,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useSubscription } from "@/hooks/use-subscription"
@@ -72,7 +71,6 @@ export default function TopicBankPage() {
   const [isGeneratingContent, setIsGeneratingContent] = useState<string | null>(null)
   const [isCleaningUp, setIsCleaningUp] = useState(false)
 
-
   // Filters and search
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -83,24 +81,17 @@ export default function TopicBankPage() {
   const [isManualDialogOpen, setIsManualDialogOpen] = useState(false)
 
   // Content generation - per topic format selection
-  const [contentFormats, setContentFormats] = useState<{[topicId: string]: string}>({})
+  const [contentFormats, setContentFormats] = useState<{ [topicId: string]: string }>({})
   const [monthlyUsage, setMonthlyUsage] = useState<MonthlyUsage | null>(null)
 
   // Subscription hook
-  const {
-    isActive,
-    canGenerateTopics,
-    canGenerateContent,
-    handleApiError,
-    SubscriptionAlertComponent
-  } = useSubscription()
+  const { isActive, canGenerateTopics, canGenerateContent, handleApiError, SubscriptionAlertComponent } =
+    useSubscription()
 
   useEffect(() => {
     loadTopics()
     loadMonthlyUsage()
   }, [])
-
-
 
   useEffect(() => {
     filterTopics()
@@ -131,9 +122,9 @@ export default function TopicBankPage() {
   const calculateStats = (topicList: Topic[]) => {
     const stats = {
       total: topicList.length,
-      pending: topicList.filter(t => t.status === "pending").length,
-      approved: topicList.filter(t => t.status === "approved").length,
-      dismissed: topicList.filter(t => t.status === "dismissed").length,
+      pending: topicList.filter((t) => t.status === "pending").length,
+      approved: topicList.filter((t) => t.status === "approved").length,
+      dismissed: topicList.filter((t) => t.status === "dismissed").length,
     }
     setStats(stats)
   }
@@ -144,9 +135,9 @@ export default function TopicBankPage() {
   }
 
   const setContentFormat = (topicId: string, format: string) => {
-    setContentFormats(prev => ({
+    setContentFormats((prev) => ({
       ...prev,
-      [topicId]: format
+      [topicId]: format,
     }))
   }
 
@@ -155,19 +146,17 @@ export default function TopicBankPage() {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(topic =>
-        topic.title.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      filtered = filtered.filter((topic) => topic.title.toLowerCase().includes(searchTerm.toLowerCase()))
     }
 
     // Status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter(topic => topic.status === statusFilter)
+      filtered = filtered.filter((topic) => topic.status === statusFilter)
     }
 
     // Source filter
     if (sourceFilter !== "all") {
-      filtered = filtered.filter(topic => topic.source === sourceFilter)
+      filtered = filtered.filter((topic) => topic.source === sourceFilter)
     }
 
     setFilteredTopics(filtered)
@@ -304,8 +293,6 @@ export default function TopicBankPage() {
     }
   }
 
-
-
   const generateContent = async (topicId: string) => {
     if (!isActive) {
       toast.error("You need an active subscription to generate content")
@@ -325,9 +312,9 @@ export default function TopicBankPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           topicId,
-          contentType: selectedFormat 
+          contentType: selectedFormat,
         }),
       })
 
@@ -421,18 +408,20 @@ export default function TopicBankPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4">
+    <div className="container mx-auto py-4 px-4 sm:px-6 lg:px-8 max-w-7xl">
       {/* Subscription Alert Component */}
       <SubscriptionAlertComponent />
 
       <div className="mb-6">
-        <div className="flex items-center justify-between">
+        {/* Enhanced responsive header layout */}
+        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Topic Bank</h1>
-            <p className="text-gray-600">Generate and manage your content topics with AI (2 topics per generation)</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Topic Bank</h1>
+            <p className="text-sm sm:text-base text-gray-600">Generate and manage your content topics with AI (2 topics per generation)</p>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={cleanupOldTopics} disabled={isCleaningUp} variant="outline" size="sm">
+          {/* Responsive button layout */}
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button onClick={cleanupOldTopics} disabled={isCleaningUp} variant="outline" size="sm" className="flex-1 sm:flex-none bg-transparent">
               {isCleaningUp ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
@@ -440,7 +429,7 @@ export default function TopicBankPage() {
               )}
               Clean Up
             </Button>
-            <Button onClick={loadTopics} variant="outline" size="sm">
+            <Button onClick={loadTopics} variant="outline" size="sm" className="flex-1 sm:flex-none bg-transparent">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -448,33 +437,31 @@ export default function TopicBankPage() {
         </div>
       </div>
 
-
-
       {/* Monthly Usage Stats */}
       {monthlyUsage && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-blue-600">
                 {monthlyUsage.topics.used}/{monthlyUsage.topics.limit}
               </div>
-              <div className="text-sm text-gray-600">Monthly Topics</div>
+              <div className="text-xs sm:text-sm text-gray-600">Monthly Topics</div>
               <div className="text-xs text-gray-500">{monthlyUsage.topics.remaining} remaining</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-purple-600">
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-purple-600">
                 {monthlyUsage.content.used}/{monthlyUsage.content.limit}
               </div>
-              <div className="text-sm text-gray-600">Monthly Content</div>
+              <div className="text-xs sm:text-sm text-gray-600">Monthly Content</div>
               <div className="text-xs text-gray-500">{monthlyUsage.content.remaining} remaining</div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600">{monthlyUsage.resetInfo.daysUntilReset}</div>
-              <div className="text-sm text-gray-600">Days Until Reset</div>
+          <Card className="sm:col-span-2 lg:col-span-1">
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-orange-600">{monthlyUsage.resetInfo.daysUntilReset}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Days Until Reset</div>
               <div className="text-xs text-gray-500">{monthlyUsage.resetInfo.nextResetDate}</div>
             </CardContent>
           </Card>
@@ -482,21 +469,22 @@ export default function TopicBankPage() {
       )}
 
       {/* Generation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      {/* Enhanced responsive layout for generation cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
         {/* Auto Generate */}
         <Card className="border-blue-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-700">
-              <Zap className="h-5 w-5" />
+          <CardHeader className="p-4 lg:p-6">
+            <CardTitle className="flex items-center gap-2 text-blue-700 text-base lg:text-lg">
+              <Zap className="h-4 w-4 lg:h-5 lg:w-5" />
               Auto Generate
             </CardTitle>
-            <p className="text-sm text-blue-600">Generate 2 topics based on your base story and customization data</p>
+            <p className="text-xs sm:text-sm text-blue-600">Generate 2 topics based on your base story and customization data</p>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 lg:p-6 pt-0">
             <Button
               onClick={generateAutoTopics}
               disabled={isGeneratingAuto || !isActive}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-sm lg:text-base"
             >
               {isGeneratingAuto ? (
                 <>
@@ -518,29 +506,29 @@ export default function TopicBankPage() {
 
         {/* Manual Generate */}
         <Card className="border-purple-200 bg-purple-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-purple-700">
-              <MessageSquare className="h-5 w-5" />
+          <CardHeader className="p-4 lg:p-6">
+            <CardTitle className="flex items-center gap-2 text-purple-700 text-base lg:text-lg">
+              <MessageSquare className="h-4 w-4 lg:h-5 lg:w-5" />
               Manual Generate
             </CardTitle>
-            <p className="text-sm text-purple-600">
+            <p className="text-xs sm:text-sm text-purple-600">
               Generate 2 topics with your custom prompt + base story + customization
             </p>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 lg:p-6 pt-0">
             <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
               <DialogTrigger asChild>
                 <Button
-                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-sm lg:text-base"
                   disabled={!isActive}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Custom Prompt
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="mx-4 max-w-lg">
                 <DialogHeader>
-                  <DialogTitle>Generate Topics with Custom Prompt</DialogTitle>
+                  <DialogTitle className="text-base lg:text-lg">Generate Topics with Custom Prompt</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
@@ -586,29 +574,30 @@ export default function TopicBankPage() {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      {/* Improved responsive statistics grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-            <div className="text-sm text-gray-600">Total Topics</div>
+          <CardContent className="p-3 lg:p-4 text-center">
+            <div className="text-xl lg:text-2xl font-bold text-blue-600">{stats.total}</div>
+            <div className="text-xs lg:text-sm text-gray-600">Total Topics</div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
-            <div className="text-sm text-gray-600">Approved</div>
+          <CardContent className="p-3 lg:p-4 text-center">
+            <div className="text-xl lg:text-2xl font-bold text-green-600">{stats.approved}</div>
+            <div className="text-xs lg:text-sm text-gray-600">Approved</div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-            <div className="text-sm text-gray-600">Pending</div>
+          <CardContent className="p-3 lg:p-4 text-center">
+            <div className="text-xl lg:text-2xl font-bold text-yellow-600">{stats.pending}</div>
+            <div className="text-xs lg:text-sm text-gray-600">Pending</div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">{stats.dismissed}</div>
-            <div className="text-sm text-gray-600">Dismissed</div>
+          <CardContent className="p-3 lg:p-4 text-center">
+            <div className="text-xl lg:text-2xl font-bold text-red-600">{stats.dismissed}</div>
+            <div className="text-xs lg:text-sm text-gray-600">Dismissed</div>
           </CardContent>
         </Card>
       </div>
@@ -616,7 +605,8 @@ export default function TopicBankPage() {
       {/* Filters */}
       <Card className="mb-6">
         <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
+          {/* Enhanced responsive filter layout */}
+          <div className="flex flex-col space-y-4 lg:flex-row lg:space-y-0 lg:gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -628,53 +618,58 @@ export default function TopicBankPage() {
                 />
               </div>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-40">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="dismissed">Dismissed</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sourceFilter} onValueChange={setSourceFilter}>
-              <SelectTrigger className="w-full md:w-40">
-                <SelectValue placeholder="All Sources" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sources</SelectItem>
-                <SelectItem value="auto">Auto</SelectItem>
-                <SelectItem value="manual">Manual</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-2 gap-4 lg:flex lg:gap-4">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="lg:w-40">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="dismissed">Dismissed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                <SelectTrigger className="lg:w-40">
+                  <SelectValue placeholder="All Sources" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sources</SelectItem>
+                  <SelectItem value="auto">Auto</SelectItem>
+                  <SelectItem value="manual">Manual</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Topics List */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Your Topics
-            <Badge variant="secondary">{filteredTopics.length} topics</Badge>
+        <CardHeader className="p-4 lg:p-6">
+          <CardTitle className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:gap-2">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 lg:h-5 lg:w-5" />
+              <span className="text-base lg:text-lg">Your Topics</span>
+            </div>
+            <Badge variant="secondary" className="self-start sm:self-auto">{filteredTopics.length} topics</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 lg:p-6 pt-0">
           {filteredTopics.length === 0 ? (
             <div className="text-center py-8">
               <Sparkles className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-600 mb-2">No Topics Found</h3>
-              <p className="text-gray-500 mb-4">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-600 mb-2">No Topics Found</h3>
+              <p className="text-sm text-gray-500 mb-4">
                 {topics.length === 0 ? "Generate some topics to get started" : "Try adjusting your filters"}
               </p>
               {topics.length === 0 && (
-                <div className="flex gap-2 justify-center">
+                <div className="flex flex-col sm:flex-row gap-2 justify-center max-w-sm mx-auto">
                   <Button
                     onClick={generateAutoTopics}
                     disabled={isGeneratingAuto || !isActive}
+                    className="flex-1 sm:flex-none"
                   >
                     <Sparkles className="h-4 w-4 mr-2" />
                     Generate Auto Topics
@@ -683,6 +678,7 @@ export default function TopicBankPage() {
                     onClick={() => setIsManualDialogOpen(true)}
                     variant="outline"
                     disabled={!isActive}
+                    className="flex-1 sm:flex-none"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Custom Prompt
@@ -693,10 +689,11 @@ export default function TopicBankPage() {
           ) : (
             <div className="space-y-4">
               {filteredTopics.map((topic) => (
-                <div key={topic.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 pr-4">
-                      <div className="flex items-center gap-2 mb-2">
+                <div key={topic.id} className="border rounded-lg p-3 lg:p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex flex-col space-y-3 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
+                    <div className="flex-1 lg:pr-4">
+                      {/* Responsive badge layout */}
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
                         <Badge variant="secondary" className={getStatusColor(topic.status)}>
                           {topic.status}
                         </Badge>
@@ -711,35 +708,43 @@ export default function TopicBankPage() {
                           </Badge>
                         )}
                       </div>
-                      <h3 className="font-medium text-gray-900 mb-1">{topic.title}</h3>
+                      <h3 className="font-medium text-gray-900 mb-1 text-sm lg:text-base">{topic.title}</h3>
                       {topic.userPrompt && (
-                        <p className="text-xs text-gray-500 mb-2">Prompt: &ldquo;{topic.userPrompt}&rdquo;</p>
+                        <p className="text-xs text-gray-500 mb-2 break-words">Prompt: &ldquo;{topic.userPrompt}&rdquo;</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    {/* Responsive action buttons layout */}
+                    <div className="flex flex-wrap items-center gap-2 lg:flex-nowrap">
                       {topic.status === "pending" && (
                         <>
                           <Button
                             size="sm"
                             onClick={() => updateTopicStatus(topic.id, "approved")}
-                            className="bg-green-600 hover:bg-green-700"
+                            className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
                           >
                             <CheckCircle className="h-3 w-3 mr-1" />
-                            Approve
+                            <span className="hidden sm:inline">Approve</span>
+                            <span className="sm:hidden">✓</span>
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => updateTopicStatus(topic.id, "dismissed")}>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => updateTopicStatus(topic.id, "dismissed")}
+                            className="flex-1 sm:flex-none"
+                          >
                             <X className="h-3 w-3 mr-1" />
-                            Dismiss
+                            <span className="hidden sm:inline">Dismiss</span>
+                            <span className="sm:hidden">✗</span>
                           </Button>
                         </>
                       )}
                       {topic.status === "approved" && topic.contentStatus !== "generated" && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
                           <Select 
                             value={getContentFormat(topic.id)} 
                             onValueChange={(value) => setContentFormat(topic.id, value)}
                           >
-                            <SelectTrigger className="w-24 h-8">
+                            <SelectTrigger className="w-full sm:w-24 h-8">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -763,33 +768,43 @@ export default function TopicBankPage() {
                               !getContentFormat(topic.id) ||
                               getContentFormat(topic.id).trim() === ""
                             }
-                            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                           >
                             {isGeneratingContent === topic.id ? (
                               <Loader2 className="h-3 w-3 animate-spin mr-1" />
                             ) : (
                               <Sparkles className="h-3 w-3 mr-1" />
                             )}
-                            {isGeneratingContent === topic.id ? "Generating..." : "Generate"}
+                            <span className="hidden sm:inline">
+                              {isGeneratingContent === topic.id ? "Generating..." : "Generate"}
+                            </span>
+                            <span className="sm:hidden">
+                              {isGeneratingContent === topic.id ? "..." : "Gen"}
+                            </span>
                           </Button>
                           {(!getContentFormat(topic.id) || getContentFormat(topic.id).trim() === "") && (
-                            <span className="text-xs text-orange-600">
+                            <span className="text-xs text-orange-600 text-center sm:text-left">
                               Select format first
                             </span>
                           )}
                         </div>
                       )}
                       {topic.contentStatus === "generated" && (
-                        <Button size="sm" variant="outline" asChild>
-                          <a href="/dashboard/approved-content">View Content</a>
+                        <Button size="sm" variant="outline" asChild className="w-full sm:w-auto bg-transparent">
+                          <a href="/dashboard/approved-content">
+                            <span className="hidden sm:inline">View Content</span>
+                            <span className="sm:hidden">View</span>
+                          </a>
                         </Button>
                       )}
-                      <Button size="sm" variant="ghost" onClick={() => copyTopic(topic.title)}>
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => deleteTopic(topic.id)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => copyTopic(topic.title)}>
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => deleteTopic(topic.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   {!isActive && topic.status === "approved" && (
@@ -801,6 +816,6 @@ export default function TopicBankPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+  </div>
   )
 }
