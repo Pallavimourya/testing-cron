@@ -72,10 +72,10 @@ export async function POST(req: Request) {
     const scheduledTimeUTC = new Date(scheduledTimeIST)
     const scheduledTimeISTString = ISTTime.formatIST(scheduledTimeUTC)
 
-    // Validate scheduled time (must be at least 5 minutes from now)
+    // Validate scheduled time (must be at least 1 minute from now)
     if (!ISTTime.isValidScheduleTime(scheduledTimeUTC)) {
       return NextResponse.json({ 
-        error: "Scheduled time must be at least 5 minutes from now" 
+        error: "Scheduled time must be at least 1 minute from now (IST)" 
       }, { status: 400 })
     }
 

@@ -89,16 +89,16 @@ export class ISTTime {
   }
 
   /**
-   * Get minimum schedulable time (current time + 5 minutes in IST)
+   * Get minimum schedulable time (current time + 1 minute in IST)
    * @returns Minimum schedulable time in IST
    */
   static getMinScheduleTime(): Date {
     const currentIST = this.getCurrentIST()
-    return addMinutes(currentIST, 5)
+    return addMinutes(currentIST, 1) // Changed from 5 to 1 minute
   }
 
   /**
-   * Validate if scheduled time is valid (at least 5 minutes from now)
+   * Validate if scheduled time is valid (at least 1 minute from now)
    * @param istDate - IST date to validate
    * @returns true if valid, false otherwise
    */

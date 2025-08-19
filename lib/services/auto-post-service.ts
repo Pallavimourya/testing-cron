@@ -33,13 +33,23 @@ export class AutoPostService {
           console.log(`🕐 Current time (IST): ${nowIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
           console.log(`🕐 Buffer time (IST): ${bufferTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
 
+          // More flexible query to find scheduled posts
           const dueQuery = {
             $and: [
               {
-                $or: [{ status: "scheduled" }, { Status: "scheduled" }],
+                $or: [
+                  { status: "scheduled" }, 
+                  { Status: "scheduled" },
+                  { status: "pending" },
+                  { Status: "pending" }
+                ],
               },
               {
-                $or: [{ scheduledFor: { $lte: bufferTime } }, { scheduled_for: { $lte: bufferTime } }],
+                $or: [
+                  { scheduledFor: { $lte: bufferTime } }, 
+                  { scheduled_for: { $lte: bufferTime } },
+                  { scheduledTime: { $lte: bufferTime } }
+                ],
               },
               // Ensure the post hasn't been posted already
               {
@@ -54,8 +64,21 @@ export class AutoPostService {
           }
 
           console.log(`🔍 Checking ${collectionName} for due posts...`)
+          console.log(`⏰ Current time: ${now.toISOString()}`)
+          console.log(`⏰ Buffer time: ${bufferTime.toISOString()}`)
+          
           const duePosts = await collection.find(dueQuery).toArray()
           console.log(`📊 Found ${duePosts.length} posts due for posting in ${collectionName}`)
+
+          // Log details of each due post for debugging
+          duePosts.forEach((post, index) => {
+            console.log(`📋 Due post ${index + 1} in ${collectionName}:`)
+            console.log(`   - ID: ${post._id}`)
+            console.log(`   - Status: ${post.status || post.Status}`)
+            console.log(`   - Scheduled for: ${post.scheduledFor || post.scheduled_for || post.scheduledTime}`)
+            console.log(`   - User: ${post.email || post.userId || post.user_id}`)
+            console.log(`   - Content length: ${(post.content || post.Content || '').length}`)
+          })
 
           for (const post of duePosts) {
             try {
@@ -89,6 +112,11 @@ export class AutoPostService {
                 results.push({ postId: post._id, status: "failed", error: "Empty content", collection: collectionName })
                 continue
               }
+
+              console.log(`📤 Posting content to LinkedIn for user ${user.email}:`)
+              console.log(`   - Content length: ${content.length}`)
+              console.log(`   - Has image: ${!!imageUrl}`)
+              console.log(`   - LinkedIn ID: ${user.linkedinProfile?.id}`)
 
               // Post to LinkedIn using the same logic as manual posting
               const linkedinService = new LinkedInService()
