@@ -254,6 +254,11 @@ export async function GET(req: Request) {
     console.log("📋 Checking existing collections...")
     const collections = ["approvedcontents", "linkdin-content-generation", "generatedcontents"]
     
+    if (!mongoose.connection.db) {
+      console.error("❌ Database connection not established")
+      return NextResponse.json({ error: "Database connection not established" }, { status: 500 })
+    }
+    
     for (const collectionName of collections) {
       try {
         const collection = mongoose.connection.db.collection(collectionName)
