@@ -1,76 +1,109 @@
-// IST Time utility for handling Indian Standard Time
+import { format, parseISO, addMinutes } from "date-fns"
+import * as dateFnsTz from "date-fns-tz"
+
+const IST_TIMEZONE = "Asia/Kolkata"
 
 export class ISTTime {
   /**
+   * Convert IST date to UTC for database storage
+   * @param istDate - Date in IST timezone
+   * @returns UTC Date object
+   */
+  static istToUtc(istDate: Date): Date {
+    return dateFnsTz.fromZonedTime(istDate, IST_TIMEZONE)
+  }
+
+  /**
+   * Convert UTC date to IST for display
+   * @param utcDate - UTC Date object
+   * @returns IST Date object
+   */
+  static utcToIst(utcDate: Date): Date {
+    return dateFnsTz.toZonedTime(utcDate, IST_TIMEZONE)
+  }
+
+  /**
+   * Get current IST time
+   * @returns Current date in IST timezone
+   */
+  static getCurrentIST(): Date {
+    return dateFnsTz.toZonedTime(new Date(), IST_TIMEZONE)
+  }
+
+  /**
    * Get current UTC time
+   * @returns Current UTC date
    */
   static getCurrentUTC(): Date {
     return new Date()
   }
 
   /**
-   * Get current IST time as Date object
+   * Format IST date for display
+   * @param date - Date to format
+   * @param formatString - Format pattern (default: 'dd MMM yyyy, hh:mm a')
+   * @returns Formatted date string
    */
-  static getCurrentIST(): Date {
-    const now = new Date()
-    const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC+5:30
-    return new Date(now.getTime() + istOffset)
+  static formatIST(date: Date, formatString = "dd MMM yyyy, hh:mm a"): string {
+    const istDate = this.utcToIst(date)
+    return format(istDate, formatString)
+  }
+
+  /**
+   * Parse IST date string and convert to UTC
+   * @param dateString - Date string in IST
+   * @returns UTC Date object
+   */
+  static parseISTToUTC(dateString: string): Date {
+    const istDate = parseISO(dateString)
+    return this.istToUtc(istDate)
   }
 
   /**
    * Get current IST time as formatted string
+   * @returns Current IST time as string
    */
   static getCurrentISTString(): string {
-    const istTime = this.getCurrentIST()
-    return istTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+    return this.formatIST(new Date())
   }
 
   /**
-   * Convert IST datetime string to UTC Date
+   * Check if a UTC date is in the past
+   * @param utcDate - UTC date to check
+   * @returns true if date is in the past
    */
-  static convertISTToUTC(istDateTimeString: string): Date {
-    // Parse the IST datetime string (format: YYYY-MM-DDTHH:MM)
-    const [datePart, timePart] = istDateTimeString.split('T')
-    const [year, month, day] = datePart.split('-').map(Number)
-    const [hours, minutes] = timePart.split(':').map(Number)
-    
-    // Create a date string in ISO format with IST timezone
-    const istDateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+05:30`
-    
-    // Parse the IST date string
-    const istDate = new Date(istDateString)
-    
-    return istDate
+  static isInPast(utcDate: Date): boolean {
+    const currentUTC = new Date()
+    return utcDate.getTime() <= currentUTC.getTime()
   }
 
   /**
-   * Convert UTC Date to IST string
+   * Add minutes to IST date and return UTC
+   * @param istDate - IST date
+   * @param minutes - Minutes to add
+   * @returns UTC date with added minutes
    */
-  static convertUTCToIST(utcDate: Date): string {
-    const istDate = new Date(utcDate.getTime() + (5.5 * 60 * 60 * 1000))
-    return istDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+  static addMinutesToIST(istDate: Date, minutes: number): Date {
+    const newISTDate = addMinutes(istDate, minutes)
+    return this.istToUtc(newISTDate)
   }
 
   /**
-   * Check if a scheduled time is at least 5 minutes in the future (IST)
+   * Get minimum schedulable time (current time + 5 minutes in IST)
+   * @returns Minimum schedulable time in IST
    */
-  static isScheduledTimeValid(scheduledIST: string): boolean {
-    const scheduledUTC = this.convertISTToUTC(scheduledIST)
-    const now = new Date()
-    const fiveMinutesFromNow = new Date(now.getTime() + (5 * 60 * 1000))
-    
-    return scheduledUTC > fiveMinutesFromNow
+  static getMinScheduleTime(): Date {
+    const currentIST = this.getCurrentIST()
+    return addMinutes(currentIST, 5)
   }
 
   /**
-   * Get minimum allowed scheduling time (5 minutes from now in IST)
+   * Validate if scheduled time is valid (at least 5 minutes from now)
+   * @param istDate - IST date to validate
+   * @returns true if valid, false otherwise
    */
-  static getMinimumSchedulingTime(): string {
-    const now = new Date()
-    const fiveMinutesFromNow = new Date(now.getTime() + (5 * 60 * 1000))
-    
-    // Format as IST datetime string
-    const istDate = new Date(fiveMinutesFromNow.getTime() + (5.5 * 60 * 60 * 1000))
-    return istDate.toISOString().slice(0, 16)
+  static isValidScheduleTime(istDate: Date): boolean {
+    const minTime = this.getMinScheduleTime()
+    return istDate.getTime() >= minTime.getTime()
   }
 }

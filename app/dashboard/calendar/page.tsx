@@ -3,9 +3,22 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { getMinimumSchedulingTime } from "@/lib/timezone-utils"
 import { Badge } from "@/components/ui/badge"
-import { CalendarIcon, Clock, Edit, Trash2, CheckCircle, XCircle, Zap, Settings, Activity, Plus, Eye, ExternalLink, CalendarDays } from 'lucide-react'
+import {
+  CalendarIcon,
+  Clock,
+  Edit,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Settings,
+  Activity,
+  Plus,
+  Eye,
+  ExternalLink,
+  CalendarDays,
+  TrendingUp,
+} from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -106,7 +119,6 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("calendar")
 
-
   // Modal states
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -152,7 +164,7 @@ export default function CalendarPage() {
       const failedData = await failedRes.json()
 
       setScheduledPosts(scheduledData.content || [])
-      setPostedPosts([...postedData.content || [], ...failedData.content || []])
+      setPostedPosts([...(postedData.content || []), ...(failedData.content || [])])
     } catch (error) {
       console.error("Error fetching posts:", error)
       toast.error("Failed to load posts")
@@ -213,10 +225,10 @@ export default function CalendarPage() {
     try {
       // Create proper IST datetime string
       const year = individualScheduleDate.getFullYear()
-      const month = String(individualScheduleDate.getMonth() + 1).padStart(2, '0')
-      const day = String(individualScheduleDate.getDate()).padStart(2, '0')
+      const month = String(individualScheduleDate.getMonth() + 1).padStart(2, "0")
+      const day = String(individualScheduleDate.getDate()).padStart(2, "0")
       const [hours, minutes] = individualScheduleTime.split(":")
-      
+
       // Format as IST datetime string: YYYY-MM-DDTHH:MM
       const scheduledIST = `${year}-${month}-${day}T${hours}:${minutes}`
 
@@ -257,10 +269,10 @@ export default function CalendarPage() {
     try {
       // Create proper IST datetime string
       const year = editDate.getFullYear()
-      const month = String(editDate.getMonth() + 1).padStart(2, '0')
-      const day = String(editDate.getDate()).padStart(2, '0')
+      const month = String(editDate.getMonth() + 1).padStart(2, "0")
+      const day = String(editDate.getDate()).padStart(2, "0")
       const [hours, minutes] = editTime.split(":")
-      
+
       // Format as IST datetime string: YYYY-MM-DDTHH:MM
       const scheduledIST = `${year}-${month}-${day}T${hours}:${minutes}`
 
@@ -361,12 +373,12 @@ export default function CalendarPage() {
   const getTimeUntilPost = (scheduledFor: string) => {
     const now = new Date()
     const scheduled = new Date(scheduledFor)
-    
+
     // Convert to IST for accurate time calculation
     const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC+5:30
     const nowIST = new Date(now.getTime() + istOffset)
     const scheduledIST = new Date(scheduled.getTime() + istOffset)
-    
+
     const diffMs = scheduledIST.getTime() - nowIST.getTime()
 
     if (diffMs <= 0) return "Scheduled time passed"
@@ -387,94 +399,148 @@ export default function CalendarPage() {
   // Helper function to format time in IST
   const formatTimeIST = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleString('en-IN', { 
-      timeZone: 'Asia/Kolkata',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     })
   }
 
   // Helper function to format current time in IST
 
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">Content Calendar</h1>
-              <p className="text-gray-600">Schedule and track your LinkedIn content posting</p>
-              <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <span>{approvedPosts.length} Ready to Schedule</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-600" />
-                  <span>{scheduledPosts.length} Scheduled</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-purple-600" />
-                  <span>{postedPosts.length} Posted</span>
+    <div className="min-h-screen bg-gradient-to-br from-green-50/30 via-white to-emerald-50/30">
+      <div className="bg-white/95 backdrop-blur-md border-b border-green-100 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div className="space-y-4">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent mb-2">
+                  Content Calendar
+                </h1>
+                <p className="text-base sm:text-lg text-muted-foreground max-w-2xl">
+                  Schedule and track your LinkedIn content posting with intelligent automation
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-green-700">{approvedPosts.length}</p>
+                    <p className="text-sm text-green-600 font-medium">Ready to Schedule</p>
+                  </div>
                 </div>
 
+                <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-200">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-blue-700">{scheduledPosts.length}</p>
+                    <p className="text-sm text-blue-600 font-medium">Scheduled Posts</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border border-purple-200">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <TrendingUp className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-purple-700">{postedPosts.length}</p>
+                    <p className="text-sm text-purple-600 font-medium">Published</p>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="flex gap-3">
+
+            <div className="flex gap-3 w-full lg:w-auto">
               <Button
                 onClick={() => setShowScheduleModal(true)}
                 disabled={!approvedPosts.length}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all"
+                size="lg"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all flex-1 lg:flex-none"
               >
-                <Settings className="w-4 h-4 mr-2" />
-                Bulk Schedule ({approvedPosts.length})
+                <Settings className="w-5 h-5 mr-2" />
+                <span className="hidden sm:inline">Bulk Schedule</span>
+                <span className="sm:hidden">Schedule</span>
+                <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-0">
+                  {approvedPosts.length}
+                </Badge>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-
-        {/* Main Content Tabs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="calendar" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-8 h-auto bg-white/80 backdrop-blur-sm border border-green-100 shadow-sm">
+            <TabsTrigger
+              value="calendar"
+              className="flex items-center gap-2 text-sm p-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white"
+            >
               <CalendarIcon className="w-4 h-4" />
-              Calendar View
+              <span className="hidden sm:inline">Calendar View</span>
+              <span className="sm:hidden">Calendar</span>
             </TabsTrigger>
-            <TabsTrigger value="approved" className="flex items-center gap-2">
+            <TabsTrigger
+              value="approved"
+              className="flex items-center gap-2 text-sm p-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white"
+            >
               <CheckCircle className="w-4 h-4" />
-              Approved ({approvedPosts.length})
+              <span className="hidden sm:inline">Ready</span>
+              <span className="sm:hidden">Ready</span>
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {approvedPosts.length}
+              </Badge>
             </TabsTrigger>
-            <TabsTrigger value="scheduled" className="flex items-center gap-2">
+            <TabsTrigger
+              value="scheduled"
+              className="flex items-center gap-2 text-sm p-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white"
+            >
               <Clock className="w-4 h-4" />
-              Scheduled ({scheduledPosts.length})
+              <span className="hidden sm:inline">Scheduled</span>
+              <span className="sm:hidden">Scheduled</span>
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {scheduledPosts.length}
+              </Badge>
             </TabsTrigger>
-            <TabsTrigger value="posted" className="flex items-center gap-2">
+            <TabsTrigger
+              value="posted"
+              className="flex items-center gap-2 text-sm p-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white"
+            >
               <Activity className="w-4 h-4" />
-              Posted/Failed ({postedPosts.length})
+              <span className="hidden sm:inline">Published</span>
+              <span className="sm:hidden">Published</span>
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {postedPosts.length}
+              </Badge>
             </TabsTrigger>
           </TabsList>
 
           {/* Calendar Tab */}
           <TabsContent value="calendar">
-
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Calendar View */}
-              <Card className="lg:col-span-2 shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-                <CardHeader className="border-b border-gray-200/50">
-                  <CardTitle className="flex items-center gap-2 text-gray-900">
-                    <CalendarIcon className="w-5 h-5 text-blue-600" />
-                    {selectedDate
-                      ? selectedDate.toLocaleString("default", { month: "long", year: "numeric" })
-                      : "Calendar"}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+              <Card className="xl:col-span-2 shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
+                <CardHeader className="border-b border-green-100 bg-gradient-to-r from-green-50 to-emerald-50 p-6">
+                  <CardTitle className="flex items-center gap-3 text-green-800">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <CalendarIcon className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">
+                        {selectedDate
+                          ? selectedDate.toLocaleString("default", { month: "long", year: "numeric" })
+                          : "Calendar Overview"}
+                      </h3>
+                      <p className="text-sm text-green-600 font-normal">Click any date to view scheduled content</p>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -491,46 +557,53 @@ export default function CalendarPage() {
                         .filter(Boolean) as Date[],
                     }}
                     modifiersClassNames={{
-                      scheduled: "bg-blue-100 text-blue-900 font-semibold border border-blue-300 rounded-full",
-                      posted: "bg-purple-100 text-purple-900 font-semibold border border-purple-300 rounded-full",
+                      scheduled:
+                        "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-900 font-semibold border-2 border-blue-300 rounded-lg shadow-sm hover:shadow-md transition-all",
+                      posted:
+                        "bg-gradient-to-r from-purple-100 to-violet-100 text-purple-900 font-semibold border-2 border-purple-300 rounded-lg shadow-sm hover:shadow-md transition-all",
                     }}
-                    className="rounded-md border-0"
+                    className="rounded-xl border-0 w-full [&_.rdp-day]:h-12 [&_.rdp-day]:w-12 [&_.rdp-day]:text-sm [&_.rdp-day]:font-medium"
                   />
 
-                  {/* Legend */}
-                  <div className="flex justify-center mt-4">
-                    <div className="flex items-center gap-6 bg-gray-50 px-4 py-2 rounded-full">
+                  <div className="flex justify-center mt-6">
+                    <div className="flex items-center gap-6 bg-gradient-to-r from-gray-50 to-slate-50 px-6 py-3 rounded-full border border-gray-200 shadow-sm">
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-blue-100 border border-blue-300"></div>
-                        <span className="text-xs text-gray-600">Scheduled</span>
+                        <div className="w-4 h-4 rounded-lg bg-gradient-to-r from-blue-100 to-cyan-100 border-2 border-blue-300 shadow-sm"></div>
+                        <span className="text-sm font-medium text-gray-700">Scheduled</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-purple-100 border border-purple-300"></div>
-                        <span className="text-xs text-gray-600">Posted</span>
+                        <div className="w-4 h-4 rounded-lg bg-gradient-to-r from-purple-100 to-violet-100 border-2 border-purple-300 shadow-sm"></div>
+                        <span className="text-sm font-medium text-gray-700">Published</span>
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Posts for Selected Date */}
-              <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-                <CardHeader className="border-b border-gray-200/50">
-                  <CardTitle className="flex items-center gap-2 text-gray-900">
-                    <CalendarDays className="w-5 h-5 text-blue-600" />
-                    {selectedDate
-                      ? selectedDate.toLocaleDateString("en-US", {
-                          weekday: "long",
-                          month: "long",
-                          day: "numeric",
-                        })
-                      : "Select Date"}
+              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
+                <CardHeader className="border-b border-green-100 bg-gradient-to-r from-green-50 to-emerald-50 p-6">
+                  <CardTitle className="flex items-center gap-3 text-green-800">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <CalendarDays className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold">
+                        {selectedDate
+                          ? selectedDate.toLocaleDateString("en-US", {
+                              weekday: "long",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "Select Date"}
+                      </h3>
+                      <p className="text-sm text-green-600 font-normal">Content for this day</p>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 max-h-96 overflow-y-auto">
                   {loading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-10 w-10 border-3 border-green-600 border-t-transparent"></div>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -543,73 +616,79 @@ export default function CalendarPage() {
                         <div>
                           <h4 className="font-medium text-sm text-blue-900 mb-3 flex items-center gap-2">
                             <Clock className="w-4 h-4" />
-                            Scheduled Posts ({scheduledPosts.filter((post) => {
-                              if (!post.scheduledFor || !selectedDate) return false
-                              const postDate = new Date(post.scheduledFor)
-                              return postDate.toDateString() === selectedDate.toDateString()
-                            }).length})
+                            Scheduled Posts (
+                            {
+                              scheduledPosts.filter((post) => {
+                                if (!post.scheduledFor || !selectedDate) return false
+                                const postDate = new Date(post.scheduledFor)
+                                return postDate.toDateString() === selectedDate.toDateString()
+                              }).length
+                            }
+                            )
                           </h4>
                           <div className="space-y-3">
-                            {scheduledPosts.filter((post) => {
-                              if (!post.scheduledFor || !selectedDate) return false
-                              const postDate = new Date(post.scheduledFor)
-                              return postDate.toDateString() === selectedDate.toDateString()
-                            }).map((post) => (
-                              <div key={post._id} className="p-3 border rounded-lg bg-blue-50 border-blue-200">
-                                <div className="flex justify-between items-start mb-2">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                                                      <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                                  <Clock className="w-3 h-3 mr-1" />
-                                  {new Date(post.scheduledFor).toLocaleTimeString("en-IN", {
-                                    timeZone: "Asia/Kolkata",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </Badge>
-                                      <Badge variant="outline" className="text-xs">
-                                        {getTimeUntilPost(post.scheduledFor)}
-                                      </Badge>
+                            {scheduledPosts
+                              .filter((post) => {
+                                if (!post.scheduledFor || !selectedDate) return false
+                                const postDate = new Date(post.scheduledFor)
+                                return postDate.toDateString() === selectedDate.toDateString()
+                              })
+                              .map((post) => (
+                                <div key={post._id} className="p-3 border rounded-lg bg-blue-50 border-blue-200">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                                        <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
+                                          <Clock className="w-3 h-3 mr-1" />
+                                          {new Date(post.scheduledFor).toLocaleTimeString("en-IN", {
+                                            timeZone: "Asia/Kolkata",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          })}
+                                        </Badge>
+                                        <Badge variant="outline" className="text-xs">
+                                          {getTimeUntilPost(post.scheduledFor)}
+                                        </Badge>
+                                      </div>
+                                      <h4 className="font-medium text-sm text-gray-900 line-clamp-2 mb-1">
+                                        {post.content.substring(0, 50) || "Untitled Post"}
+                                      </h4>
+                                      <p className="text-xs text-gray-600 capitalize">LinkedIn</p>
                                     </div>
-                                    <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
-                                      {post.content.substring(0, 50) || "Untitled Post"}
-                                    </h4>
-                                    <p className="text-xs text-gray-600 capitalize">LinkedIn</p>
-                                  </div>
-                                  <div className="flex gap-1 ml-2">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => openPreviewModal(post)}
-                                      className="h-8 w-8 p-0"
-                                    >
-                                      <Eye className="w-3 h-3" />
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => openEditModal(post)}
-                                      className="h-8 w-8 p-0"
-                                    >
-                                      <Edit className="w-3 h-3" />
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => openDeleteModal(post)}
-                                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </Button>
+                                    <div className="flex gap-1 ml-2 flex-shrink-0">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => openPreviewModal(post)}
+                                        className="h-9 w-9 sm:h-8 sm:w-8 p-0"
+                                      >
+                                        <Eye className="w-3 h-3" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => openEditModal(post)}
+                                        className="h-9 w-9 sm:h-8 sm:w-8 p-0"
+                                      >
+                                        <Edit className="w-3 h-3" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => openDeleteModal(post)}
+                                        className="h-9 w-9 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
                           </div>
                         </div>
                       )}
 
-                                            {/* Posted Posts */}
+                      {/* Posted Posts */}
                       {postedPosts.filter((post) => {
                         if (!post.postedAt || !selectedDate) return false
                         const postDate = new Date(post.postedAt)
@@ -618,69 +697,84 @@ export default function CalendarPage() {
                         <div>
                           <h4 className="font-medium text-sm text-gray-900 mb-3 flex items-center gap-2">
                             <Activity className="w-4 h-4" />
-                            Posted/Failed ({postedPosts.filter((post) => {
-                              if (!post.postedAt || !selectedDate) return false
-                              const postDate = new Date(post.postedAt)
-                              return postDate.toDateString() === selectedDate.toDateString()
-                            }).length})
+                            Posted/Failed (
+                            {
+                              postedPosts.filter((post) => {
+                                if (!post.postedAt || !selectedDate) return false
+                                const postDate = new Date(post.postedAt)
+                                return postDate.toDateString() === selectedDate.toDateString()
+                              }).length
+                            }
+                            )
                           </h4>
                           <div className="space-y-3">
-                            {postedPosts.filter((post) => {
-                              if (!post.postedAt || !selectedDate) return false
-                              const postDate = new Date(post.postedAt)
-                              return postDate.toDateString() === selectedDate.toDateString()
-                            }).map((post) => (
-                              <div key={post._id} className={`p-3 border rounded-lg ${post.status === 'posted' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                                <div className="flex justify-between items-start mb-2">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <Badge className={post.status === 'posted' ? "bg-green-100 text-green-800 border-green-200" : "bg-red-100 text-red-800 border-red-200"}>
-                                        {post.status === 'posted' ? (
-                                          <>
-                                            <CheckCircle className="w-3 h-3 mr-1" />
-                                            Posted at{" "}
-                                            {new Date(post.postedAt!).toLocaleTimeString("en-IN", {
-                                              timeZone: "Asia/Kolkata",
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                            })}
-                                          </>
-                                        ) : (
-                                          <>
-                                            <XCircle className="w-3 h-3 mr-1" />
-                                            Failed
-                                          </>
-                                        )}
-                                      </Badge>
+                            {postedPosts
+                              .filter((post) => {
+                                if (!post.postedAt || !selectedDate) return false
+                                const postDate = new Date(post.postedAt)
+                                return postDate.toDateString() === selectedDate.toDateString()
+                              })
+                              .map((post) => (
+                                <div
+                                  key={post._id}
+                                  className={`p-3 border rounded-lg ${post.status === "posted" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
+                                >
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Badge
+                                          className={
+                                            post.status === "posted"
+                                              ? "bg-green-100 text-green-800 border-green-200"
+                                              : "bg-red-100 text-red-800 border-red-200"
+                                          }
+                                        >
+                                          {post.status === "posted" ? (
+                                            <>
+                                              <CheckCircle className="w-3 h-3 mr-1" />
+                                              Posted at{" "}
+                                              {new Date(post.postedAt!).toLocaleTimeString("en-IN", {
+                                                timeZone: "Asia/Kolkata",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                              })}
+                                            </>
+                                          ) : (
+                                            <>
+                                              <XCircle className="w-3 h-3 mr-1" />
+                                              Failed
+                                            </>
+                                          )}
+                                        </Badge>
+                                      </div>
+                                      <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
+                                        {post.content.substring(0, 50) || "Untitled Post"}
+                                      </h4>
+                                      <p className="text-xs text-gray-600 capitalize">LinkedIn</p>
                                     </div>
-                                    <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
-                                      {post.content.substring(0, 50) || "Untitled Post"}
-                                    </h4>
-                                    <p className="text-xs text-gray-600 capitalize">LinkedIn</p>
-                                  </div>
-                                  <div className="flex gap-1 ml-2">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => openPreviewModal(post)}
-                                      className="h-8 w-8 p-0"
-                                    >
-                                      <Eye className="w-3 h-3" />
-                                    </Button>
-                                    {post.linkedinUrl && (
+                                    <div className="flex gap-1 ml-2">
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => window.open(post.linkedinUrl, "_blank")}
-                                        className="h-8 w-8 p-0 text-blue-600"
+                                        onClick={() => openPreviewModal(post)}
+                                        className="h-8 w-8 p-0"
                                       >
-                                        <ExternalLink className="w-3 h-3" />
+                                        <Eye className="w-3 h-3" />
                                       </Button>
-                                    )}
+                                      {post.linkedinUrl && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => window.open(post.linkedinUrl, "_blank")}
+                                          className="h-8 w-8 p-0 text-blue-600"
+                                        >
+                                          <ExternalLink className="w-3 h-3" />
+                                        </Button>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
                           </div>
                         </div>
                       )}
@@ -690,17 +784,18 @@ export default function CalendarPage() {
                         if (!post.scheduledFor || !selectedDate) return false
                         const postDate = new Date(post.scheduledFor)
                         return postDate.toDateString() === selectedDate.toDateString()
-                      }).length === 0 && postedPosts.filter((post) => {
-                        if (!post.postedAt || !selectedDate) return false
-                        const postDate = new Date(post.postedAt)
-                        return postDate.toDateString() === selectedDate.toDateString()
-                      }).length === 0 && (
-                        <div className="text-center py-8 text-gray-500">
-                          <CalendarIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                          <p>No posts for this date</p>
-                          <p className="text-sm mt-2">Select a different date or schedule new posts</p>
-                        </div>
-                      )}
+                      }).length === 0 &&
+                        postedPosts.filter((post) => {
+                          if (!post.postedAt || !selectedDate) return false
+                          const postDate = new Date(post.postedAt)
+                          return postDate.toDateString() === selectedDate.toDateString()
+                        }).length === 0 && (
+                          <div className="text-center py-8 text-gray-500">
+                            <CalendarIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                            <p>No posts for this date</p>
+                            <p className="text-sm mt-2">Select a different date or schedule new posts</p>
+                          </div>
+                        )}
                     </div>
                   )}
                 </CardContent>
@@ -710,66 +805,75 @@ export default function CalendarPage() {
 
           {/* Approved Posts Tab */}
           <TabsContent value="approved">
-            <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-              <CardHeader className="border-b border-gray-200/50">
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  Approved Posts Ready for Scheduling ({approvedPosts.length})
+            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="border-b border-green-100 bg-gradient-to-r from-green-50 to-emerald-50 p-6">
+                <CardTitle className="flex items-center gap-3 text-green-800">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">Ready to Schedule ({approvedPosts.length})</h3>
+                    <p className="text-sm text-green-600 font-normal">Approved content waiting for scheduling</p>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 {approvedPosts.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <CheckCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p>No approved posts available for scheduling</p>
-                    <p className="text-sm mt-2">Create and approve content first to schedule posts</p>
+                  <div className="text-center py-16">
+                    <div className="p-4 bg-green-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                      <CheckCircle className="w-10 h-10 text-green-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No approved posts available</h3>
+                    <p className="text-gray-600 max-w-md mx-auto">
+                      Create and approve content first to schedule posts for your LinkedIn audience
+                    </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {approvedPosts.map((post) => (
                       <div
                         key={post._id}
-                        className="p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow"
+                        className="group p-6 border border-green-100 rounded-xl bg-gradient-to-br from-white to-green-50/30 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-green-200"
                       >
-                        <div className="flex justify-between items-start mb-3">
+                        <div className="flex justify-between items-start mb-4">
                           <Badge className={getStatusColor(post.status)}>
                             <CheckCircle className="w-3 h-3 mr-1" />
                             {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
                           </Badge>
-                          <div className="flex gap-1">
+                          <div className="flex gap-2">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => openPreviewModal(post)}
-                              className="h-8 w-8 p-0"
+                              className="h-9 w-9 p-0 group-hover:bg-green-50 transition-colors"
                             >
-                              <Eye className="w-3 h-3" />
+                              <Eye className="w-4 h-4" />
                             </Button>
                             <Button
                               size="sm"
                               onClick={() => openIndividualScheduleModal(post)}
-                              className="h-8 w-8 p-0 bg-blue-600 hover:bg-blue-700 text-white"
+                              className="h-9 w-9 p-0 bg-green-600 hover:bg-green-700 text-white transition-colors"
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
                         {post.imageUrl && (
-                          <div className="mb-3">
+                          <div className="mb-4">
                             <img
                               src={post.imageUrl || "/placeholder.svg"}
                               alt="Post image"
-                              className="w-full h-32 object-cover rounded-lg"
+                              className="w-full h-32 object-cover rounded-xl shadow-sm"
                               onError={(e) => {
-                                e.currentTarget.style.display = 'none'
+                                e.currentTarget.style.display = "none"
                               }}
                             />
                           </div>
                         )}
-                        <h4 className="font-medium text-sm text-gray-900 mb-2 line-clamp-2">
+                        <h4 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-green-800 transition-colors">
                           {post.topicTitle || "Untitled Post"}
                         </h4>
-                        <p className="text-xs text-gray-600 line-clamp-3 mb-2">{post.content.substring(0, 100)}...</p>
+                        <p className="text-sm text-gray-600 line-clamp-3 mb-3">{post.content.substring(0, 100)}...</p>
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span className="capitalize">{post.platform}</span>
                           <span className="capitalize">{post.contentType}</span>
@@ -784,21 +888,28 @@ export default function CalendarPage() {
 
           {/* Scheduled Posts Tab */}
           <TabsContent value="scheduled">
-            <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-              <CardHeader className="border-b border-gray-200/50">
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Clock className="w-5 h-5 text-blue-600" />
-                  Scheduled Posts ({scheduledPosts.length})
+            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="border-b border-blue-100 bg-gradient-to-r from-blue-50 to-cyan-50 p-6">
+                <CardTitle className="flex items-center gap-3 text-blue-800">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">Scheduled Posts ({scheduledPosts.length})</h3>
+                    <p className="text-sm text-blue-600 font-normal">Content queued for automatic posting</p>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                {/* Current Time Display */}
-
                 {scheduledPosts.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p>No scheduled posts</p>
-                    <p className="text-sm mt-2">Schedule approved posts to see them here</p>
+                  <div className="text-center py-16">
+                    <div className="p-4 bg-blue-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                      <Clock className="w-10 h-10 text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No scheduled posts</h3>
+                    <p className="text-gray-600 max-w-md mx-auto">
+                      Schedule approved posts to see them here with automatic posting times
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -807,11 +918,11 @@ export default function CalendarPage() {
                       .map((post) => (
                         <div
                           key={post._id}
-                          className="p-4 border rounded-lg bg-blue-50 border-blue-200 hover:shadow-md transition-shadow"
+                          className="group p-6 border border-blue-100 rounded-xl bg-gradient-to-br from-white to-blue-50/30 shadow-sm hover:shadow-lg transition-all duration-300"
                         >
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
+                              <div className="flex items-center gap-3 mb-3">
                                 <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                                   <Clock className="w-3 h-3 mr-1" />
                                   {new Date(post.scheduledFor).toLocaleString("en-IN", {
@@ -828,18 +939,18 @@ export default function CalendarPage() {
                                 </Badge>
                               </div>
                               {post.imageUrl && (
-                                <div className="mb-3">
+                                <div className="mb-4">
                                   <img
                                     src={post.imageUrl || "/placeholder.svg"}
                                     alt="Post image"
-                                    className="w-full h-32 object-cover rounded-lg"
+                                    className="w-full h-32 object-cover rounded-xl shadow-sm"
                                     onError={(e) => {
-                                      e.currentTarget.style.display = 'none'
+                                      e.currentTarget.style.display = "none"
                                     }}
                                   />
                                 </div>
                               )}
-                              <h4 className="font-medium text-gray-900 mb-1 line-clamp-2">
+                              <h4 className="font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-blue-800 transition-colors">
                                 {post.topicTitle || "Untitled Post"}
                               </h4>
                               <p className="text-sm text-gray-600 line-clamp-2 mb-2">
@@ -855,7 +966,7 @@ export default function CalendarPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => openPreviewModal(post)}
-                                className="h-8 w-8 p-0"
+                                className="h-8 w-8 p-0 group-hover:bg-blue-50 transition-colors"
                               >
                                 <Eye className="w-3 h-3" />
                               </Button>
@@ -863,7 +974,7 @@ export default function CalendarPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => openEditModal(post)}
-                                className="h-8 w-8 p-0"
+                                className="h-8 w-8 p-0 group-hover:bg-blue-50 transition-colors"
                               >
                                 <Edit className="w-3 h-3" />
                               </Button>
@@ -871,7 +982,7 @@ export default function CalendarPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => openDeleteModal(post)}
-                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 group-hover:bg-blue-50 transition-colors"
                               >
                                 <Trash2 className="w-3 h-3" />
                               </Button>
@@ -887,19 +998,28 @@ export default function CalendarPage() {
 
           {/* Posted Posts Tab */}
           <TabsContent value="posted">
-            <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-              <CardHeader className="border-b border-gray-200/50">
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <Activity className="w-5 h-5 text-purple-600" />
-                  Posted & Failed Content ({postedPosts.length})
+            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="border-b border-purple-100 bg-gradient-to-r from-purple-50 to-violet-50 p-6">
+                <CardTitle className="flex items-center gap-3 text-purple-800">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Activity className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">Published Content ({postedPosts.length})</h3>
+                    <p className="text-sm text-purple-600 font-normal">Successfully posted and failed attempts</p>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 {postedPosts.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Activity className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p>No posted content yet</p>
-                    <p className="text-sm mt-2">Scheduled posts will appear here after being posted</p>
+                  <div className="text-center py-16">
+                    <div className="p-4 bg-purple-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                      <Activity className="w-10 h-10 text-purple-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No published content yet</h3>
+                    <p className="text-gray-600 max-w-md mx-auto">
+                      Scheduled posts will appear here after being automatically posted to LinkedIn
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -908,13 +1028,19 @@ export default function CalendarPage() {
                       .map((post) => (
                         <div
                           key={post._id}
-                          className="p-4 border rounded-lg bg-purple-50 border-purple-200 hover:shadow-md transition-shadow"
+                          className="group p-6 border border-purple-100 rounded-xl bg-gradient-to-br from-white to-purple-50/30 shadow-sm hover:shadow-lg transition-all duration-300"
                         >
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <Badge className={post.status === 'posted' ? "bg-green-100 text-green-800 border-green-200" : "bg-red-100 text-red-800 border-red-200"}>
-                                  {post.status === 'posted' ? (
+                              <div className="flex items-center gap-3 mb-3">
+                                <Badge
+                                  className={
+                                    post.status === "posted"
+                                      ? "bg-green-100 text-green-800 border-green-200"
+                                      : "bg-red-100 text-red-800 border-red-200"
+                                  }
+                                >
+                                  {post.status === "posted" ? (
                                     <>
                                       <CheckCircle className="w-3 h-3 mr-1" />
                                       Posted{" "}
@@ -943,18 +1069,18 @@ export default function CalendarPage() {
                                 )}
                               </div>
                               {post.imageUrl && (
-                                <div className="mb-3">
+                                <div className="mb-4">
                                   <img
                                     src={post.imageUrl || "/placeholder.svg"}
                                     alt="Post image"
-                                    className="w-full h-32 object-cover rounded-lg"
+                                    className="w-full h-32 object-cover rounded-xl shadow-sm"
                                     onError={(e) => {
-                                      e.currentTarget.style.display = 'none'
+                                      e.currentTarget.style.display = "none"
                                     }}
                                   />
                                 </div>
                               )}
-                              <h4 className="font-medium text-gray-900 mb-1 line-clamp-2">
+                              <h4 className="font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-purple-800 transition-colors">
                                 {post.topicTitle || "Untitled Post"}
                               </h4>
                               <p className="text-sm text-gray-600 line-clamp-2 mb-2">
@@ -970,7 +1096,7 @@ export default function CalendarPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => openPreviewModal(post)}
-                                className="h-8 w-8 p-0"
+                                className="h-8 w-8 p-0 group-hover:bg-purple-50 transition-colors"
                               >
                                 <Eye className="w-3 h-3" />
                               </Button>
@@ -979,7 +1105,7 @@ export default function CalendarPage() {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => window.open(post.linkedinUrl, "_blank")}
-                                  className="h-8 w-8 p-0 text-blue-600"
+                                  className="h-8 w-8 p-0 text-blue-600 group-hover:bg-purple-50 transition-colors"
                                 >
                                   <ExternalLink className="w-3 h-3" />
                                 </Button>
@@ -1124,9 +1250,7 @@ export default function CalendarPage() {
                 className="rounded-md border"
                 disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} // Allow today and future dates
               />
-              <p className="text-xs text-gray-500 mt-1">
-                📅 You can schedule for today or future dates
-              </p>
+              <p className="text-xs text-gray-500 mt-1">📅 You can schedule for today or future dates</p>
             </div>
             <div>
               <Label>Time (IST)</Label>
@@ -1135,11 +1259,10 @@ export default function CalendarPage() {
                 value={individualScheduleTime}
                 onChange={(e) => setIndividualScheduleTime(e.target.value)}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                ⏰ Minimum scheduling time: 5 minutes from now (IST)
-              </p>
+              <p className="text-xs text-gray-500 mt-1">⏰ Minimum scheduling time: 5 minutes from now (IST)</p>
               <p className="text-xs text-blue-600 mt-1">
-                💡 Current time: {new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false })} IST
+                💡 Current time: {new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour12: false })}{" "}
+                IST
               </p>
             </div>
           </div>
@@ -1169,7 +1292,7 @@ export default function CalendarPage() {
                     alt="Post image"
                     className="w-full max-h-64 object-cover rounded-lg"
                     onError={(e) => {
-                      e.currentTarget.style.display = 'none'
+                      e.currentTarget.style.display = "none"
                     }}
                   />
                 </div>
@@ -1266,7 +1389,8 @@ export default function CalendarPage() {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-gray-700">
-              Are you sure you want to unschedule this post? It will remain approved but won&apos;t be automatically posted.
+              Are you sure you want to unschedule this post? It will remain approved but won&apos;t be automatically
+              posted.
             </p>
           </div>
           <DialogFooter>

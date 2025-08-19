@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { SessionProvider } from "next-auth/react";
+import { Toaster } from "sonner";
 import Navigation from "@/components/navigation";
 import Footer from "@/components/footer";
 
@@ -18,6 +19,7 @@ export default function ClientLayout({
       {!isDashboard && <Navigation />}
       <main>{children}</main>
       {!isDashboard && <Footer />}
+      <Toaster position="top-right" richColors />
     </SessionProvider>
   );
 }

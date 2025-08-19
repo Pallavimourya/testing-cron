@@ -10,54 +10,63 @@ const scheduledPostSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  contentId: {
+    type: String,
+    required: false, // Optional if posting custom content
+  },
   content: {
     type: String,
     required: true,
-    trim: true,
   },
   imageUrl: {
     type: String,
-    default: null,
+    required: false,
   },
   scheduledTime: {
     type: Date,
-    required: true,
-    index: true, // Index for efficient querying
+    required: true, // Always stored in UTC
   },
-  scheduledAtIST: {
-    type: String, // Store original IST time for reference
-    required: true,
+  scheduledTimeIST: {
+    type: String,
+    required: true, // Human-readable IST time for reference
   },
   status: {
     type: String,
     enum: ["pending", "posted", "failed", "cancelled"],
     default: "pending",
-    index: true,
+  },
+  platform: {
+    type: String,
+    enum: ["linkedin"],
+    default: "linkedin",
+  },
+  linkedinPostId: {
+    type: String,
+    required: false, // Set after successful posting
+  },
+  linkedinUrl: {
+    type: String,
+    required: false, // Set after successful posting
+  },
+  error: {
+    type: String,
+    required: false, // Error message if posting fails
   },
   attempts: {
     type: Number,
     default: 0,
-    max: 3,
   },
-  postedAt: {
-    type: Date,
-    default: null,
-  },
-  linkedinPostId: {
-    type: String,
-    default: null,
-  },
-  linkedinUrl: {
-    type: String,
-    default: null,
-  },
-  error: {
-    type: String,
-    default: null,
+  maxAttempts: {
+    type: Number,
+    default: 3,
   },
   lastAttempt: {
     type: Date,
-    default: null,
+    required: false,
+  },
+  postedAt: {
+    type: Date,
+    required: false, // Set when successfully posted
   },
   createdAt: {
     type: Date,
@@ -69,16 +78,16 @@ const scheduledPostSchema = new mongoose.Schema({
   },
 })
 
-// Compound index for efficient cron queries
+// Indexes for efficient querying
+scheduledPostSchema.index({ userId: 1, status: 1 })
 scheduledPostSchema.index({ scheduledTime: 1, status: 1 })
+scheduledPostSchema.index({ userEmail: 1, status: 1 })
+scheduledPostSchema.index({ createdAt: -1 })
 
-// Update timestamp on save
+// Update the updatedAt timestamp before saving
 scheduledPostSchema.pre("save", function (next) {
   this.updatedAt = new Date()
   next()
 })
-
-// Clean up old posts (optional)
-scheduledPostSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }) // 30 days
 
 export default mongoose.models.ScheduledPost || mongoose.model("ScheduledPost", scheduledPostSchema)

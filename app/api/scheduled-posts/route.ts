@@ -1,127 +1,118 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { authOptions } from "../auth/[...nextauth]/auth"
 import connectDB from "@/lib/mongodb"
 import ScheduledPost from "@/models/ScheduledPost"
 import User from "@/models/User"
-import { convertISTToUTC, convertUTCToIST } from "@/lib/timezone-utils"
+import { ISTTime } from "@/lib/utils/ist-time"
 
-// GET - List scheduled posts
-export async function GET(request: NextRequest) {
+export async function GET(req: Request) {
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
+
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     await connectDB()
 
+    // Get user
     const user = await User.findOne({ email: session.user.email })
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get("status")
-    const page = Number.parseInt(searchParams.get("page") || "1")
-    const limit = Number.parseInt(searchParams.get("limit") || "10")
-    const skip = (page - 1) * limit
-
-    // Build query
-    const query: any = { userId: user._id }
-    if (status && status !== "all") {
-      query.status = status
-    }
-
-    // Get posts with pagination
-    const posts = await ScheduledPost.find(query).sort({ scheduledAt: -1 }).skip(skip).limit(limit).lean()
-
-    const total = await ScheduledPost.countDocuments(query)
+    // Get all scheduled posts for the user
+    const scheduledPosts = await ScheduledPost.find({
+      userId: user._id,
+    }).sort({ scheduledTime: 1 }) // Sort by scheduled time ascending
 
     // Convert UTC times to IST for display
-    const postsWithIST = posts.map((post) => ({
-      ...post,
-      scheduledAtDisplay: convertUTCToIST(post.scheduledAt),
-      postedAtDisplay: post.postedAt ? convertUTCToIST(post.postedAt) : null,
+    const postsWithIST = scheduledPosts.map((post) => ({
+      ...post.toObject(),
+      scheduledTimeDisplay: ISTTime.formatIST(post.scheduledTime),
+      isOverdue: ISTTime.isInPast(post.scheduledTime) && post.status === "pending",
     }))
 
     return NextResponse.json({
       success: true,
       posts: postsWithIST,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
+      total: scheduledPosts.length,
     })
-  } catch (error) {
-    console.error("Error fetching scheduled posts:", error)
-    return NextResponse.json({ error: "Failed to fetch scheduled posts" }, { status: 500 })
+  } catch (error: any) {
+    console.error("❌ Error fetching scheduled posts:", error)
+    return NextResponse.json({ error: error.message || "Failed to fetch scheduled posts" }, { status: 500 })
   }
 }
 
-// POST - Schedule a new post
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
+
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const body = await req.json()
+    const { content, imageUrl, scheduledTimeIST, contentId } = body
+
+    if (!content || !scheduledTimeIST) {
+      return NextResponse.json({ error: "Content and scheduled time are required" }, { status: 400 })
+    }
+
     await connectDB()
 
+    // Get user
     const user = await User.findOne({ email: session.user.email })
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    const body = await request.json()
-    const { content, imageUrl, scheduledAtIST } = body
-
-    // Validate required fields
-    if (!content || !scheduledAtIST) {
-      return NextResponse.json({ error: "Content and scheduled time are required" }, { status: 400 })
+    // Parse the scheduled time (timestamp from frontend)
+    const scheduledDate = new Date(scheduledTimeIST)
+    
+    // Simple validation: must be at least 5 minutes from now
+    const currentTime = new Date()
+    const minTime = new Date(currentTime.getTime() + 5 * 60 * 1000) // 5 minutes from now
+    
+    if (scheduledDate.getTime() < minTime.getTime()) {
+      return NextResponse.json({ error: "Scheduled time must be at least 5 minutes from now" }, { status: 400 })
     }
 
-    // Check if user has LinkedIn connected
-    if (!user.linkedinAccessToken) {
-      return NextResponse.json(
-        { error: "LinkedIn account not connected. Please connect your LinkedIn account first." },
-        { status: 400 },
-      )
-    }
-
-    // Convert IST to UTC
-    const scheduledAtUTC = convertISTToUTC(scheduledAtIST)
-
-    // Check if scheduled time is in the future
-    if (scheduledAtUTC <= new Date()) {
-      return NextResponse.json({ error: "Scheduled time must be in the future" }, { status: 400 })
-    }
+    // Store the scheduled time as is (it's already in the correct timezone)
+    const utcDate = scheduledDate
 
     // Create scheduled post
     const scheduledPost = new ScheduledPost({
       userId: user._id,
       userEmail: user.email,
+      contentId: contentId || null,
       content: content.trim(),
       imageUrl: imageUrl || null,
-      scheduledAt: scheduledAtUTC,
-      scheduledAtIST,
+      scheduledTime: utcDate,
+      scheduledTimeIST: ISTTime.formatIST(utcDate),
       status: "pending",
+      platform: "linkedin",
     })
 
     await scheduledPost.save()
 
+    console.log("✅ Scheduled post created:", {
+      id: scheduledPost._id,
+      scheduledTimeIST: scheduledPost.scheduledTimeIST,
+      scheduledTimeUTC: utcDate.toISOString(),
+    })
+
     return NextResponse.json({
       success: true,
-      message: "Post scheduled successfully",
-      post: {
+      message: "Post scheduled successfully!",
+      scheduledPost: {
         ...scheduledPost.toObject(),
-        scheduledAtDisplay: convertUTCToIST(scheduledPost.scheduledAt),
+        scheduledTimeDisplay: ISTTime.formatIST(scheduledPost.scheduledTime),
       },
     })
-  } catch (error) {
-    console.error("Error scheduling post:", error)
-    return NextResponse.json({ error: "Failed to schedule post" }, { status: 500 })
+  } catch (error: any) {
+    console.error("❌ Error scheduling post:", error)
+    return NextResponse.json({ error: error.message || "Failed to schedule post" }, { status: 500 })
   }
 }
