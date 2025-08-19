@@ -51,7 +51,7 @@ export default function AboutPage() {
       description: "We create engaging, professional content that showcases your expertise and builds your authority in your industry.",
       features: [
         "Professional Post Creation",
-        "Content Calendar Management",
+
         "Engagement Optimization",
         "Trend Analysis"
       ]

@@ -93,7 +93,7 @@ const plans = {
       "Custom Analytics Dashboard",
       "24/7 Priority Support",
       "Weekly Strategy Calls",
-      "Content Calendar Management",
+      
       "Annual Strategy Planning",
       "Priority Onboarding",
     ],

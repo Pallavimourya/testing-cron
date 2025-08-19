@@ -25,9 +25,9 @@ export async function DELETE(
     }
 
     const { id } = await params
-
-    // Find the scheduled post and verify ownership
-    const scheduledPost = await ScheduledPost.findOne({
+    
+    // Find and delete the scheduled post (only if it belongs to the user)
+    const scheduledPost = await ScheduledPost.findOneAndDelete({
       _id: id,
       userId: user._id,
     })
@@ -36,34 +36,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Scheduled post not found" }, { status: 404 })
     }
 
-    // Only allow cancellation of pending posts
-    if (scheduledPost.status !== "pending") {
-      return NextResponse.json(
-        { error: "Only pending posts can be cancelled" },
-        { status: 400 }
-      )
-    }
-
-    // Update status to cancelled instead of deleting
-    await ScheduledPost.findByIdAndUpdate(id, {
-      status: "cancelled",
-      updatedAt: new Date(),
-    })
-
-    console.log("✅ Scheduled post cancelled:", {
-      id: scheduledPost._id,
-      userEmail: user.email,
-    })
-
     return NextResponse.json({
       success: true,
       message: "Scheduled post cancelled successfully",
     })
   } catch (error: any) {
-    console.error("❌ Error cancelling scheduled post:", error)
-    return NextResponse.json(
-      { error: error.message || "Failed to cancel scheduled post" },
-      { status: 500 }
-    )
+    console.error("❌ Error deleting scheduled post:", error)
+    return NextResponse.json({ error: error.message || "Failed to delete scheduled post" }, { status: 500 })
   }
 }

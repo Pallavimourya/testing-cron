@@ -262,11 +262,14 @@ export default function ApprovedContentPage() {
       console.log(`📅 User selected (IST): ${scheduledIST}`)
       console.log(`📅 Will be posted at (IST): ${new Date(scheduledIST + '+05:30').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
 
-      const response = await fetch(`/api/approved-content/${selectedContentForSchedule.id}/schedule`, {
+      const response = await fetch(`/api/scheduled-posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          scheduledFor: scheduledIST,
+          content: selectedContentForSchedule.content,
+          imageUrl: selectedContentForSchedule.imageUrl,
+          contentId: selectedContentForSchedule.id,
+          scheduledTimeIST: new Date(scheduledIST + '+05:30').getTime(), // Convert to timestamp
         }),
       })
 

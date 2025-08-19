@@ -66,7 +66,7 @@ async function setupTestLinkedIn() {
     })
 
     console.log('\n🎯 Next Steps:')
-    console.log('1. Go to the Content Calendar page')
+    console.log('1. Go to the Approved Content page')
     console.log('2. Schedule some approved content')
     console.log('3. Test the auto-posting functionality')
     console.log('4. Check the "Test Auto-Post" button')

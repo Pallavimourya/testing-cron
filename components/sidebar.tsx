@@ -43,7 +43,6 @@ const navSections = [
     heading: "Drafts & Scheduling",
     items: [
       { label: "Drafts", icon: <FaFileAlt />, href: "/dashboard/drafts" },
-      { label: "Calendar", icon: <FaCalendarAlt />, href: "/dashboard/calendar" },
     ],
   },
   {

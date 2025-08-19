@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { content, imageUrl, scheduledTimeIST, contentId } = body
+    const { content, imageUrl, contentId, scheduledTimeIST } = body
 
     if (!content || !scheduledTimeIST) {
       return NextResponse.json({ error: "Content and scheduled time are required" }, { status: 400 })
@@ -68,51 +68,41 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    // Parse the scheduled time (timestamp from frontend)
-    const scheduledDate = new Date(scheduledTimeIST)
-    
-    // Simple validation: must be at least 5 minutes from now
-    const currentTime = new Date()
-    const minTime = new Date(currentTime.getTime() + 5 * 60 * 1000) // 5 minutes from now
-    
-    if (scheduledDate.getTime() < minTime.getTime()) {
-      return NextResponse.json({ error: "Scheduled time must be at least 5 minutes from now" }, { status: 400 })
-    }
+    // Convert IST timestamp to UTC
+    const scheduledTimeUTC = new Date(scheduledTimeIST)
+    const scheduledTimeISTString = ISTTime.formatIST(scheduledTimeUTC)
 
-    // Store the scheduled time as is (it's already in the correct timezone)
-    const utcDate = scheduledDate
+    // Validate scheduled time (must be at least 5 minutes from now)
+    if (!ISTTime.isValidScheduleTime(scheduledTimeUTC)) {
+      return NextResponse.json({ 
+        error: "Scheduled time must be at least 5 minutes from now" 
+      }, { status: 400 })
+    }
 
     // Create scheduled post
     const scheduledPost = new ScheduledPost({
       userId: user._id,
       userEmail: user.email,
-      contentId: contentId || null,
-      content: content.trim(),
-      imageUrl: imageUrl || null,
-      scheduledTime: utcDate,
-      scheduledTimeIST: ISTTime.formatIST(utcDate),
+      contentId,
+      content,
+      imageUrl,
+      scheduledTime: scheduledTimeUTC,
+      scheduledTimeIST: scheduledTimeISTString,
       status: "pending",
       platform: "linkedin",
     })
 
     await scheduledPost.save()
 
-    console.log("✅ Scheduled post created:", {
-      id: scheduledPost._id,
-      scheduledTimeIST: scheduledPost.scheduledTimeIST,
-      scheduledTimeUTC: utcDate.toISOString(),
-    })
-
     return NextResponse.json({
       success: true,
-      message: "Post scheduled successfully!",
       scheduledPost: {
         ...scheduledPost.toObject(),
-        scheduledTimeDisplay: ISTTime.formatIST(scheduledPost.scheduledTime),
+        scheduledTimeDisplay: scheduledTimeISTString,
       },
     })
   } catch (error: any) {
-    console.error("❌ Error scheduling post:", error)
-    return NextResponse.json({ error: error.message || "Failed to schedule post" }, { status: 500 })
+    console.error("❌ Error creating scheduled post:", error)
+    return NextResponse.json({ error: error.message || "Failed to create scheduled post" }, { status: 500 })
   }
 }

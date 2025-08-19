@@ -96,7 +96,7 @@ async function createTestScheduledContent() {
     console.log(`✅ Posted: ${totalPosted}`)
 
     console.log(`\n🎯 Auto-Posting Test Ready!`)
-    console.log(`1. Go to Content Calendar page`)
+    console.log(`1. Go to Approved Content page`)
     console.log(`2. You'll see ${scheduledPosts.length} scheduled posts`)
     console.log(`3. Click "Test Auto-Post" button`)
     console.log(`4. Posts will be processed in the next 5 minutes`)

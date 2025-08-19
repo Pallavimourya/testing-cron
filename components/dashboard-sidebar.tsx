@@ -102,19 +102,20 @@ export function DashboardSidebar({
       color: "blue",
     },
     {
+      path: "/dashboard/scheduled-posts",
+      icon: Calendar,
+      label: "Scheduled Posts",
+      description: "Manage scheduled content",
+      color: "blue",
+    },
+    {
       path: "/dashboard/linkedin",
       icon: Linkedin,
       label: "LinkedIn",
       description: "Connection & Analytics",
       color: "blue",
     },
-    {
-      path: "/dashboard/calendar",
-      icon: Calendar,
-      label: "Content Calendar",
-      description: "Schedule & manage posts",
-      color: "blue",
-    },
+
     {
       path: "/dashboard/billing",
       icon: Crown,
