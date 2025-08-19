@@ -292,20 +292,31 @@ export default function ApprovedContentPage() {
 
   const handlePostToLinkedIn = async (contentId: string) => {
     try {
+      // Show loading state
+      toast.loading("Posting to LinkedIn...")
+      
       const response = await fetch(`/api/approved-content/${contentId}/post`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       })
 
+      const result = await response.json()
+
       if (response.ok) {
-        toast.success("Content posted to LinkedIn successfully")
+        toast.dismiss()
+        toast.success("Content posted to LinkedIn successfully!")
+        console.log("✅ LinkedIn posting successful:", result)
         loadApprovedContent()
       } else {
-        toast.error("Failed to post to LinkedIn")
+        toast.dismiss()
+        const errorMessage = result.error || result.details || "Failed to post to LinkedIn"
+        toast.error(errorMessage)
+        console.error("❌ LinkedIn posting failed:", result)
       }
     } catch (error) {
-      console.error("Error posting to LinkedIn:", error)
-      toast.error("Failed to post to LinkedIn")
+      toast.dismiss()
+      console.error("❌ Error posting to LinkedIn:", error)
+      toast.error("Network error while posting to LinkedIn")
     }
   }
 
@@ -1612,9 +1623,12 @@ export default function ApprovedContentPage() {
                       onChange={(e) => setScheduleTime(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Select a time at least 5 minutes from now (IST)</p>
+                    <p className="text-xs text-gray-500 mt-1">Select a time at least 1 minute from now (IST)</p>
                     <p className="text-xs text-blue-600 mt-1">
                       💡 Current time: {new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false })} IST
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">
+                      ✅ All times are in Indian Standard Time (IST)
                     </p>
                   </div>
                 </div>

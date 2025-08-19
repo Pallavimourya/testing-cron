@@ -44,24 +44,41 @@ export function getCurrentISTDate(): Date {
 }
 
 /**
- * Check if a scheduled time is at least 5 minutes in the future (IST)
+ * Check if a scheduled time is at least 1 minute in the future (IST)
+ * Changed from 5 minutes to 1 minute to allow more flexible scheduling
  */
 export function isScheduledTimeValid(scheduledIST: string): boolean {
   const scheduledUTC = convertISTToUTC(scheduledIST)
   const now = new Date()
-  const fiveMinutesFromNow = new Date(now.getTime() + (5 * 60 * 1000))
+  const oneMinuteFromNow = new Date(now.getTime() + (1 * 60 * 1000)) // Changed from 5 to 1 minute
   
-  return scheduledUTC > fiveMinutesFromNow
+  return scheduledUTC > oneMinuteFromNow
 }
 
 /**
- * Get minimum allowed scheduling time (5 minutes from now in IST)
+ * Get minimum allowed scheduling time (1 minute from now in IST)
+ * Changed from 5 minutes to 1 minute
  */
 export function getMinimumSchedulingTime(): string {
   const now = new Date()
-  const fiveMinutesFromNow = new Date(now.getTime() + (5 * 60 * 1000))
+  const oneMinuteFromNow = new Date(now.getTime() + (1 * 60 * 1000)) // Changed from 5 to 1 minute
   
   // Format as IST datetime string
-  const istDate = new Date(fiveMinutesFromNow.getTime() + (5.5 * 60 * 60 * 1000))
+  const istDate = new Date(oneMinuteFromNow.getTime() + (5.5 * 60 * 60 * 1000))
   return istDate.toISOString().slice(0, 16)
+}
+
+/**
+ * Get current time in IST format for display
+ */
+export function getCurrentISTString(): string {
+  const now = new Date()
+  return now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+}
+
+/**
+ * Format a date to IST string for display
+ */
+export function formatToIST(date: Date): string {
+  return date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
 }

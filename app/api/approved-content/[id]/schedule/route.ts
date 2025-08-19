@@ -30,10 +30,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Convert IST datetime string to UTC Date object
     const scheduledDate = convertISTToUTC(scheduledFor)
     
-    // Validate that the scheduled time is at least 5 minutes in the future
+    // Validate that the scheduled time is at least 1 minute in the future
     if (!isScheduledTimeValid(scheduledFor)) {
       return NextResponse.json({ 
-        error: "Scheduled time must be at least 5 minutes in the future (IST)" 
+        error: "Scheduled time must be at least 1 minute in the future (IST)" 
       }, { status: 400 })
     }
 

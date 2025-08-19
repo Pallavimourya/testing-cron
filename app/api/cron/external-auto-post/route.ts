@@ -9,28 +9,49 @@ export async function GET(req: Request) {
   try {
     console.log("🔄 External cron job triggered at", ISTTime.getCurrentISTString())
     
-    // Check for auth header for external cron services
+    // Check for multiple authentication methods for external cron services
     const authHeader = req.headers.get('authorization')
+    const userAgent = req.headers.get('user-agent')
+    const url = new URL(req.url)
+    const tokenParam = url.searchParams.get('token')
+    const authParam = url.searchParams.get('auth')
+    
+    // Multiple authentication methods
     const cronSecret = process.env.CRON_SECRET || 'BzbHyiKVrc6rDLWHn4uYLHo+s1WkHp2ucuzsCi/euRI='
+    const externalCronToken = process.env.EXTERNAL_CRON_TOKEN || 'external-cron-token'
     
     console.log("🔍 Auth debug:", {
       hasAuthHeader: !!authHeader,
       authHeaderValue: authHeader ? authHeader.substring(0, 20) + '...' : 'none',
+      hasTokenParam: !!tokenParam,
+      hasAuthParam: !!authParam,
+      userAgent: userAgent?.substring(0, 50),
       expectedSecret: cronSecret.substring(0, 10) + '...',
-      expectedHeader: `Bearer ${cronSecret}`,
       url: req.url
     })
     
-    // Allow header authentication for external cron services
-    const isAuthenticated = authHeader === `Bearer ${cronSecret}`
+    // Multiple authentication methods for external cron services
+    const isAuthenticated = 
+      // Method 1: Bearer token in header
+      authHeader === `Bearer ${cronSecret}` ||
+      // Method 2: Token in query parameter
+      tokenParam === externalCronToken ||
+      authParam === cronSecret ||
+      // Method 3: Allow cron-job.org requests (for testing)
+      userAgent?.includes('cron-job.org') ||
+      // Method 4: Allow requests without auth in development
+      process.env.NODE_ENV === 'development'
     
     if (!isAuthenticated) {
       console.log("❌ Cron job authentication failed")
       return NextResponse.json({ 
         error: "Unauthorized", 
-        message: "Use Authorization: Bearer CRON_SECRET header",
+        message: "Use Authorization: Bearer CRON_SECRET header, ?token=EXTERNAL_CRON_TOKEN, or ?auth=CRON_SECRET",
         debug: {
           hasAuthHeader: !!authHeader,
+          hasTokenParam: !!tokenParam,
+          hasAuthParam: !!authParam,
+          userAgent: userAgent?.substring(0, 50),
           expectedSecret: cronSecret.substring(0, 10) + '...',
         }
       }, { status: 401 })
