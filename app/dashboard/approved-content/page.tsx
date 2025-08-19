@@ -260,7 +260,13 @@ export default function ApprovedContentPage() {
       const scheduledIST = `${scheduleDate}T${scheduleTime}`
 
       console.log(`📅 User selected (IST): ${scheduledIST}`)
-      console.log(`📅 Will be posted at (IST): ${new Date(scheduledIST + '+05:30').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
+      
+      // Create the date in IST timezone properly
+      const scheduledDate = new Date(scheduledIST + '+05:30')
+      const scheduledTimeIST = scheduledDate.getTime()
+
+      console.log(`📅 Will be posted at (IST): ${scheduledDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`)
+      console.log(`📅 Timestamp: ${scheduledTimeIST}`)
 
       const response = await fetch(`/api/scheduled-posts`, {
         method: "POST",
@@ -269,7 +275,7 @@ export default function ApprovedContentPage() {
           content: selectedContentForSchedule.content,
           imageUrl: selectedContentForSchedule.imageUrl,
           contentId: selectedContentForSchedule.id,
-          scheduledTimeIST: new Date(scheduledIST + '+05:30').getTime(), // Convert to timestamp
+          scheduledTimeIST: scheduledTimeIST, // Send the timestamp
         }),
       })
 

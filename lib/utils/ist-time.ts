@@ -99,11 +99,12 @@ export class ISTTime {
 
   /**
    * Validate if scheduled time is valid (at least 1 minute from now)
-   * @param istDate - IST date to validate
+   * @param utcDate - UTC date to validate
    * @returns true if valid, false otherwise
    */
-  static isValidScheduleTime(istDate: Date): boolean {
-    const minTime = this.getMinScheduleTime()
-    return istDate.getTime() >= minTime.getTime()
+  static isValidScheduleTime(utcDate: Date): boolean {
+    const currentUTC = new Date()
+    const oneMinuteFromNow = new Date(currentUTC.getTime() + (1 * 60 * 1000)) // 1 minute from now
+    return utcDate.getTime() >= oneMinuteFromNow.getTime()
   }
 }

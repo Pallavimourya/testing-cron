@@ -70,7 +70,15 @@ export async function POST(req: Request) {
 
     // Convert IST timestamp to UTC
     const scheduledTimeUTC = new Date(scheduledTimeIST)
+    
+    // The timestamp is already in UTC (since it was created with +05:30 offset)
+    // We need to convert it back to IST for validation
+    const scheduledTimeISTDate = new Date(scheduledTimeIST)
     const scheduledTimeISTString = ISTTime.formatIST(scheduledTimeUTC)
+
+    console.log(`📅 Received timestamp: ${scheduledTimeIST}`)
+    console.log(`📅 UTC time: ${scheduledTimeUTC.toISOString()}`)
+    console.log(`📅 IST time: ${scheduledTimeISTString}`)
 
     // Validate scheduled time (must be at least 1 minute from now)
     if (!ISTTime.isValidScheduleTime(scheduledTimeUTC)) {
