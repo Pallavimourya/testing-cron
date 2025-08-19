@@ -11,7 +11,7 @@ function shouldRunAutoPosting() {
   if (!lastRunTime) {
     return true
   }
-
+  
   const timeSinceLastRun = new Date().getTime() - lastRunTime.getTime()
   const oneMinute = 1 * 60 * 1000
   
@@ -97,7 +97,7 @@ export async function GET(request: Request) {
   } catch (error) {
     isAutoPostingRunning = false
     console.error("❌ Auto-post cron job error:", error)
-
+    
     return NextResponse.json(
       {
         success: false,

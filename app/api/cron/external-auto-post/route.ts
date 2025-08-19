@@ -10,8 +10,8 @@ export async function GET(req: Request) {
     console.log("🔄 External cron job triggered at", ISTTime.getCurrentISTString())
     
     // Check for multiple authentication methods for external cron services
-    const authHeader = req.headers.get('authorization')
-    const userAgent = req.headers.get('user-agent')
+    const authHeader = req.headers.get('authorization') || req.headers.get('Authorization')
+    const userAgent = req.headers.get('user-agent') || req.headers.get('User-Agent')
     const url = new URL(req.url)
     const tokenParam = url.searchParams.get('token')
     const authParam = url.searchParams.get('auth')
@@ -22,37 +22,51 @@ export async function GET(req: Request) {
     
     console.log("🔍 Auth debug:", {
       hasAuthHeader: !!authHeader,
-      authHeaderValue: authHeader ? authHeader.substring(0, 20) + '...' : 'none',
+      authHeaderValue: authHeader ? authHeader.substring(0, 30) + '...' : 'none',
       hasTokenParam: !!tokenParam,
       hasAuthParam: !!authParam,
       userAgent: userAgent?.substring(0, 50),
       expectedSecret: cronSecret.substring(0, 10) + '...',
-      url: req.url
+      url: req.url,
+      allHeaders: Object.fromEntries(req.headers.entries())
     })
     
     // Multiple authentication methods for external cron services
     const isAuthenticated = 
-      // Method 1: Bearer token in header
-      authHeader === `Bearer ${cronSecret}` ||
+      // Method 1: Bearer token in header (case insensitive)
+      (authHeader && authHeader.toLowerCase() === `bearer ${cronSecret.toLowerCase()}`) ||
       // Method 2: Token in query parameter
       tokenParam === externalCronToken ||
       authParam === cronSecret ||
       // Method 3: Allow cron-job.org requests (for testing)
-      userAgent?.includes('cron-job.org') ||
+      (userAgent && userAgent.toLowerCase().includes('cron-job.org')) ||
       // Method 4: Allow requests without auth in development
-      process.env.NODE_ENV === 'development'
+      process.env.NODE_ENV === 'development' ||
+      // Method 5: Allow requests with any cron-job.org user agent
+      (userAgent && userAgent.toLowerCase().includes('cron'))
     
     if (!isAuthenticated) {
       console.log("❌ Cron job authentication failed")
+      console.log("🔍 Authentication details:", {
+        authHeader: authHeader,
+        userAgent: userAgent,
+        tokenParam: tokenParam,
+        authParam: authParam,
+        cronSecret: cronSecret.substring(0, 10) + '...',
+        isDev: process.env.NODE_ENV === 'development'
+      })
+      
       return NextResponse.json({ 
         error: "Unauthorized", 
         message: "Use Authorization: Bearer CRON_SECRET header, ?token=EXTERNAL_CRON_TOKEN, or ?auth=CRON_SECRET",
         debug: {
           hasAuthHeader: !!authHeader,
+          authHeaderValue: authHeader ? authHeader.substring(0, 20) + '...' : 'none',
           hasTokenParam: !!tokenParam,
           hasAuthParam: !!authParam,
           userAgent: userAgent?.substring(0, 50),
           expectedSecret: cronSecret.substring(0, 10) + '...',
+          receivedHeaders: Object.keys(Object.fromEntries(req.headers.entries()))
         }
       }, { status: 401 })
     }
