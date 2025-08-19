@@ -94,20 +94,45 @@ export async function GET(req: Request) {
     const url = new URL(req.url)
     const token = url.searchParams.get('token')
     const authHeader = req.headers.get('authorization')
+    const cronSecret = req.headers.get('cron-secret')
     const userAgent = req.headers.get('user-agent')
+
+    console.log("🔐 Authentication check:", {
+      hasToken: !!token,
+      hasAuthHeader: !!authHeader,
+      hasCronSecret: !!cronSecret,
+      userAgent: userAgent,
+      nodeEnv: process.env.NODE_ENV
+    })
 
     // Check for various authentication methods
     const isAuthenticated =
       token === process.env.EXTERNAL_CRON_TOKEN ||
       authHeader === `Bearer ${process.env.EXTERNAL_CRON_TOKEN}` ||
+      cronSecret === process.env.EXTERNAL_CRON_TOKEN ||
+      cronSecret === process.env.CRON_SECRET ||
       userAgent?.includes('cron-job.org') ||
       process.env.NODE_ENV === 'development'
 
     if (!isAuthenticated) {
       console.log("❌ External cron authentication failed")
-      return NextResponse.json({ error: "Unauthorized", message: "Use ?token=your-token or Authorization: Bearer your-token header" }, { status: 401 })
+      console.log("Expected tokens:", {
+        EXTERNAL_CRON_TOKEN: process.env.EXTERNAL_CRON_TOKEN ? "SET" : "NOT SET",
+        CRON_SECRET: process.env.CRON_SECRET ? "SET" : "NOT SET"
+      })
+      return NextResponse.json({ 
+        error: "Unauthorized", 
+        message: "Use ?token=your-token, Authorization: Bearer your-token header, or CRON_SECRET header",
+        received: {
+          token: !!token,
+          authHeader: !!authHeader,
+          cronSecret: !!cronSecret,
+          userAgent: userAgent
+        }
+      }, { status: 401 })
     }
 
+    console.log("✅ External cron authentication successful")
     console.log("🔄 External cron job trigger started at", ISTTime.getCurrentISTString())
 
     await connectDB()
