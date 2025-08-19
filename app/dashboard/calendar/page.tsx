@@ -35,7 +35,7 @@ interface ScheduledPost {
   userEmail: string
   content: string
   imageUrl?: string
-  scheduledTime: string
+  scheduledFor: string
   scheduledAtIST: string
   status: string
   attempts: number
@@ -50,27 +50,7 @@ interface ScheduledPost {
   topicTitle?: string
   platform?: string
   contentType?: string
-}
-
-interface CronStatus {
-  stats: {
-    totalScheduled: number
-    dueNow: number
-    futureScheduled: number
-    totalPosted: number
-    totalApproved: number
-  }
-  nextScheduledPosts: Array<{
-    id: string
-    topic: string
-    scheduledFor: string
-    timeUntilPost: number
-  }>
-  cronJobInfo: {
-    frequency: string
-    nextRun: string
-    status: string
-  }
+  scheduledTime?: string
 }
 
 const SCHEDULE_OPTIONS = [
@@ -123,9 +103,7 @@ export default function CalendarPage() {
   const [approvedPosts, setApprovedPosts] = useState<ApprovedPost[]>([])
   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([])
   const [postedPosts, setPostedPosts] = useState<ScheduledPost[]>([])
-  const [cronStatus, setCronStatus] = useState<CronStatus | null>(null)
   const [loading, setLoading] = useState(false)
-  const [testLoading, setTestLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("calendar")
 
 
@@ -152,36 +130,29 @@ export default function CalendarPage() {
   // Fetch data on component mount
   useEffect(() => {
     fetchPosts()
-    fetchCronStatus()
-
-    // Refresh cron status every 30 seconds
-    const interval = setInterval(fetchCronStatus, 30000)
-    return () => clearInterval(interval)
   }, [])
-
-
 
   const fetchPosts = async () => {
     setLoading(true)
     try {
-      // Fetch approved content (still using the old endpoint for approved posts)
+      // Fetch approved content
       const approvedRes = await fetch("/api/approved-content?status=approved&limit=100")
       const approvedData = await approvedRes.json()
       setApprovedPosts(approvedData.content || [])
 
-      // Fetch scheduled posts using the new ScheduledPost model
+      // Fetch scheduled posts from existing collections
       const [scheduledRes, postedRes, failedRes] = await Promise.all([
-        fetch("/api/scheduled-posts?status=pending&limit=100"),
-        fetch("/api/scheduled-posts?status=posted&limit=100"),
-        fetch("/api/scheduled-posts?status=failed&limit=100"),
+        fetch("/api/approved-content?status=scheduled&limit=100"),
+        fetch("/api/approved-content?status=posted&limit=100"),
+        fetch("/api/approved-content?status=failed&limit=100"),
       ])
 
       const scheduledData = await scheduledRes.json()
       const postedData = await postedRes.json()
       const failedData = await failedRes.json()
 
-      setScheduledPosts(scheduledData.posts || [])
-      setPostedPosts([...postedData.posts || [], ...failedData.posts || []])
+      setScheduledPosts(scheduledData.content || [])
+      setPostedPosts([...postedData.content || [], ...failedData.content || []])
     } catch (error) {
       console.error("Error fetching posts:", error)
       toast.error("Failed to load posts")
@@ -189,94 +160,6 @@ export default function CalendarPage() {
       setLoading(false)
     }
   }
-
-  const fetchCronStatus = async () => {
-    try {
-      const response = await fetch("/api/cron/status")
-      if (response.ok) {
-        const data = await response.json()
-        setCronStatus(data)
-      }
-    } catch (error) {
-      console.error("Error fetching cron status:", error)
-    }
-  }
-
-  // Test auto-post functionality
-  const testAutoPost = async () => {
-    setTestLoading(true)
-    try {
-      const response = await fetch("/api/test-auto-post", {
-        method: "POST",
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        toast.success(`Auto-post test completed! ${data.posted || 0} posts successful, ${data.errors || 0} errors.`)
-        fetchPosts()
-        fetchCronStatus()
-      } else {
-        const error = await response.json()
-        toast.error(error.message || "Auto-post test failed")
-      }
-    } catch (error) {
-      console.error("Error testing auto-post:", error)
-      toast.error("Failed to test auto-post")
-    } finally {
-      setTestLoading(false)
-    }
-  }
-
-  // Handle overdue posts
-  const handleOverduePosts = async () => {
-    setTestLoading(true)
-    try {
-      const response = await fetch("/api/cron/handle-overdue-posts", {
-        method: "POST",
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          toast.success(data.message || `Failed posts processed! ${data.stats.totalProcessed} posts reset to pending.`)
-        } else {
-          toast.warning(data.message || "Some posts were processed but cron trigger failed")
-        }
-        fetchPosts()
-        fetchCronStatus()
-      } else {
-        const error = await response.json()
-        toast.error(error.message || "Failed to handle overdue posts")
-      }
-    } catch (error) {
-      console.error("Error handling overdue posts:", error)
-      toast.error("Failed to handle overdue posts")
-    } finally {
-      setTestLoading(false)
-    }
-  }
-
-  // Get scheduled dates for calendar highlighting
-  const scheduledDates = scheduledPosts
-    .map((post) => (post.scheduledTime ? new Date(post.scheduledTime) : null))
-    .filter(Boolean) as Date[]
-
-  const postedDates = postedPosts
-    .map((post) => (post.postedAt ? new Date(post.postedAt) : null))
-    .filter(Boolean) as Date[]
-
-  // Posts for selected date
-  const postsForSelectedDate = scheduledPosts.filter((post) => {
-    if (!post.scheduledTime || !selectedDate) return false
-    const postDate = new Date(post.scheduledTime)
-    return postDate.toDateString() === selectedDate.toDateString()
-  })
-
-  const postedPostsForSelectedDate = postedPosts.filter((post) => {
-    if (!post.postedAt || !selectedDate) return false
-    const postDate = new Date(post.postedAt)
-    return postDate.toDateString() === selectedDate.toDateString()
-  })
 
   // Handle bulk scheduling
   const handleBulkSchedule = async () => {
@@ -310,10 +193,6 @@ export default function CalendarPage() {
         toast.success(`🎉 ${data.successCount} posts scheduled!`)
         setShowScheduleModal(false)
         fetchPosts()
-        toast.success(`🎉 ${data.successCount} posts scheduled! Auto-posting will happen at scheduled times.`)
-        setShowScheduleModal(false)
-        fetchPosts()
-        fetchCronStatus()
       } else {
         const error = await response.json()
         toast.error(error.message || "Failed to schedule posts")
@@ -358,7 +237,6 @@ export default function CalendarPage() {
         setShowIndividualScheduleModal(false)
         setSelectedApprovedPost(null)
         fetchPosts()
-        fetchCronStatus()
       } else {
         const error = await response.json()
         toast.error(error.message || "Failed to schedule post")
@@ -403,7 +281,6 @@ export default function CalendarPage() {
         setShowEditModal(false)
         setSelectedPost(null)
         fetchPosts()
-        fetchCronStatus()
       } else {
         toast.error("Failed to update post schedule")
       }
@@ -430,7 +307,6 @@ export default function CalendarPage() {
         setShowDeleteModal(false)
         setSelectedPost(null)
         fetchPosts()
-        fetchCronStatus()
       } else {
         toast.error("Failed to unschedule post")
       }
@@ -444,8 +320,8 @@ export default function CalendarPage() {
 
   const openEditModal = (post: ScheduledPost) => {
     setSelectedPost(post)
-    setEditDate(new Date(post.scheduledTime))
-    const date = new Date(post.scheduledTime)
+    setEditDate(new Date(post.scheduledFor))
+    const date = new Date(post.scheduledFor)
     setEditTime(`${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`)
     setShowEditModal(true)
   }
@@ -547,47 +423,9 @@ export default function CalendarPage() {
                   <span>{postedPosts.length} Posted</span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-orange-600" />
-                  <span>{cronStatus?.stats.totalScheduled || 0} Scheduled</span>
-                </div>
               </div>
             </div>
             <div className="flex gap-3">
-              <Button
-                onClick={testAutoPost}
-                disabled={testLoading}
-                className="bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg hover:shadow-xl transition-all"
-              >
-                {testLoading ? (
-                  <>
-                    <Zap className="w-4 h-4 mr-2 animate-spin" />
-                    Testing...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4 mr-2" />
-                    Test Auto-Post
-                  </>
-                )}
-              </Button>
-              <Button
-                onClick={handleOverduePosts}
-                disabled={testLoading}
-                className="bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg hover:shadow-xl transition-all"
-              >
-                {testLoading ? (
-                  <>
-                    <Zap className="w-4 h-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4 mr-2" />
-                    Handle Overdue Posts
-                  </>
-                )}
-              </Button>
               <Button
                 onClick={() => setShowScheduleModal(true)}
                 disabled={!approvedPosts.length}
@@ -602,76 +440,6 @@ export default function CalendarPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-
-        {/* CRON Status Card */}
-        {cronStatus && (
-          <Card className="mb-8 shadow-xl border-0 bg-gradient-to-r from-green-50 to-blue-50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-900">
-                <Activity className="w-5 h-5 text-green-600" />
-                Auto-Posting System Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{cronStatus.stats.totalScheduled}</div>
-                  <div className="text-xs text-gray-600">Total Scheduled</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">{cronStatus.stats.totalPosted}</div>
-                  <div className="text-xs text-gray-600">Posted</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{cronStatus.stats.totalApproved}</div>
-                  <div className="text-xs text-gray-600">Approved</div>
-                </div>
-              </div>
-
-              <div className="bg-white/60 p-3 rounded-lg">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-700">Auto-Post Status:</span>
-                  <Badge className="bg-green-100 text-green-800">Active - Every 5 minutes</Badge>
-                </div>
-              </div>
-
-
-
-              {cronStatus.nextScheduledPosts && cronStatus.nextScheduledPosts.length > 0 && (
-                <div className="mt-4">
-                  <h4 className="font-medium text-gray-900 mb-2">⏰ Next Posts to be Auto-Posted:</h4>
-                  <div className="space-y-2">
-                    {cronStatus.nextScheduledPosts.slice(0, 3).map((post) => (
-                      <div
-                        key={post.id}
-                        className="flex items-center justify-between bg-white/60 p-3 rounded-lg text-sm"
-                      >
-                        <div className="flex-1">
-                          <span className="font-medium truncate block">{post.topic}</span>
-                          <span className="text-xs text-gray-500">
-                            {new Date(post.scheduledFor).toLocaleString("en-IN", {
-                              timeZone: "Asia/Kolkata",
-                              weekday: "short",
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        </div>
-                        <Badge
-                          className={`ml-2 ${post.timeUntilPost <= 0 ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}`}
-                        >
-                          {post.timeUntilPost > 0 ? `in ${post.timeUntilPost}m` : "Due now"}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -715,8 +483,12 @@ export default function CalendarPage() {
                     selected={selectedDate}
                     onSelect={setSelectedDate}
                     modifiers={{
-                      scheduled: scheduledDates,
-                      posted: postedDates,
+                      scheduled: scheduledPosts
+                        .map((post) => (post.scheduledFor ? new Date(post.scheduledFor) : null))
+                        .filter(Boolean) as Date[],
+                      posted: postedPosts
+                        .map((post) => (post.postedAt ? new Date(post.postedAt) : null))
+                        .filter(Boolean) as Date[],
                     }}
                     modifiersClassNames={{
                       scheduled: "bg-blue-100 text-blue-900 font-semibold border border-blue-300 rounded-full",
@@ -763,28 +535,40 @@ export default function CalendarPage() {
                   ) : (
                     <div className="space-y-4">
                       {/* Scheduled Posts */}
-                      {postsForSelectedDate.length > 0 && (
+                      {scheduledPosts.filter((post) => {
+                        if (!post.scheduledFor || !selectedDate) return false
+                        const postDate = new Date(post.scheduledFor)
+                        return postDate.toDateString() === selectedDate.toDateString()
+                      }).length > 0 && (
                         <div>
                           <h4 className="font-medium text-sm text-blue-900 mb-3 flex items-center gap-2">
                             <Clock className="w-4 h-4" />
-                            Scheduled Posts ({postsForSelectedDate.length})
+                            Scheduled Posts ({scheduledPosts.filter((post) => {
+                              if (!post.scheduledFor || !selectedDate) return false
+                              const postDate = new Date(post.scheduledFor)
+                              return postDate.toDateString() === selectedDate.toDateString()
+                            }).length})
                           </h4>
                           <div className="space-y-3">
-                            {postsForSelectedDate.map((post) => (
+                            {scheduledPosts.filter((post) => {
+                              if (!post.scheduledFor || !selectedDate) return false
+                              const postDate = new Date(post.scheduledFor)
+                              return postDate.toDateString() === selectedDate.toDateString()
+                            }).map((post) => (
                               <div key={post._id} className="p-3 border rounded-lg bg-blue-50 border-blue-200">
                                 <div className="flex justify-between items-start mb-2">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                                                       <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                                   <Clock className="w-3 h-3 mr-1" />
-                                  {new Date(post.scheduledTime).toLocaleTimeString("en-IN", {
+                                  {new Date(post.scheduledFor).toLocaleTimeString("en-IN", {
                                     timeZone: "Asia/Kolkata",
                                     hour: "2-digit",
                                     minute: "2-digit",
                                   })}
                                 </Badge>
                                       <Badge variant="outline" className="text-xs">
-                                        {getTimeUntilPost(post.scheduledTime)}
+                                        {getTimeUntilPost(post.scheduledFor)}
                                       </Badge>
                                     </div>
                                     <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
@@ -826,14 +610,26 @@ export default function CalendarPage() {
                       )}
 
                                             {/* Posted Posts */}
-                      {postedPostsForSelectedDate.length > 0 && (
+                      {postedPosts.filter((post) => {
+                        if (!post.postedAt || !selectedDate) return false
+                        const postDate = new Date(post.postedAt)
+                        return postDate.toDateString() === selectedDate.toDateString()
+                      }).length > 0 && (
                         <div>
                           <h4 className="font-medium text-sm text-gray-900 mb-3 flex items-center gap-2">
                             <Activity className="w-4 h-4" />
-                            Posted/Failed ({postedPostsForSelectedDate.length})
+                            Posted/Failed ({postedPosts.filter((post) => {
+                              if (!post.postedAt || !selectedDate) return false
+                              const postDate = new Date(post.postedAt)
+                              return postDate.toDateString() === selectedDate.toDateString()
+                            }).length})
                           </h4>
                           <div className="space-y-3">
-                            {postedPostsForSelectedDate.map((post) => (
+                            {postedPosts.filter((post) => {
+                              if (!post.postedAt || !selectedDate) return false
+                              const postDate = new Date(post.postedAt)
+                              return postDate.toDateString() === selectedDate.toDateString()
+                            }).map((post) => (
                               <div key={post._id} className={`p-3 border rounded-lg ${post.status === 'posted' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                                 <div className="flex justify-between items-start mb-2">
                                   <div className="flex-1">
@@ -890,7 +686,15 @@ export default function CalendarPage() {
                       )}
 
                       {/* No posts message */}
-                      {postsForSelectedDate.length === 0 && postedPostsForSelectedDate.length === 0 && (
+                      {scheduledPosts.filter((post) => {
+                        if (!post.scheduledFor || !selectedDate) return false
+                        const postDate = new Date(post.scheduledFor)
+                        return postDate.toDateString() === selectedDate.toDateString()
+                      }).length === 0 && postedPosts.filter((post) => {
+                        if (!post.postedAt || !selectedDate) return false
+                        const postDate = new Date(post.postedAt)
+                        return postDate.toDateString() === selectedDate.toDateString()
+                      }).length === 0 && (
                         <div className="text-center py-8 text-gray-500">
                           <CalendarIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                           <p>No posts for this date</p>
@@ -999,7 +803,7 @@ export default function CalendarPage() {
                 ) : (
                   <div className="space-y-4">
                     {scheduledPosts
-                      .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime())
+                      .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime())
                       .map((post) => (
                         <div
                           key={post._id}
@@ -1010,7 +814,7 @@ export default function CalendarPage() {
                               <div className="flex items-center gap-3 mb-2">
                                 <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                                   <Clock className="w-3 h-3 mr-1" />
-                                  {new Date(post.scheduledTime).toLocaleString("en-IN", {
+                                  {new Date(post.scheduledFor).toLocaleString("en-IN", {
                                     timeZone: "Asia/Kolkata",
                                     weekday: "short",
                                     month: "short",
@@ -1020,7 +824,7 @@ export default function CalendarPage() {
                                   })}
                                 </Badge>
                                 <Badge variant="outline" className="text-xs">
-                                  {getTimeUntilPost(post.scheduledTime)}
+                                  {getTimeUntilPost(post.scheduledFor)}
                                 </Badge>
                               </div>
                               {post.imageUrl && (

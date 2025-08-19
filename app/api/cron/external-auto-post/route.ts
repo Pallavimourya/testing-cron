@@ -3,14 +3,14 @@ import connectDB from "@/lib/mongodb"
 import ScheduledPost from "@/models/ScheduledPost"
 import User from "@/models/User"
 import { ISTTime } from "@/lib/utils/ist-time"
+import mongoose from "mongoose"
 
 // Helper function to post to LinkedIn (simplified version)
-async function postToLinkedIn(scheduledPost: any, user: any) {
+async function postToLinkedIn(content: string, imageUrl: string | null, user: any) {
   try {
-    console.log("📤 Attempting to post scheduled content to LinkedIn:", {
-      postId: scheduledPost._id,
-      contentLength: scheduledPost.content.length,
-      hasImage: !!scheduledPost.imageUrl,
+    console.log("📤 Attempting to post content to LinkedIn:", {
+      contentLength: content.length,
+      hasImage: !!imageUrl,
       linkedinId: user.linkedinProfile?.id,
     })
 
@@ -23,7 +23,7 @@ async function postToLinkedIn(scheduledPost: any, user: any) {
       specificContent: {
         "com.linkedin.ugc.ShareContent": {
           shareCommentary: {
-            text: scheduledPost.content,
+            text: content,
           },
           shareMediaCategory: "NONE",
         },
@@ -31,6 +31,19 @@ async function postToLinkedIn(scheduledPost: any, user: any) {
       visibility: {
         "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC",
       },
+    }
+
+    // Add image if available
+    if (imageUrl) {
+      postBody.specificContent["com.linkedin.ugc.ShareContent"].shareMediaCategory = "IMAGE"
+      postBody.specificContent["com.linkedin.ugc.ShareContent"].media = [
+        {
+          status: "READY",
+          description: { text: "Image attachment" },
+          media: imageUrl,
+          title: { text: "LinkedIn Post Image" },
+        },
+      ]
     }
 
     // Post to LinkedIn
@@ -103,32 +116,25 @@ export async function GET(req: Request) {
     const currentUTC = ISTTime.getCurrentUTC()
     console.log("⏰ Current UTC time:", currentUTC.toISOString())
 
-    // Find all pending scheduled posts that are due
-    const dueScheduledPosts = await ScheduledPost.find({
+    let totalProcessed = 0
+    let successCount = 0
+    let failureCount = 0
+    const results = []
+
+    // 1. First, check ScheduledPost model (new system)
+    console.log("📋 Checking ScheduledPost model...")
+    const scheduledPosts = await ScheduledPost.find({
       status: "pending",
       scheduledTime: { $lte: currentUTC },
       attempts: { $lt: 3 }, // Don't retry more than 3 times
     }).sort({ scheduledTime: 1 })
 
-    console.log(`📋 Found ${dueScheduledPosts.length} due scheduled posts`)
+    console.log(`📋 Found ${scheduledPosts.length} due posts in ScheduledPost model`)
 
-    if (dueScheduledPosts.length === 0) {
-      return NextResponse.json({
-        success: true,
-        message: "No scheduled posts due",
-        postsProcessed: 0,
-        currentTime: ISTTime.getCurrentISTString(),
-      })
-    }
-
-    let successCount = 0
-    let failureCount = 0
-    const results = []
-
-    // Process each scheduled post
-    for (const scheduledPost of dueScheduledPosts) {
+    // Process ScheduledPost entries
+    for (const scheduledPost of scheduledPosts) {
       try {
-        console.log(`🔄 Processing scheduled post ${scheduledPost._id}`)
+        console.log(`🔄 Processing ScheduledPost: ${scheduledPost._id}`)
 
         // Get user with LinkedIn credentials
         const user = await User.findById(scheduledPost.userId).select(
@@ -146,6 +152,7 @@ export async function GET(req: Request) {
           failureCount++
           results.push({
             postId: scheduledPost._id,
+            source: "ScheduledPost",
             status: "failed",
             error: "User not found",
           })
@@ -168,6 +175,7 @@ export async function GET(req: Request) {
           failureCount++
           results.push({
             postId: scheduledPost._id,
+            source: "ScheduledPost",
             status: "failed",
             error: "LinkedIn not connected",
           })
@@ -181,7 +189,7 @@ export async function GET(req: Request) {
         })
 
         // Post to LinkedIn
-        const postResult = await postToLinkedIn(scheduledPost, user)
+        const postResult = await postToLinkedIn(scheduledPost.content, scheduledPost.imageUrl, user)
 
         if (postResult.success) {
           // Update scheduled post as posted
@@ -193,10 +201,12 @@ export async function GET(req: Request) {
             error: null, // Clear any previous errors
           })
 
-          console.log(`✅ Successfully posted scheduled content ${scheduledPost._id}`)
+          console.log(`✅ Successfully posted ScheduledPost: ${scheduledPost._id}`)
           successCount++
+          totalProcessed++
           results.push({
             postId: scheduledPost._id,
+            source: "ScheduledPost",
             status: "posted",
             linkedinPostId: postResult.linkedinPostId,
             linkedinUrl: postResult.linkedinUrl,
@@ -208,16 +218,18 @@ export async function GET(req: Request) {
             error: postResult.error,
           })
 
-          console.error(`❌ Failed to post scheduled content ${scheduledPost._id}:`, postResult.error)
+          console.error(`❌ Failed to post ScheduledPost ${scheduledPost._id}:`, postResult.error)
           failureCount++
+          totalProcessed++
           results.push({
             postId: scheduledPost._id,
+            source: "ScheduledPost",
             status: "failed",
             error: postResult.error,
           })
         }
       } catch (error: any) {
-        console.error(`❌ Error processing scheduled post ${scheduledPost._id}:`, error)
+        console.error(`❌ Error processing ScheduledPost ${scheduledPost._id}:`, error)
 
         // Update scheduled post as failed
         await ScheduledPost.findByIdAndUpdate(scheduledPost._id, {
@@ -228,20 +240,198 @@ export async function GET(req: Request) {
         })
 
         failureCount++
+        totalProcessed++
         results.push({
           postId: scheduledPost._id,
+          source: "ScheduledPost",
           status: "failed",
           error: error.message || "Unknown error",
         })
       }
     }
 
-    console.log(`✅ External cron job completed: ${successCount} successful, ${failureCount} failed`)
+    // 2. Now check existing collections (old system)
+    console.log("📋 Checking existing collections...")
+    const collections = ["approvedcontents", "linkdin-content-generation", "generatedcontents"]
+    
+    for (const collectionName of collections) {
+      try {
+        const collection = mongoose.connection.db.collection(collectionName)
+        
+        // Find scheduled posts that are due
+        const dueQuery = {
+          $and: [
+            { $or: [{ status: "scheduled" }, { Status: "scheduled" }] },
+            { $or: [{ scheduledFor: { $lte: currentUTC } }, { scheduled_for: { $lte: currentUTC } }] },
+            { $or: [
+              { postedAt: { $exists: false } },
+              { posted_at: { $exists: false } },
+              { linkedinPostId: { $exists: false } },
+              { linkedin_post_id: { $exists: false } }
+            ] }
+          ]
+        }
+
+        const duePosts = await collection.find(dueQuery).toArray()
+        console.log(`📋 Found ${duePosts.length} due posts in ${collectionName}`)
+
+        for (const post of duePosts) {
+          try {
+            console.log(`🔄 Processing ${collectionName} post: ${post._id}`)
+
+            // Get user with LinkedIn credentials
+            const userId = post.userId || post["user id"] || post.user_id
+            const user = await User.findById(userId).select("+linkedinAccessToken +linkedinTokenExpiry +linkedinProfile")
+
+            if (!user) {
+              console.error(`❌ User not found for post ${post._id}`)
+              await collection.updateOne({ _id: post._id }, { 
+                $set: { 
+                  status: "failed", 
+                  Status: "failed",
+                  error: "User not found",
+                  updatedAt: new Date(), 
+                  updated_at: new Date() 
+                } 
+              })
+              failureCount++
+              totalProcessed++
+              results.push({ 
+                postId: post._id, 
+                source: collectionName,
+                status: "failed", 
+                error: "User not found" 
+              })
+              continue
+            }
+
+            // Check LinkedIn connection
+            if (!user.linkedinAccessToken || !user.linkedinTokenExpiry || new Date(user.linkedinTokenExpiry) <= new Date()) {
+              await collection.updateOne({ _id: post._id }, { 
+                $set: { 
+                  status: "failed", 
+                  Status: "failed",
+                  error: "LinkedIn account not connected or token expired",
+                  updatedAt: new Date(), 
+                  updated_at: new Date() 
+                } 
+              })
+              failureCount++
+              totalProcessed++
+              results.push({ 
+                postId: post._id, 
+                source: collectionName,
+                status: "failed", 
+                error: "LinkedIn not connected" 
+              })
+              continue
+            }
+
+            const content = post.content || post.Content || post["generated content"] || ""
+            const imageUrl = post.imageUrl || post.Image || post.image_url || post.image || null
+
+            if (!content || !content.trim()) {
+              await collection.updateOne({ _id: post._id }, { 
+                $set: { 
+                  status: "failed", 
+                  Status: "failed",
+                  error: "No content to post",
+                  updatedAt: new Date(), 
+                  updated_at: new Date() 
+                } 
+              })
+              failureCount++
+              totalProcessed++
+              results.push({ 
+                postId: post._id, 
+                source: collectionName,
+                status: "failed", 
+                error: "No content to post" 
+              })
+              continue
+            }
+
+            console.log(`📤 Posting content: ${content.substring(0, 100)}...`)
+            const postResult = await postToLinkedIn(content, imageUrl, user)
+
+            if (postResult.success) {
+              await collection.updateOne({ _id: post._id }, { 
+                $set: {
+                  status: "posted", 
+                  Status: "posted",
+                  postedAt: new Date(), 
+                  posted_at: new Date(),
+                  linkedinPostId: postResult.linkedinPostId, 
+                  linkedin_post_id: postResult.linkedinPostId,
+                  linkedinUrl: postResult.linkedinUrl, 
+                  linkedin_url: postResult.linkedinUrl,
+                  error: null, 
+                  updatedAt: new Date(), 
+                  updated_at: new Date()
+                } 
+              })
+              successCount++
+              totalProcessed++
+              results.push({ 
+                postId: post._id, 
+                source: collectionName,
+                status: "posted", 
+                linkedinPostId: postResult.linkedinPostId, 
+                linkedinUrl: postResult.linkedinUrl 
+              })
+              console.log(`✅ Successfully posted ${collectionName} post: ${post._id}`)
+            } else {
+              await collection.updateOne({ _id: post._id }, { 
+                $set: {
+                  status: "failed", 
+                  Status: "failed",
+                  error: postResult.error || "Failed to post to LinkedIn",
+                  updatedAt: new Date(), 
+                  updated_at: new Date()
+                } 
+              })
+              failureCount++
+              totalProcessed++
+              results.push({ 
+                postId: post._id, 
+                source: collectionName,
+                status: "failed", 
+                error: postResult.error 
+              })
+              console.log(`❌ Failed to post ${collectionName} post: ${post._id} - ${postResult.error}`)
+            }
+          } catch (error: any) {
+            console.error(`❌ Error processing ${collectionName} post ${post._id}:`, error)
+            await collection.updateOne({ _id: post._id }, { 
+              $set: {
+                status: "failed", 
+                Status: "failed",
+                error: error.message || "Unknown error occurred",
+                updatedAt: new Date(), 
+                updated_at: new Date()
+              } 
+            })
+            failureCount++
+            totalProcessed++
+            results.push({ 
+              postId: post._id, 
+              source: collectionName,
+              status: "failed", 
+              error: error.message 
+            })
+          }
+        }
+      } catch (error) {
+        console.error(`❌ Error checking collection ${collectionName}:`, error)
+      }
+    }
+
+    console.log(`✅ External cron job completed: ${successCount} successful, ${failureCount} failed, ${totalProcessed} total processed`)
 
     return NextResponse.json({
       success: true,
-      message: `Processed ${dueScheduledPosts.length} scheduled posts`,
-      postsProcessed: dueScheduledPosts.length,
+      message: `Processed ${totalProcessed} scheduled posts`,
+      postsProcessed: totalProcessed,
       successCount,
       failureCount,
       results,
