@@ -75,7 +75,10 @@ export default function DashboardTopbar({
   }
 
   useEffect(() => {
-    checkLinkedInStatus()
+    // Only check LinkedIn status if we're on the dashboard page
+    if (window.location.pathname === '/dashboard') {
+      checkLinkedInStatus()
+    }
 
     // Check for connection success from URL params
     const urlParams = new URLSearchParams(window.location.search)

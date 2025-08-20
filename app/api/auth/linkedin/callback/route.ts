@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     // Dynamic redirect URI based on environment
     let redirectUri = process.env.LINKEDIN_REDIRECT_URI
     if (!redirectUri) {
-      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+      const baseUrl = process.env.NEXTAUTH_URL || "http://testing-cron.vercel.app/api/auth/linkedin/callback"
       redirectUri = `${baseUrl}/api/auth/linkedin/callback`
     }
 

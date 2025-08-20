@@ -95,21 +95,14 @@ function createUniqueStoryPrompt(baseStoryData: any, customizationData: any) {
 - Including unexpected insights
 
 **Base Story Elements:**
-- Early Life: ${baseStoryData.earlyLife || "Not provided"}
-- First Dream: ${baseStoryData.firstDream || "Not provided"}
-- First Job: ${baseStoryData.firstJob || "Not provided"}
-- Career Realization: ${baseStoryData.careerRealization || "Not provided"}
-- Biggest Challenge: ${baseStoryData.biggestChallenge || "Not provided"}
-- Almost Gave Up: ${baseStoryData.almostGaveUp || "Not provided"}
-- Turning Point: ${baseStoryData.turningPoint || "Not provided"}
-- Mentor: ${baseStoryData.mentor || "Not provided"}
-- Current Work: ${baseStoryData.currentWork || "Not provided"}
-- Unique Approach: ${baseStoryData.uniqueApproach || "Not provided"}
-- Proud Achievement: ${baseStoryData.proudAchievement || "Not provided"}
-- Industry Misconception: ${baseStoryData.industryMisconception || "Not provided"}
-- Powerful Lesson: ${baseStoryData.powerfulLesson || "Not provided"}
-- Core Values: ${baseStoryData.coreValues || "Not provided"}
-- Desired Impact: ${baseStoryData.desiredImpact || "Not provided"}
+- Childhood and Early Life: ${baseStoryData.childhood || "Not provided"}
+- School Life: ${baseStoryData.schoolLife || "Not provided"}
+- College and Higher Education: ${baseStoryData.collegeEducation || "Not provided"}
+- Career Journey: ${baseStoryData.careerJourney || "Not provided"}
+- Personal Life and Lifestyle: ${baseStoryData.personalLife || "Not provided"}
+- Awards and Recognitions: ${baseStoryData.awardsRecognition || "Not provided"}
+- Aspirations and Goals: ${baseStoryData.aspirationsGoals || "Not provided"}
+- Additional Insights: ${baseStoryData.additionalInsights || "Not provided"}
 
 **Customization Preferences:**
 - Content Language: ${customizationData.content_language || "English"}
@@ -309,30 +302,28 @@ function generateStoryRelatedFallbackTopics(baseStoryData: any, customizationDat
 
   // Extract key elements from the story to create story-related topics
   const storyElements = {
-    currentWork: baseStoryData.currentWork || "professional work",
-    biggestChallenge: baseStoryData.biggestChallenge || "challenges",
-    mentor: baseStoryData.mentor || "mentor",
-    turningPoint: baseStoryData.turningPoint || "turning point",
-    proudAchievement: baseStoryData.proudAchievement || "achievement",
-    coreValues: baseStoryData.coreValues || "values",
-    uniqueApproach: baseStoryData.uniqueApproach || "approach",
-    powerfulLesson: baseStoryData.powerfulLesson || "lesson",
-    earlyLife: baseStoryData.earlyLife || "early experiences",
-    firstJob: baseStoryData.firstJob || "first job"
+    careerJourney: baseStoryData.careerJourney || "professional journey",
+    personalLife: baseStoryData.personalLife || "personal life",
+    childhood: baseStoryData.childhood || "childhood experiences",
+    schoolLife: baseStoryData.schoolLife || "school years",
+    collegeEducation: baseStoryData.collegeEducation || "college experience",
+    awardsRecognition: baseStoryData.awardsRecognition || "achievements",
+    aspirationsGoals: baseStoryData.aspirationsGoals || "goals",
+    additionalInsights: baseStoryData.additionalInsights || "insights"
   }
 
   // Create story-specific topic templates based on actual story elements
   const storyRelatedTemplates = [
-    `The Biggest Challenge in My ${storyElements.currentWork} Journey`,
-    `How My ${storyElements.mentor} Taught Me the Most Important Lesson`,
-    `The ${storyElements.turningPoint} That Changed Everything`,
-    `Why I'm Proud of My ${storyElements.proudAchievement}`,
-    `How My ${storyElements.uniqueApproach} Sets Me Apart`,
-    `The ${storyElements.powerfulLesson} That Shapes My Decisions`,
-    `What My ${storyElements.earlyLife} Taught Me About Success`,
-    `The ${storyElements.firstJob} That Started It All`,
-    `How I Overcame ${storyElements.biggestChallenge}`,
-    `Why My ${storyElements.coreValues} Matter in Everything I Do`
+    `My ${storyElements.careerJourney} and Key Milestones`,
+    `How My ${storyElements.personalLife} Shapes My Professional Success`,
+    `Lessons from My ${storyElements.childhood} That Still Guide Me`,
+    `The Impact of My ${storyElements.schoolLife} on My Career`,
+    `How My ${storyElements.collegeEducation} Influenced My Path`,
+    `The ${storyElements.awardsRecognition} That Mean the Most`,
+    `My ${storyElements.aspirationsGoals} and How I'm Working Towards Them`,
+    `The ${storyElements.additionalInsights} That Make My Story Unique`,
+    `Balancing ${storyElements.personalLife} with Professional Growth`,
+    `The ${storyElements.careerJourney} Lessons I'd Share with Others`
   ]
 
   // Create unique selection based on timestamp and random seed

@@ -236,10 +236,10 @@ async function generateSingleReplacementTopic(baseStoryData: any, customizationD
 **UNIQUENESS SEED:** ${timestamp}-${randomSeed}
 
 **Professional Background:**
-- Current Work: ${baseStoryData.currentWork || "Professional work"}
-- Biggest Challenge: ${baseStoryData.biggestChallenge || "Professional challenges"}
-- Core Values: ${baseStoryData.coreValues || "Professional values"}
-- Unique Approach: ${baseStoryData.uniqueApproach || "Distinctive methods"}
+- Career Journey: ${baseStoryData.careerJourney || "Professional journey"}
+- Personal Life: ${baseStoryData.personalLife || "Personal life and lifestyle"}
+- Childhood: ${baseStoryData.childhood || "Childhood experiences"}
+- Awards and Recognition: ${baseStoryData.awardsRecognition || "Achievements and recognition"}
 
 **Content Preferences:**
 - Target Audience: ${customizationData.target_audience || "professionals"}

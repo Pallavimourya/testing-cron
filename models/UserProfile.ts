@@ -14,21 +14,14 @@ const UserProfileSchema = new mongoose.Schema({
 
   // Base Story Data
   baseStoryData: {
-    earlyLife: { type: String, default: "" },
-    firstDream: { type: String, default: "" },
-    firstJob: { type: String, default: "" },
-    careerRealization: { type: String, default: "" },
-    biggestChallenge: { type: String, default: "" },
-    almostGaveUp: { type: String, default: "" },
-    turningPoint: { type: String, default: "" },
-    mentor: { type: String, default: "" },
-    currentWork: { type: String, default: "" },
-    uniqueApproach: { type: String, default: "" },
-    proudAchievement: { type: String, default: "" },
-    industryMisconception: { type: String, default: "" },
-    powerfulLesson: { type: String, default: "" },
-    coreValues: { type: String, default: "" },
-    desiredImpact: { type: String, default: "" },
+    childhood: { type: String, default: "" },
+    schoolLife: { type: String, default: "" },
+    collegeEducation: { type: String, default: "" },
+    careerJourney: { type: String, default: "" },
+    personalLife: { type: String, default: "" },
+    awardsRecognition: { type: String, default: "" },
+    aspirationsGoals: { type: String, default: "" },
+    additionalInsights: { type: String, default: "" },
   },
 
   // Customization Data (MCQ responses)

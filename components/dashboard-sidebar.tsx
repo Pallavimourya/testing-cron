@@ -171,7 +171,7 @@ export function DashboardSidebar({
   // Check LinkedIn connection status on mount and periodically
   useEffect(() => {
     checkLinkedInStatus()
-    const interval = setInterval(checkLinkedInStatus, 120000) // Check every 2 minutes instead of 30 seconds
+    const interval = setInterval(checkLinkedInStatus, 300000) // Check every 5 minutes instead of 2 minutes
     return () => clearInterval(interval)
   }, [])
 

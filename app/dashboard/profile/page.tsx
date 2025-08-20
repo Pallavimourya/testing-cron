@@ -28,21 +28,14 @@ import { toast } from "sonner"
 import AudioRecorder from "@/components/audio-recorder"
 
 interface BaseStoryData {
-  earlyLife: string
-  firstDream: string
-  firstJob: string
-  careerRealization: string
-  biggestChallenge: string
-  almostGaveUp: string
-  turningPoint: string
-  mentor: string
-  currentWork: string
-  uniqueApproach: string
-  proudAchievement: string
-  industryMisconception: string
-  powerfulLesson: string
-  coreValues: string
-  desiredImpact: string
+  childhood: string
+  schoolLife: string
+  collegeEducation: string
+  careerJourney: string
+  personalLife: string
+  awardsRecognition: string
+  aspirationsGoals: string
+  additionalInsights: string
 }
 
 interface CustomizationData {
@@ -75,21 +68,14 @@ export default function UnifiedProfilePage() {
 
   // Form data
   const [baseStoryData, setBaseStoryData] = useState<BaseStoryData>({
-    earlyLife: "",
-    firstDream: "",
-    firstJob: "",
-    careerRealization: "",
-    biggestChallenge: "",
-    almostGaveUp: "",
-    turningPoint: "",
-    mentor: "",
-    currentWork: "",
-    uniqueApproach: "",
-    proudAchievement: "",
-    industryMisconception: "",
-    powerfulLesson: "",
-    coreValues: "",
-    desiredImpact: "",
+    childhood: "",
+    schoolLife: "",
+    collegeEducation: "",
+    careerJourney: "",
+    personalLife: "",
+    awardsRecognition: "",
+    aspirationsGoals: "",
+    additionalInsights: "",
   })
 
   const [customizationData, setCustomizationData] = useState<CustomizationData>({
@@ -273,7 +259,7 @@ export default function UnifiedProfilePage() {
   // Generate story using ChatGPT - This will create a unique story every time
   const generateStory = async () => {
     // Validate required fields
-    const requiredBaseFields = ["earlyLife", "currentWork", "biggestChallenge"]
+    const requiredBaseFields = ["childhood", "careerJourney", "personalLife"]
     const requiredCustomFields = ["content_language", "target_audience", "content_goal", "content_tone"]
 
     const missingBaseFields = requiredBaseFields.filter((field) => !baseStoryData[field as keyof BaseStoryData])
@@ -395,112 +381,63 @@ export default function UnifiedProfilePage() {
 
   const baseStoryQuestions = [
     {
-      id: "earlyLife",
-      label: "1. Where did you grow up, and what early experiences shaped your personality or mindset?",
-      labelHindi: "1. आप कहाँ बड़े हुए, और कौन से शुरुआती अनुभवों ने आपके व्यक्तित्व या सोच को आकार दिया?",
-      placeholder: "Share your childhood experiences...",
-      placeholderHindi: "अपने बचपन के अनुभव साझा करें...",
+      id: "childhood",
+      label: "1. Childhood and Early Life: What are some of your fondest memories from your childhood?",
+      labelHindi: "1. बचपन और प्रारंभिक जीवन: आपके बचपन की कौन सी यादें सबसे प्यारी हैं?",
+      placeholder: "Share your fondest childhood memories...",
+      placeholderHindi: "अपनी सबसे प्यारी बचपन की यादें साझा करें...",
       required: true,
     },
     {
-      id: "firstDream",
-      label: "2. What was your first dream or ambition as a child, and how has it evolved over time?",
-      labelHindi: "2. बचपन में आपका पहला सपना या महत्वाकांक्षा क्या थी, और समय के साथ यह कैसे विकसित हुई?",
-      placeholder: "Your childhood dreams...",
-      placeholderHindi: "आपके बचपन के सपने...",
+      id: "schoolLife",
+      label: "2. School Life: How would you describe your school years, and were there any significant experiences that shaped who you are today?",
+      labelHindi: "2. स्कूल जीवन: आप अपने स्कूल के वर्षों का वर्णन कैसे करेंगे, और क्या कोई महत्वपूर्ण अनुभव थे जिन्होंने आज के आपको आकार दिया?",
+      placeholder: "Describe your school years and significant experiences...",
+      placeholderHindi: "अपने स्कूल के वर्षों और महत्वपूर्ण अनुभवों का वर्णन करें...",
     },
     {
-      id: "firstJob",
-      label: "3. What was your first job, business, or project, and what did it teach you?",
-      labelHindi: "3. आपकी पहली नौकरी, व्यवसाय या प्रोजेक्ट क्या था, और उसने आपको क्या सिखाया?",
-      placeholder: "Your first professional experience...",
-      placeholderHindi: "आपका पहला पेशेवर अनुभव...",
+      id: "collegeEducation",
+      label: "3. College and Higher Education: What was your college experience like, and how did it influence your career path?",
+      labelHindi: "3. कॉलेज और उच्च शिक्षा: आपका कॉलेज का अनुभव कैसा था, और इसने आपके करियर पथ को कैसे प्रभावित किया?",
+      placeholder: "Share your college experience and its impact on your career...",
+      placeholderHindi: "अपना कॉलेज अनुभव और करियर पर इसका प्रभाव साझा करें...",
     },
     {
-      id: "careerRealization",
-      label: "4. When did you realize what you truly wanted to do in your career or business?",
-      labelHindi: "4. आपको कब एहसास हुआ कि आप अपने करियर या व्यवसाय में वास्तव में क्या करना चाहते हैं?",
-      placeholder: "The moment of clarity...",
-      placeholderHindi: "स्पष्टता का क्षण...",
-    },
-    {
-      id: "biggestChallenge",
-      label: "5. What has been the toughest challenge or failure in your journey, and how did you overcome it?",
-      labelHindi: "5. आपकी यात्रा में सबसे कठिन चुनौती या असफलता क्या रही है, और आपने उसे कैसे पार किया?",
-      placeholder: "Your toughest moment...",
-      placeholderHindi: "आपका सबसे कठिन क्षण...",
+      id: "careerJourney",
+      label: "4. Career Journey: Can you walk me through your professional journey, including key milestones and challenges you've faced?",
+      labelHindi: "4. करियर यात्रा: क्या आप मुझे अपनी पेशेवर यात्रा के बारे में बता सकते हैं, जिसमें महत्वपूर्ण मील के पत्थर और चुनौतियां शामिल हैं?",
+      placeholder: "Walk through your professional journey, milestones, and challenges...",
+      placeholderHindi: "अपनी पेशेवर यात्रा, मील के पत्थर और चुनौतियों के बारे में बताएं...",
       required: true,
     },
     {
-      id: "almostGaveUp",
-      label: "6. Was there a moment when you felt like giving up but decided to keep going? What motivated you?",
-      labelHindi: "6. क्या कोई ऐसा क्षण था जब आप हार मानने वाले थे लेकिन जारी रखने का फैसला किया? आपको क्या प्रेरित किया?",
-      placeholder: "The moment of doubt...",
-      placeholderHindi: "संदेह का क्षण...",
-    },
-    {
-      id: "turningPoint",
-      label: "7. What was the single biggest turning point that changed your career or life path?",
-      labelHindi: "7. वह कौन सा सबसे बड़ा मोड़ था जिसने आपके करियर या जीवन पथ को बदल दिया?",
-      placeholder: "The decision that changed everything...",
-      placeholderHindi: "वह फैसला जिसने सब कुछ बदल दिया...",
-    },
-    {
-      id: "mentor",
-      label: "8. Who has been your biggest mentor or influence, and what is one lesson you still follow from them?",
-      labelHindi: "8. आपका सबसे बड़ा गुरु या प्रभाव कौन रहा है, और उनसे आप अभी भी कौन सा सबक मानते हैं?",
-      placeholder: "Your mentor and their impact...",
-      placeholderHindi: "आपका गुरु और उनका प्रभाव...",
-    },
-    {
-      id: "currentWork",
-      label: "9. What do you do today, and who do you help (your audience, clients, or industry)?",
-      labelHindi: "9. आज आप क्या करते हैं, और आप किसकी मदद करते हैं (आपके दर्शक, ग्राहक या उद्योग)?",
-      placeholder: "Your current role and who you serve...",
-      placeholderHindi: "आपकी वर्तमान भूमिका और जिनकी आप सेवा करते हैं...",
+      id: "personalLife",
+      label: "5. Personal Life and Lifestyle: How do you like to spend your time outside of work, and what are your hobbies or passions?",
+      labelHindi: "5. व्यक्तिगत जीवन और जीवनशैली: आप काम के बाहर अपना समय कैसे बिताना पसंद करते हैं, और आपके शौक या जुनून क्या हैं?",
+      placeholder: "Share your personal life, hobbies, and passions...",
+      placeholderHindi: "अपना व्यक्तिगत जीवन, शौक और जुनून साझा करें...",
       required: true,
     },
     {
-      id: "uniqueApproach",
-      label: "10. What makes your approach or expertise unique compared to others in your field?",
-      labelHindi: "10. आपके क्षेत्र में दूसरों की तुलना में आपका दृष्टिकोण या विशेषज्ञता क्या अद्वितीय बनाती है?",
-      placeholder: "What sets you apart...",
-      placeholderHindi: "आपको क्या अलग बनाता है...",
+      id: "awardsRecognition",
+      label: "6. Awards and Recognitions: What are some of the awards or recognitions you've received, and what do they mean to you?",
+      labelHindi: "6. पुरस्कार और मान्यता: आपको कौन से पुरस्कार या मान्यता मिली हैं, और वे आपके लिए क्या मतलब रखते हैं?",
+      placeholder: "Share your awards, recognitions, and what they mean to you...",
+      placeholderHindi: "अपने पुरस्कार, मान्यता और उनका आपके लिए क्या मतलब है साझा करें...",
     },
     {
-      id: "proudAchievement",
-      label: "11. What achievement or milestone in your current work are you most proud of?",
-      labelHindi: "11. आपके वर्तमान काम में कौन सी उपलब्धि या मील का पत्थर है जिस पर आप सबसे ज्यादा गर्व करते हैं?",
-      placeholder: "Your biggest accomplishment...",
-      placeholderHindi: "आपकी सबसे बड़ी उपलब्धि...",
+      id: "aspirationsGoals",
+      label: "7. Aspirations and Goals: What are your short-term and long-term goals, both personally and professionally?",
+      labelHindi: "7. आकांक्षाएं और लक्ष्य: आपके अल्पकालिक और दीर्घकालिक लक्ष्य क्या हैं, व्यक्तिगत और पेशेवर दोनों?",
+      placeholder: "Share your short-term and long-term goals...",
+      placeholderHindi: "अपने अल्पकालिक और दीर्घकालिक लक्ष्य साझा करें...",
     },
     {
-      id: "industryMisconception",
-      label: "12. What is one common belief or misconception in your industry that you see differently—and why?",
-      labelHindi: "12. आपके उद्योग में कौन सी सामान्य धारणा या गलतफहमी है जिसे आप अलग तरह से देखते हैं—और क्यों?",
-      placeholder: "The industry myth you challenge...",
-      placeholderHindi: "उद्योग का वह मिथक जिसे आप चुनौती देते हैं...",
-    },
-    {
-      id: "powerfulLesson",
-      label: "13. What is the most powerful lesson from your journey that you would share with others?",
-      labelHindi: "13. आपकी यात्रा से सबसे शक्तिशाली सबक क्या है जो आप दूसरों के साथ साझा करेंगे?",
-      placeholder: "The key insight you'd share...",
-      placeholderHindi: "वह मुख्य अंतर्दृष्टि जो आप साझा करेंगे...",
-    },
-    {
-      id: "coreValues",
-      label: "14. What are your core values, and how do they shape your decisions and work?",
-      labelHindi: "14. आपके मूल मूल्य क्या हैं, और वे आपके निर्णयों और काम को कैसे आकार देते हैं?",
-      placeholder: "Your fundamental values...",
-      placeholderHindi: "आपके मौलिक मूल्य...",
-    },
-    {
-      id: "desiredImpact",
-      label: "15. What impact or legacy do you want to create in your industry or for the people you serve?",
-      labelHindi: "15. आप अपने उद्योग या जिन लोगों की आप सेवा करते हैं, उनके लिए क्या प्रभाव या विरासत बनाना चाहते हैं?",
-      placeholder: "The difference you want to make...",
-      placeholderHindi: "वह अंतर जो आप लाना चाहते हैं...",
+      id: "additionalInsights",
+      label: "8. Additional Insights: Is there anything else about you that you'd like people to know, or a unique story that you'd like to share?",
+      labelHindi: "8. अतिरिक्त अंतर्दृष्टि: क्या आपके बारे में कुछ और है जो आप चाहते हैं कि लोग जानें, या कोई अनूठी कहानी जो आप साझा करना चाहते हैं?",
+      placeholder: "Share any additional insights or unique stories about yourself...",
+      placeholderHindi: "अपने बारे में कोई अतिरिक्त अंतर्दृष्टि या अनूठी कहानियां साझा करें...",
     },
   ]
 
