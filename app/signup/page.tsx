@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, Loader2, User, Mail, Phone, MapPin, Lock } from "lucide-react"
+import { Eye, EyeOff, Loader2, User, Mail, Phone, MapPin, Lock, UserPlus } from "lucide-react"
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -93,12 +93,12 @@ export default function SignUpPage() {
       <div className="max-w-md w-full space-y-8 bg-white/10 backdrop-blur-lg p-8 rounded-2xl border border-white/20 shadow-2xl">
         <div className="text-center">
           <div className="mx-auto h-12 w-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mb-4">
-            <User className="h-6 w-6 text-white" />
+            <UserPlus className="h-6 w-6 text-white" />
           </div>
           <h2 className="text-3xl font-bold text-white">Create your account</h2>
           <p className="mt-2 text-sm text-slate-300">
             Already have an account?{" "}
-            <Link href="/signin" className="font-medium text-blue-400 hover:text-blue-300 transition-colors">
+            <Link href="/signin" className="font-medium text-yellow-400 hover:text-yellow-300 transition-colors">
               Sign in
             </Link>
           </p>
@@ -119,6 +119,7 @@ export default function SignUpPage() {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -135,6 +136,7 @@ export default function SignUpPage() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -152,6 +154,7 @@ export default function SignUpPage() {
                 className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400"
                 maxLength={10}
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -168,6 +171,7 @@ export default function SignUpPage() {
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -185,6 +189,7 @@ export default function SignUpPage() {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400 pr-10"
                   required
+                  disabled={isLoading}
                 />
                 <Button
                   type="button"
@@ -192,6 +197,7 @@ export default function SignUpPage() {
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-slate-400 hover:text-white"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
@@ -212,6 +218,7 @@ export default function SignUpPage() {
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400 pr-10"
                   required
+                  disabled={isLoading}
                 />
                 <Button
                   type="button"
@@ -219,6 +226,7 @@ export default function SignUpPage() {
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-slate-400 hover:text-white"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  disabled={isLoading}
                 >
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
