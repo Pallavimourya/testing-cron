@@ -5,6 +5,7 @@ import { useState, useEffect, memo } from "react"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import DashboardTopbar from "@/components/dashboard-topbar"
 import { Toaster } from "@/components/ui/sonner"
+import Chatbot from "@/components/chatbot"
 import { usePathname } from "next/navigation"
 
 // Memoize components to prevent unnecessary re-renders
@@ -94,7 +95,7 @@ export default function DashboardLayout({
           </main>
         </div>
         
-        <Toaster 
+                <Toaster 
           position="top-center" 
           toastOptions={{
             style: {
@@ -115,6 +116,7 @@ export default function DashboardLayout({
             className: 'fast-notification',
           }}
         />
+        <Chatbot />
       </div>
-  )
-}
+    )
+  }

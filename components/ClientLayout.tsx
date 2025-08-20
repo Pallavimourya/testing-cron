@@ -5,6 +5,7 @@ import { SessionProvider } from "next-auth/react";
 import { Toaster } from "sonner";
 import Navigation from "@/components/navigation";
 import Footer from "@/components/footer";
+import Chatbot from "@/components/chatbot";
 
 export default function ClientLayout({
   children,
@@ -19,6 +20,7 @@ export default function ClientLayout({
       {!isDashboard && <Navigation />}
       <main>{children}</main>
       {!isDashboard && <Footer />}
+      {!isDashboard && <Chatbot />}
       <Toaster position="top-right" richColors />
     </SessionProvider>
   );
