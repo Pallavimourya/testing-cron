@@ -34,10 +34,10 @@ export default function HomePage() {
         <div className="relative z-10 text-center text-white max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="pt-20 sm:pt-32">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black mb-6 sm:mb-8 leading-tight tracking-tighter animate-slide-up">
-            Elevate Your
-            <span className="block bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent mt-2 pb-3">
-            Digital Presence
-            </span>
+              Elevate Your
+              <span className="block bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent mt-2 pb-3">
+                Digital Presence
+              </span>
             </h1>
           </div>
 
