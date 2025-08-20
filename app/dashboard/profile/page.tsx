@@ -829,15 +829,7 @@ export default function UnifiedProfilePage() {
                 </div>
               )}
 
-              {!generatedStory && !isGeneratingStory && (
-                <div className="text-center py-8">
-                  <Sparkles className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">No Story Generated</h3>
-                  <p className="text-gray-500 mb-4 text-sm">
-                    Fill in your base story and customization preferences, then click &quot;Generate Unique Story&quot;
-                  </p>
-                </div>
-              )}
+
 
               {!generatedStory && isGeneratingStory && (
                 <div className="text-center py-8">

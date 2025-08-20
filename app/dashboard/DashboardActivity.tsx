@@ -100,3 +100,4 @@ export default function DashboardActivity({ stats, formatDate, getStatusColor }:
     </div>
   )
 }
+
