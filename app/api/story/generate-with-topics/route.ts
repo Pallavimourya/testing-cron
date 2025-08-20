@@ -295,17 +295,8 @@ Generate 5-8 relevant topics based on the story above:`
 }
 
 function generateFallbackStory(baseStoryData: any): string {
-  return `My professional journey began with a simple realization: success isn't about avoiding challenges, but about how we respond to them.
-
-Starting in my current role, I faced what seemed like an insurmountable obstacle. The biggest challenge wasn't technical - it was learning to trust my instincts and stay true to my core values when everything around me suggested taking shortcuts.
-
-The turning point came when I realized that my unique approach, though unconventional, was actually my greatest strength. Instead of following the established path, I chose to innovate and think differently.
-
-This led to my proudest achievement: not just the results we achieved, but the way we achieved them - with integrity, creativity, and genuine care for our team and customers.
-
-The most powerful lesson I learned is that authentic leadership isn't about having all the answers, but about asking the right questions and creating an environment where others can thrive.
-
-Today, I continue to build on these foundations, always remembering that the best professional growth comes from staying true to yourself while remaining open to new perspectives and approaches.`
+  // Return empty string instead of default content
+  return ""
 }
 
 function generateFallbackTopics(): string[] {

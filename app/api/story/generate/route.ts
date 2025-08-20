@@ -38,10 +38,11 @@ export async function POST(request: Request) {
     const profile = await UserProfile.findOne({ userId: user._id })
 
     console.log("🎯 Generating story for user:", user._id)
-    console.log("👤 Profile context:", profile ? "Found" : "Not found")
+    console.log("📝 Base story data:", Object.keys(baseStoryData))
+    console.log("🎨 Customization data:", Object.keys(customizationData))
 
-    // Generate story using OpenAI directly
-    const generatedStory = await generateStoryWithOpenAI(
+    // Generate story using enhanced OpenAI prompt
+    const generatedStory = await generateEnhancedStoryWithOpenAI(
       baseStoryData,
       customizationData,
       profile,
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
       updatedAt: new Date(),
     })
 
-    // Generate topics from the story
+    // Generate topics directly from the story
     const generatedTopics = await generateTopicsFromStory(
       generatedStory,
       customizationData,
@@ -121,7 +122,7 @@ export async function POST(request: Request) {
   }
 }
 
-async function generateStoryWithOpenAI(
+async function generateEnhancedStoryWithOpenAI(
   baseStoryData: any,
   customizationData: any,
   profile?: any,
@@ -137,37 +138,49 @@ async function generateStoryWithOpenAI(
     const contentLanguage = customizationData?.content_language || customizationData?.contentLanguage || "English"
     const targetAudience = customizationData?.target_audience || customizationData?.targetAudience || "professionals"
     const industry = user?.industry || "business"
+    const writingStyle = customizationData?.writing_style || customizationData?.writingStyle || "conversational"
+    const contentTone = customizationData?.content_tone || customizationData?.contentTone || "professional"
 
-    const prompt = `Create a compelling professional story based on the user's background and preferences. Write in ${contentLanguage} language.
+    // Create a comprehensive prompt that properly combines base story + customization
+    const prompt = `Create a professional story based on the user's specific information. Write in ${contentLanguage} language only.
 
-**User Background:**
-- Current Work: ${baseStoryData?.currentWork || "Not specified"}
-- Biggest Challenge: ${baseStoryData?.biggestChallenge || "Not specified"}
-- Turning Point: ${baseStoryData?.turningPoint || "Not specified"}
-- Core Values: ${baseStoryData?.coreValues || "Not specified"}
-- Unique Approach: ${baseStoryData?.uniqueApproach || "Not specified"}
-- Proud Achievement: ${baseStoryData?.proudAchievement || "Not specified"}
-- Powerful Lesson: ${baseStoryData?.powerfulLesson || "Not specified"}
+**USER'S SPECIFIC INFORMATION (USE THESE EXACT DETAILS):**
+- Current Work/Role: "${baseStoryData?.currentWork || baseStoryData?.current_work || "Not specified"}"
+- Biggest Challenge: "${baseStoryData?.biggestChallenge || baseStoryData?.biggest_challenge || "Not specified"}"
+- Turning Point: "${baseStoryData?.turningPoint || baseStoryData?.turning_point || "Not specified"}"
+- Core Values: "${baseStoryData?.coreValues || baseStoryData?.core_values || "Not specified"}"
+- Unique Approach: "${baseStoryData?.uniqueApproach || baseStoryData?.unique_approach || "Not specified"}"
+- Proud Achievement: "${baseStoryData?.proudAchievement || baseStoryData?.proud_achievement || "Not specified"}"
+- Powerful Lesson: "${baseStoryData?.powerfulLesson || baseStoryData?.powerful_lesson || "Not specified"}"
 
-**Profile Context:**
+**CUSTOMIZATION PREFERENCES:**
 - Target Audience: ${targetAudience}
-- Industry: ${industry}
 - Content Language: ${contentLanguage}
-- Experience: ${profile?.experience || "Not specified"}
-- Expertise: ${profile?.expertise || "Not specified"}
-- Goals: ${profile?.goals || "Not specified"}
+- Writing Style: ${writingStyle}
+- Content Tone: ${contentTone}
+- Industry: ${industry}
 
-**Requirements:**
-1. Create a cohesive, engaging professional story
-2. Write in ${contentLanguage} language
-3. Make it personal and authentic
-4. Include specific details and experiences
-5. Focus on growth, challenges, and lessons learned
+**CRITICAL REQUIREMENTS:**
+1. Write ONLY in ${contentLanguage} language - no mixing of languages
+2. Use the specific details provided above - do not create generic content
+3. Write in simple, clean text - no bold formatting, no special characters
+4. Create a natural, flowing narrative that sounds authentic
+5. Keep the tone ${contentTone} and style ${writingStyle}
 6. Make it relevant to ${targetAudience} in ${industry}
-7. Keep it professional but relatable
-8. Include a clear narrative arc with beginning, middle, and end
+7. Write 3-4 paragraphs maximum
+8. Focus on the user's actual experiences and lessons learned
+9. Make it personal and engaging
+10. Avoid clichés and generic statements
 
-Generate a compelling professional story:`
+**STORY STRUCTURE:**
+- Start with the user's current work situation
+- Describe the challenge they faced
+- Explain the turning point that changed things
+- Show how their values and approach helped
+- Highlight their achievement
+- End with the lesson learned
+
+Write a clean, professional story using the user's specific information:`
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -176,11 +189,11 @@ Generate a compelling professional story:`
         Authorization: `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: `You are an expert storyteller who creates compelling professional narratives. Always write in ${contentLanguage} language and make stories authentic and engaging.`,
+            content: `You are a professional storyteller. Write clean, simple stories in the specified language only. Use the exact details provided by the user. No mixed languages, no bold formatting, no special characters. Write natural, authentic content.`,
           },
           {
             role: "user",
@@ -197,8 +210,16 @@ Generate a compelling professional story:`
       const content = data.choices[0]?.message?.content
 
       if (content && content.trim().length > 0) {
-        console.log("✅ Generated story with OpenAI")
-        return content.trim()
+        console.log("✅ Generated enhanced story with OpenAI")
+        // Clean the content to remove any formatting issues
+        const cleanedContent = content
+          .replace(/\*\*/g, '') // Remove bold formatting
+          .replace(/\*/g, '') // Remove asterisks
+          .replace(/\[.*?\]/g, '') // Remove brackets
+          .replace(/\n\s*\n/g, '\n\n') // Clean up extra line breaks
+          .trim()
+        
+        return cleanedContent
       }
     }
 
@@ -225,27 +246,32 @@ async function generateTopicsFromStory(
     const targetAudience = customizationData?.target_audience || customizationData?.targetAudience || "professionals"
     const industry = user?.industry || "business"
 
-    const prompt = `Generate 5-8 engaging LinkedIn content topics based on this professional story. Write topic titles only, one per line, in ${contentLanguage} language.
+    const prompt = `Generate 5-8 engaging LinkedIn content topics that are DIRECTLY derived from this specific story. 
 
-**User's Story:**
+**USER'S STORY:**
 ${baseStory}
 
-**Profile Context:**
+**CONTEXT:**
 - Target Audience: ${targetAudience}
 - Industry: ${industry}
 - Content Language: ${contentLanguage}
 
-**Requirements:**
-1. Create topics that directly relate to the user's story and experiences
-2. Make topics engaging and relevant to ${targetAudience}
-3. Focus on professional growth, lessons learned, and insights
-4. Write in ${contentLanguage} language
-5. Keep topic titles concise (under 60 characters)
-6. Make them specific and actionable
-7. Return only the topic titles, one per line
-8. No numbering, no formatting, just plain text titles
+**REQUIREMENTS:**
+1. **MUST BE DERIVED** from the specific story above - do not create generic topics
+2. Extract key themes, lessons, and insights from the story
+3. Create topics that the user can write about based on their actual experiences
+4. Make topics engaging and relevant to ${targetAudience}
+5. Write in ${contentLanguage} language
+6. Keep topic titles concise (under 60 characters)
+7. Make them specific and actionable
+8. Focus on professional growth, challenges, and insights from the story
 
-Generate 5-8 relevant topics based on the story above:`
+**EXAMPLES OF GOOD TOPICS (based on story elements):**
+- If story mentions "team leadership" → "Leading teams through challenging times"
+- If story mentions "career transition" → "How I navigated my career pivot"
+- If story mentions "innovation" → "Innovating in traditional industries"
+
+**OUTPUT:** Return only the topic titles, one per line, no numbering or formatting.`
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -254,18 +280,18 @@ Generate 5-8 relevant topics based on the story above:`
         Authorization: `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: `You are an expert content strategist who creates engaging LinkedIn topics based on personal stories. Always respond with topic titles only, one per line, in ${contentLanguage} language.`,
+            content: `You are an expert content strategist who creates LinkedIn topics directly from personal stories. You MUST extract topics from the specific story provided, not create generic ones. Always respond with topic titles only, one per line.`,
           },
           {
             role: "user",
             content: prompt,
           },
         ],
-        max_tokens: 300,
+        max_tokens: 400,
         temperature: 0.7,
       }),
     })
@@ -282,7 +308,7 @@ Generate 5-8 relevant topics based on the story above:`
           .filter((line: string) => line.length > 0 && !line.match(/^\d+\./)) // Remove numbered lines
           .slice(0, 8) // Limit to 8 topics
 
-        console.log("✅ Generated topics with OpenAI:", topics.length)
+        console.log("✅ Generated story-based topics with OpenAI:", topics.length)
         return topics
       }
     }
@@ -295,17 +321,8 @@ Generate 5-8 relevant topics based on the story above:`
 }
 
 function generateFallbackStory(baseStoryData: any): string {
-  return `My professional journey began with a simple realization: success isn't about avoiding challenges, but about how we respond to them.
-
-Starting in my current role, I faced what seemed like an insurmountable obstacle. The biggest challenge wasn't technical - it was learning to trust my instincts and stay true to my core values when everything around me suggested taking shortcuts.
-
-The turning point came when I realized that my unique approach, though unconventional, was actually my greatest strength. Instead of following the established path, I chose to innovate and think differently.
-
-This led to my proudest achievement: not just the results we achieved, but the way we achieved them - with integrity, creativity, and genuine care for our team and customers.
-
-The most powerful lesson I learned is that authentic leadership isn't about having all the answers, but about asking the right questions and creating an environment where others can thrive.
-
-Today, I continue to build on these foundations, always remembering that the best professional growth comes from staying true to yourself while remaining open to new perspectives and approaches.`
+  // Return empty string instead of default content
+  return ""
 }
 
 function generateFallbackTopics(): string[] {

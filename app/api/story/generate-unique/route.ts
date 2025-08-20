@@ -182,34 +182,8 @@ async function generateUniqueStoryWithChatGPT(prompt: string) {
 }
 
 function generateFallbackStory() {
-  const timestamp = new Date().toLocaleString()
-  const randomElements = [
-    "journey of discovery",
-    "path of transformation",
-    "adventure of growth",
-    "story of resilience",
-    "tale of innovation",
-    "narrative of success",
-    "chronicle of change",
-    "saga of determination",
-  ]
-
-  const randomElement = randomElements[Math.floor(Math.random() * randomElements.length)]
-  const uniqueId = Math.floor(Math.random() * 10000)
-
-  return `This is my unique professional ${randomElement} (Generated: ${timestamp} - ID: ${uniqueId}).
-
-From my early experiences, I've learned that every challenge is an opportunity waiting to be discovered. My path hasn't been conventional, but that's exactly what makes it uniquely mine.
-
-The defining moment came when I realized that success isn't just about reaching the destination—it's about the meaningful impact you create along the way. Today, I'm passionate about helping others discover their own unique paths and unlock their hidden potential.
-
-What sets my approach apart? I believe in authentic storytelling, building genuine connections, and creating lasting value that inspires others. Every day, I work towards building something meaningful that will empower the next generation of professionals.
-
-My mission is clear: to demonstrate that with the right mindset, unwavering dedication, and the courage to be different, anyone can write their own success story.
-
-This story represents my unique perspective and experiences as of ${timestamp}.
-
-#UniqueJourney #ProfessionalGrowth #Inspiration #Authenticity`
+  // Return empty string instead of default content
+  return ""
 }
 
 async function generateRelatedTopics(baseStoryData: any, customizationData: any, generatedStory: string) {

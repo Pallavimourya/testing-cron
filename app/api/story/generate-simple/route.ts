@@ -195,15 +195,7 @@ This journey has taught me that ${powerfulLesson}. Whether you're just starting 
     return story
   } catch (error) {
     console.error("Local story generation error:", error)
-    return `# Your Brand Story
-
-Thank you for sharing your journey with us. Your story is unique and powerful, shaped by your experiences and driven by your vision for the future.
-
-From your early experiences to your current work, every step has contributed to who you are today. Your challenges have made you stronger, your mentors have guided you, and your values continue to drive you forward.
-
-This is the foundation of your brand story - authentic, personal, and meaningful. Use this as a starting point to share your message with the world.
-
-*Your story matters. Your voice matters. Your impact matters.*`
+    return ""
   }
 }
 
