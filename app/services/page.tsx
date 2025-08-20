@@ -68,9 +68,11 @@ export default function ServicesPage() {
               <span className="font-medium text-sm sm:text-base">LinkedIn Management</span>
             </div>
             <h1 className="text-4xl sm:text-6xl md:text-8xl font-black mb-6 sm:mb-8 leading-tight text-white">
-              Adarsh Ka
+            Elevate Your
+
               <span className="block bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mt-2">
-                Jaadu
+              LinkedIn Presence
+
               </span>
             </h1>
             <p className="text-base sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed px-4">

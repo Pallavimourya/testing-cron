@@ -22,12 +22,6 @@ export default function RootLayout({
         <ClientLayout>
           {children}
         </ClientLayout>
-        <Script
-          src="https://cdn.pulse.is/livechat/loader.js"
-          data-live-chat-id="6836ed8a4ab6ec1a4a0c8f68"
-          strategy="afterInteractive"
-          async
-        />
       </body>
     </html>
   )

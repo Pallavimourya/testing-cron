@@ -1,80 +1,73 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Check, Star, Zap, Crown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { PaymentModal } from "@/components/payment-modal"
 
-export default function PricingClientPage() {
-  const plans = [
-    {
-      name: "Zuper 15",
-      price: "₹9",
-      duration: "per 15 days",
-      description: "Perfect for individuals starting their LinkedIn journey",
-      icon: <Star className="h-6 w-6" />,
-      features: [
-        "Profile Optimization",
-        "Basic Content Strategy",
-        "Weekly Post Creation (2 posts)",
-        "Engagement Monitoring",
-        "Basic Analytics Report",
-        "Email Support",
-      ],
-      buttonText: "Get Started",
-      popular: false,
-    },
-    {
-      name: "Zuper 30",
-      price: "₹799",
-      duration: "per 30 days",
-      description: "Ideal for professionals looking to grow their network",
-      icon: <Zap className="h-6 w-6" />,
-      features: [
-        "Everything in Zuper 15",
-        "Advanced Profile Optimization",
-        "Weekly Post Creation (4 posts)",
-        "Network Growth Strategy",
-        "Engagement Management",
-        "Detailed Analytics Report",
-        "Priority Email Support",
-        "Monthly Strategy Call",
-      ],
-      buttonText: "Get Started",
-      popular: true,
-    },
-    {
-      name: "Zuper 360",
-      price: "₹5,999",
-      duration: "per 360 days",
-      description: "For businesses and executives seeking maximum impact",
-      icon: <Crown className="h-6 w-6" />,
-      features: [
-        "Everything in Zuper 30",
-        "Premium Profile Optimization",
-        "Weekly Post Creation (6 posts)",
-        "Advanced Network Growth",
-        "Thought Leadership Strategy",
-        "Competitor Analysis",
-        "Custom Analytics Dashboard",
-        "24/7 Priority Support",
-        "Weekly Strategy Calls",
+interface Plan {
+  id: string
+  name: string
+  slug: string
+  description: string
+  price: number
+  originalPrice?: number
+  durationDays: number
+  features: string[]
+  imageLimit: number
+  contentLimit: number
+  badge?: string
+  color?: string
+  icon?: string
+  isActive: boolean
+}
 
-        "Annual Strategy Planning",
-        "Priority Onboarding",
-      ],
-      buttonText: "Get Started",
-      popular: false,
-    },
-  ]
+export default function PricingClientPage() {
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchPlans()
+  }, [])
+
+  const fetchPlans = async () => {
+    try {
+      const response = await fetch("/api/plans/active")
+      if (response.ok) {
+        const data = await response.json()
+        setPlans(data.plans || [])
+      }
+    } catch (error) {
+      console.error("Failed to fetch plans:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getIcon = (iconName: string) => {
+    switch (iconName) {
+      case "Star":
+        return <Star className="h-6 w-6" />
+      case "Zap":
+        return <Zap className="h-6 w-6" />
+      case "Crown":
+        return <Crown className="h-6 w-6" />
+      default:
+        return <Star className="h-6 w-6" />
+    }
+  }
+
+  const formatPrice = (price: number) => {
+    return `₹${price.toLocaleString("en-IN")}`
+  }
 
   const [selectedPlan, setSelectedPlan] = useState<{
-    type: "zuper15" | "zuper30" | "zuper360"
-    details: (typeof plans)[0]
+    type: string
+    details: Plan
   } | null>(null)
 
-  const handlePlanSelect = (planType: "zuper15" | "zuper30" | "zuper360", planDetails: (typeof plans)[0]) => {
+  const handlePlanSelect = (planType: string, planDetails: Plan) => {
     setSelectedPlan({ type: planType, details: planDetails })
   }
 
@@ -108,41 +101,48 @@ export default function PricingClientPage() {
       {/* Plans Section */}
       <section className="py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            {plans.map((plan, index) => (
-              <div
-                key={index}
-                className={`relative bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border ${
-                  plan.popular ? "border-blue-500/50 shadow-lg shadow-blue-500/20" : "border-slate-700/50"
-                } transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex flex-col h-full`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-1 rounded-full">
-                      Most Popular
-                    </Badge>
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+              {plans.map((plan, index) => (
+                <div
+                  key={plan.id}
+                  className={`relative bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border ${
+                    plan.badge === "Most Popular" ? "border-blue-500/50 shadow-lg shadow-blue-500/20" : "border-slate-700/50"
+                  } transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex flex-col h-full`}
+                >
+                  {plan.badge && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-1 rounded-full">
+                        {plan.badge}
+                      </Badge>
+                    </div>
+                  )}
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mb-6 text-white">
+                    {getIcon(plan.icon || "Star")}
                   </div>
-                )}
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mb-6 text-white">
-                  {plan.icon}
+                  <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold text-white">{formatPrice(plan.price)}</span>
+                    <span className="text-slate-400 ml-2">per {plan.durationDays} days</span>
+                  </div>
+                  <p className="text-slate-300 mb-6">{plan.description}</p>
+                  <ul className="space-y-3 mb-8 flex-grow">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-center text-slate-300">
+                        <Check className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-white">{plan.price}</span>
-                  <span className="text-slate-400 ml-2">{plan.duration}</span>
-                </div>
-                <p className="text-slate-300 mb-6">{plan.description}</p>
-                <ul className="space-y-3 mb-8 flex-grow">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-center text-slate-300">
-                      <Check className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
       {selectedPlan && (
@@ -153,13 +153,13 @@ export default function PricingClientPage() {
             id: selectedPlan.type,
             slug: selectedPlan.type,
             name: selectedPlan.details.name,
-            price: parseInt(selectedPlan.details.price.replace(/[^\d]/g, '')),
-            durationDays: selectedPlan.type === 'zuper15' ? 15 : selectedPlan.type === 'zuper30' ? 30 : 360,
+            price: selectedPlan.details.price,
+            durationDays: selectedPlan.details.durationDays,
             features: selectedPlan.details.features,
             description: selectedPlan.details.description,
-            imageLimit: selectedPlan.type === 'zuper15' ? 10 : selectedPlan.type === 'zuper30' ? 50 : 200,
-            contentLimit: selectedPlan.type === 'zuper15' ? 20 : selectedPlan.type === 'zuper30' ? 100 : 500,
-            isActive: true,
+            imageLimit: selectedPlan.details.imageLimit,
+            contentLimit: selectedPlan.details.contentLimit,
+            isActive: selectedPlan.details.isActive,
           }}
         />
       )}
