@@ -64,21 +64,14 @@ interface UserProfileData {
   profilePhoto?: string
   image?: string
   baseStoryData?: {
-    earlyLife: string
-    firstDream: string
-    firstJob: string
-    careerRealization: string
-    biggestChallenge: string
-    almostGaveUp: string
-    turningPoint: string
-    mentor: string
-    currentWork: string
-    uniqueApproach: string
-    proudAchievement: string
-    industryMisconception: string
-    powerfulLesson: string
-    coreValues: string
-    desiredImpact: string
+    childhood: string
+    schoolLife: string
+    collegeEducation: string
+    careerJourney: string
+    personalLife: string
+    awardsRecognition: string
+    aspirationsGoals: string
+    additionalInsights: string
   }
   customizationData?: {
     content_language: string
@@ -807,51 +800,51 @@ export default function ViewProfilePage() {
                 {isEditing ? (
                   <div className="space-y-6">
                     <div className="space-y-3">
-                      <Label className="text-base font-medium text-gray-700">Current Work</Label>
+                      <Label className="text-base font-medium text-gray-700">Career Journey</Label>
                       <Textarea
-                        value={editableBaseStory.currentWork || ""}
-                        onChange={(e) => handleBaseStoryChange("currentWork", e.target.value)}
-                        placeholder="What do you do today, and who do you help?"
+                        value={editableBaseStory.careerJourney || ""}
+                        onChange={(e) => handleBaseStoryChange("careerJourney", e.target.value)}
+                        placeholder="Can you walk me through your professional journey, including key milestones and challenges you've faced?"
                         className="min-h-[120px] text-base"
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label className="text-base font-medium text-gray-700">Core Values</Label>
+                      <Label className="text-base font-medium text-gray-700">Personal Life & Lifestyle</Label>
                       <Textarea
-                        value={editableBaseStory.coreValues || ""}
-                        onChange={(e) => handleBaseStoryChange("coreValues", e.target.value)}
-                        placeholder="What are your core values, and how do they shape your decisions and work?"
+                        value={editableBaseStory.personalLife || ""}
+                        onChange={(e) => handleBaseStoryChange("personalLife", e.target.value)}
+                        placeholder="How do you like to spend your time outside of work, and what are your hobbies or passions?"
                         className="min-h-[120px] text-base"
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label className="text-base font-medium text-gray-700">Desired Impact</Label>
+                      <Label className="text-base font-medium text-gray-700">Aspirations & Goals</Label>
                       <Textarea
-                        value={editableBaseStory.desiredImpact || ""}
-                        onChange={(e) => handleBaseStoryChange("desiredImpact", e.target.value)}
-                        placeholder="What impact or legacy do you want to create?"
+                        value={editableBaseStory.aspirationsGoals || ""}
+                        onChange={(e) => handleBaseStoryChange("aspirationsGoals", e.target.value)}
+                        placeholder="What are your short-term and long-term goals, both personally and professionally?"
                         className="min-h-[120px] text-base"
                       />
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {profileData.baseStoryData?.currentWork && (
+                    {profileData.baseStoryData?.careerJourney && (
                       <div className="p-6 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-3">Current Work</h3>
-                        <p className="text-gray-700 leading-relaxed">{profileData.baseStoryData.currentWork}</p>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-3">Career Journey</h3>
+                        <p className="text-gray-700 leading-relaxed">{profileData.baseStoryData.careerJourney}</p>
                       </div>
                     )}
-                    {profileData.baseStoryData?.coreValues && (
+                    {profileData.baseStoryData?.personalLife && (
                       <div className="p-6 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-3">Core Values</h3>
-                        <p className="text-gray-700 leading-relaxed">{profileData.baseStoryData.coreValues}</p>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-3">Personal Life & Lifestyle</h3>
+                        <p className="text-gray-700 leading-relaxed">{profileData.baseStoryData.personalLife}</p>
                       </div>
                     )}
-                    {profileData.baseStoryData?.desiredImpact && (
+                    {profileData.baseStoryData?.aspirationsGoals && (
                       <div className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-3">Desired Impact</h3>
-                        <p className="text-gray-700 leading-relaxed">{profileData.baseStoryData.desiredImpact}</p>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-3">Aspirations & Goals</h3>
+                        <p className="text-gray-700 leading-relaxed">{profileData.baseStoryData.aspirationsGoals}</p>
                       </div>
                     )}
                   </div>

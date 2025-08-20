@@ -40,21 +40,14 @@ export default function AIStoryPage() {
     name: "",
     industry: "",
     experience: "",
-    earlyLife: "",
-    firstDream: "",
-    firstJob: "",
-    careerRealization: "",
-    biggestChallenge: "",
-    almostGaveUp: "",
-    turningPoint: "",
-    mentor: "",
-    currentWork: "",
-    uniqueApproach: "",
-    proudAchievement: "",
-    industryMisconception: "",
-    powerfulLesson: "",
-    coreValues: "",
-    desiredImpact: ""
+    childhood: "",
+    schoolLife: "",
+    collegeEducation: "",
+    careerJourney: "",
+    personalLife: "",
+    awardsRecognition: "",
+    aspirationsGoals: "",
+    additionalInsights: ""
   })
 
   // Customization Data - Enhanced with more options
@@ -316,57 +309,90 @@ export default function AIStoryPage() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="currentWork">Current Role *</Label>
+                  <Label htmlFor="careerJourney">Career Journey *</Label>
                   <Input
-                    id="currentWork"
-                    value={baseStoryData.currentWork}
-                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, currentWork: e.target.value }))}
-                    placeholder="e.g., Senior Software Engineer"
+                    id="careerJourney"
+                    value={baseStoryData.careerJourney}
+                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, careerJourney: e.target.value }))}
+                    placeholder="e.g., My professional journey from intern to senior engineer"
                   />
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="earlyLife">Early Life & Background</Label>
+                  <Label htmlFor="childhood">Childhood & Early Life</Label>
                   <Textarea
-                    id="earlyLife"
-                    value={baseStoryData.earlyLife}
-                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, earlyLife: e.target.value }))}
-                    placeholder="Describe your early life, upbringing, and what shaped your professional journey..."
+                    id="childhood"
+                    value={baseStoryData.childhood}
+                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, childhood: e.target.value }))}
+                    placeholder="Share your fondest memories from childhood and early experiences..."
                     rows={3}
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="firstJob">First Job Experience *</Label>
+                  <Label htmlFor="schoolLife">School Life</Label>
                   <Textarea
-                    id="firstJob"
-                    value={baseStoryData.firstJob}
-                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, firstJob: e.target.value }))}
-                    placeholder="Describe your first professional job and what you learned..."
+                    id="schoolLife"
+                    value={baseStoryData.schoolLife}
+                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, schoolLife: e.target.value }))}
+                    placeholder="Describe your school years and significant experiences that shaped you..."
                     rows={3}
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="biggestChallenge">Biggest Professional Challenge *</Label>
+                  <Label htmlFor="collegeEducation">College & Higher Education</Label>
                   <Textarea
-                    id="biggestChallenge"
-                    value={baseStoryData.biggestChallenge}
-                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, biggestChallenge: e.target.value }))}
-                    placeholder="Describe the biggest challenge you've faced in your career..."
+                    id="collegeEducation"
+                    value={baseStoryData.collegeEducation}
+                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, collegeEducation: e.target.value }))}
+                    placeholder="Share your college experience and how it influenced your career path..."
                     rows={3}
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="proudAchievement">Proudest Achievement *</Label>
+                  <Label htmlFor="personalLife">Personal Life & Lifestyle</Label>
                   <Textarea
-                    id="proudAchievement"
-                    value={baseStoryData.proudAchievement}
-                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, proudAchievement: e.target.value }))}
-                    placeholder="What are you most proud of in your professional journey?"
+                    id="personalLife"
+                    value={baseStoryData.personalLife}
+                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, personalLife: e.target.value }))}
+                    placeholder="How do you spend time outside work and what are your hobbies or passions?"
+                    rows={3}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="awardsRecognition">Awards & Recognitions</Label>
+                  <Textarea
+                    id="awardsRecognition"
+                    value={baseStoryData.awardsRecognition}
+                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, awardsRecognition: e.target.value }))}
+                    placeholder="What awards or recognitions have you received and what do they mean to you?"
+                    rows={3}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="aspirationsGoals">Aspirations & Goals</Label>
+                  <Textarea
+                    id="aspirationsGoals"
+                    value={baseStoryData.aspirationsGoals}
+                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, aspirationsGoals: e.target.value }))}
+                    placeholder="What are your short-term and long-term goals, both personally and professionally?"
+                    rows={3}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="additionalInsights">Additional Insights</Label>
+                  <Textarea
+                    id="additionalInsights"
+                    value={baseStoryData.additionalInsights}
+                    onChange={(e) => setBaseStoryData(prev => ({ ...prev, additionalInsights: e.target.value }))}
+                    placeholder="Is there anything else about you that you'd like people to know, or a unique story to share?"
                     rows={3}
                   />
                 </div>

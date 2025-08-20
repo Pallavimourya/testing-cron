@@ -1,11 +1,15 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, memo } from "react"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import DashboardTopbar from "@/components/dashboard-topbar"
 import { Toaster } from "@/components/ui/sonner"
 import { usePathname } from "next/navigation"
+
+// Memoize components to prevent unnecessary re-renders
+const MemoizedDashboardSidebar = memo(DashboardSidebar)
+const MemoizedDashboardTopbar = memo(DashboardTopbar)
 
 
 export default function DashboardLayout({
@@ -67,7 +71,7 @@ export default function DashboardLayout({
         )}
 
         {/* Sidebar */}
-        <DashboardSidebar 
+        <MemoizedDashboardSidebar 
           onClose={handleSidebarClose} 
           isOpen={sidebarOpen}
           isCollapsed={sidebarCollapsed}
@@ -77,7 +81,7 @@ export default function DashboardLayout({
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
-          <DashboardTopbar 
+          <MemoizedDashboardTopbar 
             onMenuClick={handleMenuClick} 
             onToggleCollapse={handleToggleCollapse}
             isCollapsed={sidebarCollapsed}

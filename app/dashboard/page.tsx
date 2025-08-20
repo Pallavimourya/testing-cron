@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense, lazy } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import {
   FileText,
   TrendingUp,
@@ -24,6 +23,11 @@ import {
 import Link from "next/link"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
+import { PerformanceMonitor } from "@/components/performance-monitor"
+
+// Lazy load heavy chart components
+const DashboardCharts = lazy(() => import('./DashboardCharts'))
+const DashboardActivity = lazy(() => import('./DashboardActivity'))
 
 interface DashboardStats {
   totalTopics: number
@@ -63,19 +67,66 @@ interface DashboardStats {
   }>
 }
 
+// Skeleton loading component
+const DashboardSkeleton = () => (
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+      {/* Header skeleton */}
+      <div className="mb-6 lg:mb-8">
+        <div className="h-8 bg-gray-200 rounded w-1/3 mb-2 animate-pulse"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+      </div>
+
+      {/* Stats cards skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-gray-200 rounded w-1/3 mb-2 animate-pulse"></div>
+              <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Charts skeleton */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6 lg:mb-8">
+        {[1, 2].map((i) => (
+          <Card key={i} className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+            <CardHeader>
+              <div className="h-6 bg-gray-200 rounded w-1/3 mb-2 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64 lg:h-80 bg-gray-200 rounded animate-pulse"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  </div>
+)
+
 export default function DashboardPage() {
   const { data: session } = useSession()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [showCharts, setShowCharts] = useState(false)
 
   const loadDashboardStats = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/dashboard-stats")
+      const response = await fetch("/api/dashboard-stats?minimal=true")
       if (response.ok) {
         const data = await response.json()
         setStats(data.stats)
+        // Load charts after initial data is loaded
+        setTimeout(() => setShowCharts(true), 100)
       } else {
         toast.error("Failed to load dashboard stats")
       }
@@ -90,6 +141,8 @@ export default function DashboardPage() {
   const handleRefresh = async () => {
     try {
       setRefreshing(true)
+      // Clear cache and reload
+      await fetch('/api/dashboard-stats', { method: 'POST' })
       await loadDashboardStats()
       toast.success("Dashboard refreshed")
     } catch (error) {
@@ -104,16 +157,7 @@ export default function DashboardPage() {
   }, [session])
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            <span className="ml-2 text-gray-600">Loading dashboard...</span>
-          </div>
-        </div>
-      </div>
-    )
+    return <DashboardSkeleton />
   }
 
   if (!stats) {
@@ -132,24 +176,6 @@ export default function DashboardPage() {
       </div>
     )
   }
-
-  // Prepare chart data
-  const contentStatusData = [
-    { name: "Generated", value: stats.contentByStatus.generated, color: "#3B82F6" },
-    { name: "Approved", value: stats.contentByStatus.approved, color: "#10B981" },
-    { name: "Posted", value: stats.contentByStatus.posted, color: "#8B5CF6" },
-    { name: "Failed", value: stats.contentByStatus.failed, color: "#EF4444" },
-  ]
-
-  const weeklyData = stats.weeklyData || [
-    { name: "Mon", content: 0 },
-    { name: "Tue", content: 0 },
-    { name: "Wed", content: 0 },
-    { name: "Thu", content: 0 },
-    { name: "Fri", content: 0 },
-    { name: "Sat", content: 0 },
-    { name: "Sun", content: 0 },
-  ]
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -172,8 +198,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+    <>
+      <PerformanceMonitor componentName="Dashboard" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <div className="mb-6 lg:mb-8">
           <div className="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
             <div className="space-y-2">
@@ -202,6 +230,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Stats Cards - Load immediately */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -262,145 +291,53 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6 lg:mb-8">
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
-                <PieChartIcon className="h-5 w-5 text-blue-600" />
-                Content by Status
-              </CardTitle>
-              <CardDescription className="text-sm">
-                Distribution of your content across different statuses
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 lg:h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={contentStatusData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={100}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {contentStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+        {/* Charts - Lazy loaded */}
+        {showCharts && (
+          <Suspense fallback={
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6 lg:mb-8">
+              {[1, 2].map((i) => (
+                <Card key={i} className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                  <CardHeader>
+                    <div className="h-6 bg-gray-200 rounded w-1/3 mb-2 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64 lg:h-80 bg-gray-200 rounded animate-pulse"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          }>
+            <DashboardCharts stats={stats} />
+          </Suspense>
+        )}
+
+        {/* Activity Sections - Lazy loaded */}
+        {showCharts && (
+          <Suspense fallback={
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6 lg:mb-8">
+              {[1, 2].map((i) => (
+                <Card key={i} className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                  <CardHeader>
+                    <div className="h-6 bg-gray-200 rounded w-1/3 mb-2 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((j) => (
+                        <div key={j} className="h-12 bg-gray-200 rounded animate-pulse"></div>
                       ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="grid grid-cols-2 gap-2 mt-4">
-                {contentStatusData.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }}></div>
-                    <span className="text-sm text-gray-600 truncate">
-                      {item.name}: {item.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
-                <BarChart3 className="h-5 w-5 text-green-600" />
-                Weekly Activity
-              </CardTitle>
-              <CardDescription className="text-sm">Your content generation activity over the past week</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 lg:h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={weeklyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="content" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6 lg:mb-8">
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
-                <Activity className="h-5 w-5 text-purple-600" />
-                Recent Topics
-              </CardTitle>
-              <CardDescription className="text-sm">Your latest topic activities</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {stats.recentActivity.topics.length > 0 ? (
-                <div className="space-y-3">
-                  {stats.recentActivity.topics.map((topic, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1 min-w-0 pr-3">
-                        <h4 className="font-medium text-gray-900 truncate text-sm">{topic.title}</h4>
-                        <p className="text-xs text-gray-500">{formatDate(topic.createdAt)}</p>
-                      </div>
-                      <Badge className={`${getStatusColor(topic.status)} text-xs flex-shrink-0`}>{topic.status}</Badge>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Target className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 text-sm mb-3">No recent topics</p>
-                  <Link href="/dashboard/topic-bank">
-                    <Button size="sm">Create Topics</Button>
-                  </Link>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          }>
+            <DashboardActivity stats={stats} formatDate={formatDate} getStatusColor={getStatusColor} />
+          </Suspense>
+        )}
 
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
-                <Zap className="h-5 w-5 text-orange-600" />
-                Recent Content
-              </CardTitle>
-              <CardDescription className="text-sm">Your latest generated content</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {stats.recentActivity.content.length > 0 ? (
-                <div className="space-y-3">
-                  {stats.recentActivity.content.map((content, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1 min-w-0 pr-3">
-                        <h4 className="font-medium text-gray-900 truncate text-sm">{content.topicTitle}</h4>
-                        <p className="text-xs text-gray-500">{formatDate(content.createdAt)}</p>
-                      </div>
-                      <Badge className={`${getStatusColor(content.status)} text-xs flex-shrink-0`}>
-                        {content.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 text-sm mb-3">No recent content</p>
-                  <Link href="/dashboard/approved-content">
-                    <Button size="sm">View Content</Button>
-                  </Link>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
+        {/* Quick Actions - Load immediately */}
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="text-base lg:text-lg">Quick Actions</CardTitle>
@@ -440,5 +377,6 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
+    </>
   )
 }

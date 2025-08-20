@@ -49,8 +49,38 @@ function getPlanDateRange(user: any, planLimits: any) {
   return currentCycleStart
 }
 
-export async function GET() {
+// Cache for dashboard stats (in-memory cache for now)
+const statsCache = new Map()
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
+function getCacheKey(userId: string, minimal: boolean) {
+  return `${userId}_${minimal ? 'minimal' : 'full'}`
+}
+
+function getCachedStats(userId: string, minimal: boolean) {
+  const key = getCacheKey(userId, minimal)
+  const cached = statsCache.get(key)
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data
+  }
+  
+  return null
+}
+
+function setCachedStats(userId: string, minimal: boolean, data: any) {
+  const key = getCacheKey(userId, minimal)
+  statsCache.set(key, {
+    data,
+    timestamp: Date.now()
+  })
+}
+
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const minimal = searchParams.get('minimal') === 'true'
+    
     const session = await getServerSession()
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -62,18 +92,25 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    console.log("📊 Fetching dashboard stats for user:", user.email)
+    // Check cache first
+    const cachedStats = getCachedStats(user._id.toString(), minimal)
+    if (cachedStats) {
+      return NextResponse.json({
+        success: true,
+        stats: cachedStats,
+        cached: true
+      })
+    }
+
+    console.log("📊 Fetching dashboard stats for user:", user.email, minimal ? "(minimal)" : "(full)")
 
     const userPlan = user.subscriptionPlan || "free"
     const planLimits = PLAN_LIMITS[userPlan as keyof typeof PLAN_LIMITS] || PLAN_LIMITS.free
 
     const planStartDate = getPlanDateRange(user, planLimits)
-    const startOfWeek = new Date()
-    startOfWeek.setDate(startOfWeek.getDate() - 7)
-
     const userFilter = { userId: user._id }
 
-    // Get topics stats - user-specific only
+    // Get basic stats - always needed
     const totalTopics = await Topic.countDocuments(userFilter)
     const approvedTopics = await Topic.countDocuments({ ...userFilter, status: "approved" })
     const pendingTopics = await Topic.countDocuments({ ...userFilter, status: "pending" })
@@ -96,6 +133,8 @@ export async function GET() {
 
     const imagesGenerated = user.imagesGenerated || 0
 
+    // Only process additional collections if not minimal mode
+    if (!minimal) {
     const collections = ["approvedcontents", "linkdin-content-generation", "generatedcontents"]
 
     if (mongoose.connection.db) {
@@ -156,6 +195,7 @@ export async function GET() {
           })
         } catch (error) {
           console.error(`❌ Error processing collection ${collectionName}:`, error)
+          }
         }
       }
     }
@@ -164,7 +204,16 @@ export async function GET() {
     postedContent += postedScheduled
     failedContent += failedScheduled
 
-    const weeklyData = []
+    const engagementRate = totalContent > 0 ? Math.round((postedContent / totalContent) * 100) : 0
+
+    // For minimal mode, use simplified data
+    let weeklyData = []
+    let recentTopics = []
+    let recentContent = []
+    let weeklyGrowth = 0
+
+    if (!minimal) {
+      // Get weekly data
     for (let i = 6; i >= 0; i--) {
       const date = new Date()
       date.setDate(date.getDate() - i)
@@ -177,6 +226,7 @@ export async function GET() {
       })
 
       if (mongoose.connection.db) {
+          const collections = ["approvedcontents", "linkdin-content-generation", "generatedcontents"]
         for (const collectionName of collections) {
           try {
             const collection = mongoose.connection.db.collection(collectionName)
@@ -212,22 +262,22 @@ export async function GET() {
       })
     }
 
-    const engagementRate = totalContent > 0 ? Math.round((postedContent / totalContent) * 100) : 0
-
     const lastWeekContent = weeklyData.slice(0, 3).reduce((sum, day) => sum + day.content, 0)
     const thisWeekContent = weeklyData.slice(4, 7).reduce((sum, day) => sum + day.content, 0)
-    const weeklyGrowth =
+      weeklyGrowth =
       lastWeekContent > 0 ? Math.round(((thisWeekContent - lastWeekContent) / lastWeekContent) * 100) : 0
 
-    const recentTopics = await Topic.find(userFilter).sort({ createdAt: -1 }).limit(5).select("title status createdAt")
+      // Get recent activity
+      recentTopics = await Topic.find(userFilter).sort({ createdAt: -1 }).limit(5).select("title status createdAt")
 
-    let recentContent = await ApprovedContent.find(userFilter)
+      recentContent = await ApprovedContent.find(userFilter)
       .sort({ createdAt: -1 })
       .limit(5)
       .select("topicTitle status createdAt")
 
     if (mongoose.connection.db) {
       const allRecentContent = [...recentContent]
+        const collections = ["approvedcontents", "linkdin-content-generation", "generatedcontents"]
 
       for (const collectionName of collections) {
         try {
@@ -262,60 +312,20 @@ export async function GET() {
       allRecentContent.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       recentContent = allRecentContent.slice(0, 5)
     }
-
-    const generateUserAnalytics = () => {
-      // Generate realistic analytics data based on user's actual content
-      const baseViews = Math.max(totalContent * 50, 100)
-      const baseEngagement = Math.max(totalContent * 5, 10)
-
-      return {
-        profileViews: Math.floor(baseViews + Math.random() * baseViews * 0.5),
-        profileViewsGrowth: Math.floor((Math.random() - 0.5) * 40), // -20% to +20%
-        connectionRequests: Math.floor(totalContent * 2 + Math.random() * 20),
-        connectionAcceptance: Math.floor(60 + Math.random() * 30), // 60-90%
-        postImpressions: Math.floor(baseViews * 3 + Math.random() * baseViews),
-        postEngagement: Math.floor(baseEngagement + Math.random() * baseEngagement),
-        followerGrowth: Math.floor(totalContent * 3 + Math.random() * 50),
-        contentReach: Math.floor(baseViews * 2 + Math.random() * baseViews),
-        averageEngagementRate: Math.floor(3 + Math.random() * 7), // 3-10%
-
-        topPerformingContent: recentContent.slice(0, 5).map((content, index) => ({
-          title: content.topicTitle || "Untitled Content",
-          engagement: Math.floor(50 + Math.random() * 200 * (5 - index)),
-          impressions: Math.floor(500 + Math.random() * 2000 * (5 - index)),
-          date: content.createdAt,
-        })),
-
-        monthlyEngagement: Array.from({ length: 6 }, (_, i) => {
-          const month = new Date()
-          month.setMonth(month.getMonth() - (5 - i))
-          const monthlyContent = Math.floor(totalContent / 6 + Math.random() * 10)
-
-          return {
-            month: month.toLocaleDateString("en-US", { month: "short" }),
-            views: Math.floor(monthlyContent * 100 + Math.random() * 500),
-            likes: Math.floor(monthlyContent * 15 + Math.random() * 50),
-            comments: Math.floor(monthlyContent * 5 + Math.random() * 20),
-            shares: Math.floor(monthlyContent * 3 + Math.random() * 15),
-            impressions: Math.floor(monthlyContent * 200 + Math.random() * 1000),
-          }
-        }),
-
-        dailyActivity: Array.from({ length: 30 }, (_, i) => {
-          const date = new Date()
-          date.setDate(date.getDate() - (29 - i))
-
-          return {
-            date: date.toISOString().split("T")[0],
-            posts: Math.floor(Math.random() * 3), // 0-2 posts per day
-            engagement: Math.floor(Math.random() * 50 + 10), // 10-60 engagement
-            reach: Math.floor(Math.random() * 200 + 50), // 50-250 reach
-          }
-        }),
-      }
+    } else {
+      // Minimal mode - use default data
+      weeklyData = [
+        { name: "Mon", content: 0 },
+        { name: "Tue", content: 0 },
+        { name: "Wed", content: 0 },
+        { name: "Thu", content: 0 },
+        { name: "Fri", content: 0 },
+        { name: "Sat", content: 0 },
+        { name: "Sun", content: 0 },
+      ]
+      recentTopics = []
+      recentContent = []
     }
-
-    const userAnalytics = generateUserAnalytics()
 
     const stats = {
       totalTopics,
@@ -364,30 +374,67 @@ export async function GET() {
         postedScheduled,
         failedScheduled,
       },
-      userAnalytics,
     }
 
-    console.log("📊 Enhanced dashboard stats calculated for user:", user.email, {
+    // Cache the results
+    setCachedStats(user._id.toString(), minimal, stats)
+
+    console.log("📊 Dashboard stats calculated for user:", user.email, {
       totalTopics,
       totalContent,
       monthlyContent,
       plan: userPlan,
-      planPeriodStart: planStartDate,
-      planLimits,
-      hasRecentActivity: recentContent.length > 0,
-      schedulingStats: stats.schedulingStats,
-      userAnalytics: "Generated comprehensive analytics",
+      minimal,
+      cached: false
     })
 
     return NextResponse.json({
       success: true,
       stats,
+      cached: false
     })
   } catch (error) {
     console.error("❌ Error fetching dashboard stats:", error)
     return NextResponse.json(
       {
         error: "Failed to fetch dashboard stats",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const session = await getServerSession()
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    await connectDB()
+    const user = await User.findOne({ email: session.user.email })
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // Clear cache for this user
+    const minimalKey = getCacheKey(user._id.toString(), true)
+    const fullKey = getCacheKey(user._id.toString(), false)
+    statsCache.delete(minimalKey)
+    statsCache.delete(fullKey)
+
+    console.log("🗑️ Cache cleared for user:", user.email)
+
+    return NextResponse.json({
+      success: true,
+      message: "Cache cleared successfully"
+    })
+  } catch (error) {
+    console.error("❌ Error clearing cache:", error)
+    return NextResponse.json(
+      {
+        error: "Failed to clear cache",
         details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },
