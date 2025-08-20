@@ -217,10 +217,10 @@ export default function AboutPage() {
             <Link href="/linkezup">
               <Button
                 size="lg"
-                className="bg-white text-blue-600 hover:bg-gray-100 px-10 py-6 text-lg font-bold rounded-full transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                className="bg-white text-blue-600 hover:bg-gray-100 px-4 sm:px-10 py-4 sm:py-6 text-base sm:text-lg font-bold rounded-full transform transition-all duration-300 hover:scale-105 hover:shadow-lg w-full sm:w-auto"
               >
                 Start Your Journey
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </Link>
           </div>
