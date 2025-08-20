@@ -67,12 +67,10 @@ export default function ServicesPage() {
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-yellow-400" />
               <span className="font-medium text-sm sm:text-base">LinkedIn Management</span>
             </div>
-            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black mb-6 sm:mb-8 leading-tight text-white">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-black mb-6 sm:mb-8 leading-tight text-white">
             Elevate Your
-
               <span className="block bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mt-2">
               LinkedIn Presence
-
               </span>
             </h1>
             <p className="text-base sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed px-4">
@@ -87,32 +85,32 @@ export default function ServicesPage() {
                 <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full text-white mb-6 backdrop-blur-sm border border-white/10">
                   <span className="font-medium">Linkzup</span>
                 </div>
-                <h2 className="text-5xl font-bold text-white mb-6">LinkedIn Management</h2>
-                <p className="text-slate-200 text-lg mb-8">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">LinkedIn Management</h2>
+                <p className="text-slate-200 text-base sm:text-lg mb-8">
                   Our expert team manages your LinkedIn presence, creating engaging content and building your professional network.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link href="/linkezup">
-                    <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-6 text-lg font-bold rounded-full shadow-lg shadow-blue-500/20">
+                    <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-bold rounded-full shadow-lg shadow-blue-500/20 w-full sm:w-auto">
                       Get Started
-                      <ArrowRight className="ml-2 h-5 w-5" />
+                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </Link>
                   <Link href="/case-studies">
-                    <Button size="lg" variant="outline" className="border-2 border-white/20 text-black hover:bg-white/10 px-8 py-6 text-lg font-bold rounded-full backdrop-blur-sm">
+                    <Button size="lg" variant="outline" className="border-2 border-white/20 text-black hover:bg-white/10 px-4 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-bold rounded-full backdrop-blur-sm w-full sm:w-auto">
                       View Case Studies
                     </Button>
                   </Link>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {features.map((feature, index) => (
-                  <div key={index} className="bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm rounded-2xl p-6 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/10 border border-white/10">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 text-white shadow-lg shadow-blue-500/20">
+                  <div key={index} className="bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/10 border border-white/10">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mb-3 sm:mb-4 text-white shadow-lg shadow-blue-500/20">
                       {feature.icon}
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                    <p className="text-slate-300 text-sm">{feature.description}</p>
+                    <h3 className="text-base sm:text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                    <p className="text-slate-300 text-xs sm:text-sm">{feature.description}</p>
                   </div>
                 ))}
               </div>
@@ -131,14 +129,14 @@ export default function ServicesPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-32">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-16 sm:mb-32">
             {benefits.map((benefit, index) => (
-              <div key={index} className="bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/10 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/10">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center mb-6 text-white shadow-lg shadow-yellow-500/20">
+              <div key={index} className="bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-white/10 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/10">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center mb-4 sm:mb-6 text-white shadow-lg shadow-yellow-500/20">
                   {benefit.icon}
                 </div>
-                <h3 className="text-2xl font-semibold text-white mb-3">{benefit.title}</h3>
-                <p className="text-slate-300">{benefit.description}</p>
+                <h3 className="text-xl sm:text-2xl font-semibold text-white mb-3">{benefit.title}</h3>
+                <p className="text-slate-300 text-sm sm:text-base">{benefit.description}</p>
               </div>
             ))}
           </div>
@@ -149,14 +147,14 @@ export default function ServicesPage() {
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-full blur-[120px]"></div>
             </div>
             <div className="relative z-10">
-              <h2 className="text-5xl font-bold text-white mb-6">Ready to Transform Your LinkedIn Presence?</h2>
-              <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">Ready to Transform Your LinkedIn Presence?</h2>
+              <p className="text-lg sm:text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
                 Take the first step towards building a powerful professional brand that opens doors to new opportunities.
               </p>
               <Link href="/pricing">
-                <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-10 py-6 text-lg font-bold rounded-full shadow-lg shadow-yellow-500/20 transform transition-all duration-300 hover:scale-105">
+                <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-6 sm:px-10 py-4 sm:py-6 text-base sm:text-lg font-bold rounded-full shadow-lg shadow-yellow-500/20 transform transition-all duration-300 hover:scale-105 w-full sm:w-auto">
                   Start Your Journey
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </Link>
             </div>
@@ -166,3 +164,5 @@ export default function ServicesPage() {
     </div>
   )
 }
+
+

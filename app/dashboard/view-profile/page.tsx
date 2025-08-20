@@ -572,12 +572,12 @@ export default function ViewProfilePage() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl">
-                      <div className="p-3 bg-indigo-100 rounded-xl">
+                      <div className="p-3 bg-indigo-100 rounded-xl flex-shrink-0">
                         <Mail className="h-5 w-5 text-indigo-600" />
                       </div>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm text-gray-500 font-medium">Email</p>
-                        <p className="text-gray-900 font-semibold">{profileData.email}</p>
+                        <p className="text-gray-900 font-semibold break-all">{profileData.email}</p>
                       </div>
                     </div>
                     

@@ -524,7 +524,7 @@ export default function UnifiedProfilePage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button onClick={saveProfileData} disabled={isSaving} variant="outline">
+          <Button onClick={saveProfileData} disabled={isSaving} variant="outline" className="w-full sm:w-auto">
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -540,7 +540,7 @@ export default function UnifiedProfilePage() {
           <Button
             onClick={generateStory}
             disabled={isGeneratingStory}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 w-full sm:w-auto"
           >
             {isGeneratingStory ? (
               <>
@@ -559,7 +559,7 @@ export default function UnifiedProfilePage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
         {/* Main Content - Profile Form */}
-        <div className="xl:col-span-2">
+        <div className="xl:col-span-2 order-2 xl:order-1">
           {/* Language Toggle */}
           <div className="mb-6 flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div className="flex items-center gap-4">
@@ -723,7 +723,7 @@ export default function UnifiedProfilePage() {
         </div>
 
         {/* Sidebar - Generated Story and Topics */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1 space-y-6 order-1 xl:order-2">
           {/* Generated Story Section */}
           <Card>
             <CardHeader>
@@ -869,13 +869,13 @@ export default function UnifiedProfilePage() {
                     <div key={topic.id} className="border rounded-lg p-3 space-y-2">
                       <div className="flex items-start justify-between">
                         <p className="text-sm font-medium leading-tight flex-1 pr-2">{topic.title}</p>
-                        <div className="flex gap-1">
+                        <div className="flex flex-col sm:flex-row gap-1">
                           {topic.status === "pending" && (
                             <>
                               <Button
                                 size="sm"
                                 onClick={() => approveTopic(topic.id)}
-                                className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700"
+                                className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700 w-full sm:w-auto"
                               >
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 Approve
@@ -884,7 +884,7 @@ export default function UnifiedProfilePage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => rejectTopic(topic.id)}
-                                className="h-6 px-2 text-xs"
+                                className="h-6 px-2 text-xs w-full sm:w-auto"
                               >
                                 <X className="h-3 w-3 mr-1" />
                                 Reject
