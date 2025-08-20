@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Dialog,
   DialogContent,
@@ -34,10 +35,12 @@ import {
   XCircle,
   Loader2,
   Eye,
+  List,
 } from "lucide-react"
 import { toast } from "sonner"
 import { ISTTime } from "@/lib/utils/ist-time"
 import Link from "next/link"
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 
 interface ScheduledPost {
   _id: string
@@ -63,6 +66,8 @@ export default function ScheduledPostsPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [activeView, setActiveView] = useState<"list" | "calendar">("list")
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
 
   const loadScheduledPosts = async () => {
     try {
@@ -71,7 +76,11 @@ export default function ScheduledPostsPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setScheduledPosts(data.posts || [])
+        // Sort posts by scheduled time (most recent first)
+        const sortedPosts = (data.posts || []).sort((a: ScheduledPost, b: ScheduledPost) => 
+          new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime()
+        )
+        setScheduledPosts(sortedPosts)
       } else {
         toast.error("Failed to load scheduled posts")
       }
@@ -176,6 +185,36 @@ export default function ScheduledPostsPage() {
     }
   }
 
+  // Get posts for a specific date
+  const getPostsForDate = (date: Date) => {
+    return scheduledPosts.filter(post => {
+      const postDate = new Date(post.scheduledTime)
+      return postDate.toDateString() === date.toDateString()
+    })
+  }
+
+  // Get calendar modifiers for styling
+  const getCalendarModifiers = () => {
+    const modifiers: any = {}
+    
+    scheduledPosts.forEach(post => {
+      const postDate = new Date(post.scheduledTime)
+      const dateKey = postDate.toDateString()
+      
+      if (!modifiers[dateKey]) {
+        modifiers[dateKey] = []
+      }
+      
+      modifiers[dateKey].push({
+        date: postDate,
+        status: post.status,
+        isOverdue: post.isOverdue
+      })
+    })
+    
+    return modifiers
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
@@ -207,31 +246,6 @@ export default function ScheduledPostsPage() {
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
                 Refresh
-              </Button>
-              <Button
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/cron/external-auto-post', {
-                      headers: {
-                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || 'BzbHyiKVrc6rDLWHn4uYLHo+s1WkHp2ucuzsCi/euRI='}`
-                      }
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                      toast.success(`Cron job executed: ${data.successCount} successful, ${data.failureCount} failed`);
-                      loadScheduledPosts(); // Refresh the list
-                    } else {
-                      toast.error(data.error || 'Cron job failed');
-                    }
-                  } catch (error) {
-                    toast.error('Failed to trigger cron job');
-                  }
-                }}
-                variant="outline"
-                className="flex items-center gap-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-              >
-                <Clock className="w-4 h-4" />
-                Test Cron Job
               </Button>
               <Link href="/dashboard/approved-content">
                 <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
@@ -300,8 +314,26 @@ export default function ScheduledPostsPage() {
           </Card>
         </div>
 
-        {/* Posts List */}
-        {scheduledPosts.length === 0 ? (
+        {/* View Toggle and Content */}
+        <div className="mb-6">
+          <Tabs value={activeView} onValueChange={(value) => setActiveView(value as "list" | "calendar")}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="list" className="flex items-center gap-2">
+                <List className="h-4 w-4" />
+                List View
+              </TabsTrigger>
+              <TabsTrigger value="calendar" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Calendar View
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Content based on active view */}
+            <TabsContent value={activeView} className="mt-0">
+          {activeView === "list" && (
+            <>
+              {/* Posts List */}
+              {scheduledPosts.length === 0 ? (
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardContent className="p-12 text-center">
               <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -413,6 +445,151 @@ export default function ScheduledPostsPage() {
             ))}
           </div>
         )}
+            </>
+          )}
+
+          {activeView === "calendar" && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Calendar */}
+              <div className="lg:col-span-2">
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Scheduled Posts Calendar
+                    </CardTitle>
+                  </CardHeader>
+                                     <CardContent className="space-y-4">
+                     <CalendarComponent
+                       mode="single"
+                       selected={selectedDate}
+                       onSelect={setSelectedDate}
+                       className="rounded-md border w-full max-w-md mx-auto"
+                       classNames={{
+                         table: "w-full",
+                         head_row: "grid grid-cols-7 gap-1 mb-2",
+                         head_cell: "h-8 flex items-center justify-center text-xs font-semibold text-gray-600",
+                         row: "grid grid-cols-7 gap-1",
+                         cell: "h-9 w-full flex items-center justify-center text-sm relative",
+                         day: "h-9 w-9 rounded-md hover:bg-gray-100 transition-colors"
+                       }}
+                       modifiers={{
+                         pending: (date) => {
+                           const posts = getPostsForDate(date)
+                           return posts.some(post => post.status === "pending")
+                         },
+                         posted: (date) => {
+                           const posts = getPostsForDate(date)
+                           return posts.some(post => post.status === "posted")
+                         },
+                         failed: (date) => {
+                           const posts = getPostsForDate(date)
+                           return posts.some(post => post.status === "failed")
+                         },
+                         overdue: (date) => {
+                           const posts = getPostsForDate(date)
+                           return posts.some(post => post.isOverdue)
+                         }
+                       }}
+                       modifiersStyles={{
+                         pending: { backgroundColor: "#fef3c7", color: "#92400e" },
+                         posted: { backgroundColor: "#d1fae5", color: "#065f46" },
+                         failed: { backgroundColor: "#fee2e2", color: "#991b1b" },
+                         overdue: { backgroundColor: "#fecaca", color: "#7f1d1d" }
+                       }}
+                     />
+                     
+                     {/* Calendar Legend */}
+                     <div className="border-t pt-4">
+                       <h4 className="text-sm font-medium text-gray-700 mb-2">Legend</h4>
+                       <div className="grid grid-cols-2 gap-2 text-xs">
+                         <div className="flex items-center gap-2">
+                           <div className="w-3 h-3 rounded bg-yellow-200 border border-yellow-300"></div>
+                           <span className="text-gray-600">Pending</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                           <div className="w-3 h-3 rounded bg-green-200 border border-green-300"></div>
+                           <span className="text-gray-600">Posted</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                           <div className="w-3 h-3 rounded bg-red-200 border border-red-300"></div>
+                           <span className="text-gray-600">Failed</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                           <div className="w-3 h-3 rounded bg-red-100 border border-red-200"></div>
+                           <span className="text-gray-600">Overdue</span>
+                         </div>
+                       </div>
+                     </div>
+                   </CardContent>
+                </Card>
+              </div>
+
+              {/* Selected Date Posts */}
+              <div className="lg:col-span-1">
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="h-5 w-5" />
+                      {selectedDate ? `Posts for ${selectedDate.toLocaleDateString()}` : "Select a date"}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedDate ? (
+                      <>
+                        {getPostsForDate(selectedDate).length === 0 ? (
+                          <div className="text-center py-8">
+                            <Calendar className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-gray-600 text-sm">No posts scheduled for this date</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {getPostsForDate(selectedDate).map((post) => (
+                              <div key={post._id} className="border rounded-lg p-3 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Badge className={getStatusColor(post.status, post.isOverdue)}>
+                                    <div className="flex items-center gap-1">
+                                      {getStatusIcon(post.status, post.isOverdue)}
+                                      {getStatusText(post.status, post.isOverdue)}
+                                    </div>
+                                  </Badge>
+                                  {post.linkedinUrl && (
+                                    <a
+                                      href={post.linkedinUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800"
+                                    >
+                                      <ExternalLink className="h-4 w-4" />
+                                    </a>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-900 line-clamp-2">{post.content}</p>
+                                <div className="text-xs text-gray-600">
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    <span>{post.scheduledTimeDisplay}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Calendar className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-600 text-sm">Select a date to view scheduled posts</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+                         </div>
+           )}
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   )

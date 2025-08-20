@@ -32,3 +32,4 @@ export function PerformanceMonitor({ componentName }: PerformanceMonitorProps) {
 
   return null
 }
+
