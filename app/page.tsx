@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Sparkles, TrendingUp, CheckCircle2, Zap, Lightbulb } from "lucide-react"
+import { ArrowRight, Sparkles, TrendingUp, CheckCircle2, Zap, Lightbulb, Users, Target, Award, Star, MessageSquare, BarChart, Check, Calendar, Rocket, Shield, X as XIcon } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState, useRef } from "react"
 
@@ -146,12 +146,16 @@ export default function HomePage() {
         <div className="relative z-10 text-center text-white max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="pt-20 sm:pt-32">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black mb-6 sm:mb-8 leading-tight tracking-tighter animate-slide-up">
-              Elevate Your
+               Grow on LinkedIn.
               <span className="block bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent mt-2 pb-3">
-                Digital Presence
+                Without the hassle.
               </span>
             </h1>
           </div>
+
+          <p className="text-lg sm:text-xl lg:text-2xl mb-8 sm:mb-12 text-slate-300 max-w-3xl mx-auto leading-relaxed animate-fade-in px-4">
+            Your profile, content, engagement & DMs — managed end-to-end so you can focus on business.
+          </p>
 
           {/* Video Section */}
           <div className="mb-8 sm:mb-12 max-w-4xl mx-auto animate-fade-in">
@@ -163,18 +167,13 @@ export default function HomePage() {
             </div>
           </div>
 
-          <p className="text-lg sm:text-xl lg:text-2xl mb-8 sm:mb-12 text-slate-300 max-w-3xl mx-auto leading-relaxed animate-fade-in px-4">
-            Transform your professional identity with AI-powered personal branding. We craft compelling content that
-            drives engagement, builds authority, and accelerates your career growth.
-          </p>
-
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center animate-slide-up px-4">
-            <Link href="/services">
+            <Link href="/signin">
               <Button
                 size="lg"
                 className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 sm:px-10 py-4 sm:py-6 text-base sm:text-lg font-bold rounded-full transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
               >
-                Start Your Journey
+                👉 Get Started Now
                 <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </Link>
@@ -182,183 +181,158 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Impact Count Section */}
-      <section ref={impactRef} className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
-        {/* Background Effects */}
+      {/* Section 1: The Problem */}
+      <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-10 w-48 h-48 sm:w-72 sm:h-72 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-32 right-20 w-64 h-64 sm:w-96 sm:h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-20 left-10 w-48 h-48 sm:w-72 sm:h-72 bg-red-400/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-32 right-20 w-64 h-64 sm:w-96 sm:h-96 bg-orange-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12 sm:mb-16 lg:mb-20">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black mb-4 sm:mb-6 leading-tight tracking-tight">
               <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                Growing Impact
+                Most professionals are invisible on LinkedIn.
               </span>
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed px-4">
-              Real-time metrics showing our rapid growth and the value we're creating for our users
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {/* Months Since Launch */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105">
-              <div className="text-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
-                  {isImpactVisible ? animatedStats.monthsSinceLaunch : impactStats.monthsSinceLaunch}+
-                </h3>
-                <p className="text-sm sm:text-base text-slate-300 mb-2">Months Since Launch</p>
-                <div className="text-xs sm:text-sm text-slate-400">
-                  Rapid growth & innovation
-                </div>
-              </div>
-            </div>
-
-            {/* Countries Served */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105">
-              <div className="text-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
-                  {isImpactVisible ? animatedStats.countriesServed : impactStats.countriesServed}+
-                </h3>
-                <p className="text-sm sm:text-base text-slate-300 mb-2">Countries Served</p>
-                <div className="text-xs sm:text-sm text-slate-400">
-                  Expanding globally
-                </div>
-              </div>
-            </div>
-
-            {/* Clients Served */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105">
-              <div className="text-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
-                  {isImpactVisible ? animatedStats.clientsServed : impactStats.clientsServed}+
-                </h3>
-                <p className="text-sm sm:text-base text-slate-300 mb-2">Happy Users</p>
-                <div className="text-xs sm:text-sm text-slate-400">
-                  Growing community
-                </div>
-              </div>
-            </div>
-
-            {/* Success Rate */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105">
-              <div className="text-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
-                  {isImpactVisible ? animatedStats.successRate : impactStats.successRate}%
-                </h3>
-                <p className="text-sm sm:text-base text-slate-300 mb-2">Success Rate</p>
-                <div className="text-xs sm:text-sm text-slate-400">
-                  User satisfaction
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Section */}
-      <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-10 w-48 h-48 sm:w-72 sm:h-72 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-32 right-20 w-64 h-64 sm:w-96 sm:h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-black mb-4 sm:mb-6 leading-tight tracking-tight">
-              <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                Our Service
-              </span>
-            </h2>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed px-4">
-              Experience the magic of professional branding with our specialized LinkedIn personal branding service
-            </p>
           </div>
 
           <div className="max-w-4xl mx-auto">
-            {/* LinkZup Card */}
-            <div className="group relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl sm:rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-              <div className="relative bg-slate-800/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300">
-                <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 items-start">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center transform transition-transform group-hover:scale-110 flex-shrink-0 mx-auto lg:mx-0">
-                    <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 text-center lg:text-left">
-                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 sm:mb-6">LinkZup</h3>
-                    <p className="text-base sm:text-lg text-slate-300 mb-6 sm:mb-8 leading-relaxed">
-                      Professional LinkedIn personal branding service that helps you build a strong digital presence. We
-                      create compelling content, optimize your profile, and establish your thought leadership in your
-                      industry.
-                    </p>
-                    <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                      <div className="space-y-3 sm:space-y-4">
-                        <h4 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">What We Offer</h4>
-                        <ul className="space-y-3 sm:space-y-4">
-                          <li className="flex items-center text-slate-300 text-sm sm:text-base">
-                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 mr-3 flex-shrink-0" />
-                            <span>Content Creation & Strategy</span>
-                          </li>
-                          <li className="flex items-center text-slate-300 text-sm sm:text-base">
-                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 mr-3 flex-shrink-0" />
-                            <span>Profile Optimization</span>
-                          </li>
-                          <li className="flex items-center text-slate-300 text-sm sm:text-base">
-                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 mr-3 flex-shrink-0" />
-                            <span>Engagement Management</span>
-                          </li>
-                        </ul>
-                      </div>
-                      <div className="space-y-3 sm:space-y-4">
-                        <h4 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Key Benefits</h4>
-                        <ul className="space-y-3 sm:space-y-4">
-                          <li className="flex items-center text-slate-300 text-sm sm:text-base">
-                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 mr-3 flex-shrink-0" />
-                            <span>Increased Visibility</span>
-                          </li>
-                          <li className="flex items-center text-slate-300 text-sm sm:text-base">
-                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 mr-3 flex-shrink-0" />
-                            <span>Professional Growth</span>
-                          </li>
-                          <li className="flex items-center text-slate-300 text-sm sm:text-base">
-                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 mr-3 flex-shrink-0" />
-                            <span>Networking Opportunities</span>
-                          </li>
-                        </ul>
-                      </div>
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 border border-slate-700/50">
+              <div className="text-center mb-8">
+                <div className="text-4xl sm:text-6xl font-bold text-blue-400 mb-4">1 Billion users, but less than 3% post content.</div>
+              </div>
+              
+              <div className="grid sm:grid-cols-1 gap-6 mb-8">
+                <div className="text-center">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">Founders & CXOs don't have the time to:</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center text-slate-300 text-lg">
+                      <XIcon className="w-6 h-6 text-red-400 mr-3" />
+                      <span>Write content consistently</span>
                     </div>
-                    <Link href="/linkezup">
-                      <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 sm:px-8 rounded-xl transition-all duration-300 hover:shadow-lg">
-                        Get Started with LinkZup
-                        <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-                      </Button>
-                    </Link>
+                    <div className="flex items-center justify-center text-slate-300 text-lg">
+                      <XIcon className="w-6 h-6 text-red-400 mr-3" />
+                      <span>Engage with prospects daily</span>
+                    </div>
+                    <div className="flex items-center justify-center text-slate-300 text-lg">
+                      <XIcon className="w-6 h-6 text-red-400 mr-3" />
+                      <span>Optimize their profile for visibility</span>
+                    </div>
                   </div>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl font-bold text-red-400 mb-2">Result:</div>
+                <div className="text-lg sm:text-xl text-slate-300">Missed leads. Poor visibility. Weak personal brand.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 2: The LinkZup Solution */}
+      <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-48 h-48 sm:w-72 sm:h-72 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-32 right-20 w-64 h-64 sm:w-96 sm:h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black mb-4 sm:mb-6 leading-tight tracking-tight">
+              <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+                We make you a thought leader, while you focus on business.
+              </span>
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-12">
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105">
+              <div className="text-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Profile Revamp</h3>
+                <p className="text-sm sm:text-base text-slate-300">Authority-driven design & copy.</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105">
+              <div className="text-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Content Calendar</h3>
+                <p className="text-sm sm:text-base text-slate-300">Weekly posts crafted for visibility.</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105">
+              <div className="text-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Engagement & DMs</h3>
+                <p className="text-sm sm:text-base text-slate-300">Daily interactions that build trust.</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105">
+              <div className="text-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <BarChart className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Growth Insights</h3>
+                <p className="text-sm sm:text-base text-slate-300">Monthly analytics & strategy tweaks.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Link href="/signin">
+              <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-full transition-all duration-300 hover:shadow-lg text-lg">
+                Try LinkZup Today
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+
+
+      {/* Section 3: Why Now? */}
+      <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-48 h-48 sm:w-72 sm:h-72 bg-green-400/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-32 right-20 w-64 h-64 sm:w-96 sm:h-96 bg-blue-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black mb-4 sm:mb-6 leading-tight tracking-tight">
+              <span className="bg-gradient-to-r from-green-500 to-blue-600 bg-clip-text text-transparent">
+                LinkedIn is the #1 platform for professionals.
+              </span>
+            </h2>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 border border-slate-700/50">
+              <div className="space-y-6">
+                <div className="flex items-center text-slate-300 text-lg sm:text-xl">
+                  <CheckCircle2 className="w-6 h-6 text-green-400 mr-3 flex-shrink-0" />
+                  <span>Organic reach on LinkedIn is 10x higher than other platforms.</span>
+                </div>
+                <div className="flex items-center text-slate-300 text-lg sm:text-xl">
+                  <CheckCircle2 className="w-6 h-6 text-green-400 mr-3 flex-shrink-0" />
+                  <span>CXOs & founders are shifting to personal brand-led growth.</span>
+                </div>
+                <div className="flex items-center text-slate-300 text-lg sm:text-xl">
+                  <CheckCircle2 className="w-6 h-6 text-green-400 mr-3 flex-shrink-0" />
+                  <span>Early movers in LinkedIn management will dominate.</span>
                 </div>
               </div>
             </div>
@@ -366,158 +340,175 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* LinkedIn Info Section */}
-      <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
+      {/* Section 4: Plans & Pricing */}
+      <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black mb-4 sm:mb-6 leading-tight tracking-tight">
+              <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+                Choose your growth plan.
+              </span>
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105">
+              <div className="text-center">
+                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">Starter</h3>
+                <div className="text-3xl sm:text-4xl font-bold text-blue-400 mb-4">₹25,000<span className="text-lg text-slate-400">/month</span></div>
+                <ul className="space-y-3 mb-8 text-left">
+                  <li className="flex items-center text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <span>Profile revamp</span>
+                  </li>
+                  <li className="flex items-center text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <span>8 posts/month</span>
+                  </li>
+                </ul>
+                <Link href="/signin">
+                  <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border-2 border-blue-500/50 hover:border-blue-400/50 transition-all duration-300 transform hover:scale-105 relative">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold">Most Popular</span>
+              </div>
+              <div className="text-center">
+                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">Growth</h3>
+                <div className="text-3xl sm:text-4xl font-bold text-blue-400 mb-4">₹50,000<span className="text-lg text-slate-400">/month</span></div>
+                <ul className="space-y-3 mb-8 text-left">
+                  <li className="flex items-center text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <span>Profile revamp</span>
+                  </li>
+                  <li className="flex items-center text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <span>16 posts/month</span>
+                  </li>
+                  <li className="flex items-center text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <span>DM management</span>
+                  </li>
+                </ul>
+                <Link href="/signin">
+                  <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105">
+              <div className="text-center">
+                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">Premium</h3>
+                <div className="text-3xl sm:text-4xl font-bold text-blue-400 mb-4">₹1,00,000<span className="text-lg text-slate-400">/month</span></div>
+                <ul className="space-y-3 mb-8 text-left">
+                  <li className="flex items-center text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <span>Full DFY service</span>
+                  </li>
+                  <li className="flex items-center text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <span>PR</span>
+                  </li>
+                  <li className="flex items-center text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <span>Lead Gen</span>
+                  </li>
+                </ul>
+                <Link href="/signin">
+                  <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-8">
+            <p className="text-slate-300 text-lg">👉 All plans include analytics & dedicated support.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 5: Results & Case Studies */}
+      <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-48 h-48 sm:w-72 sm:h-72 bg-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-32 right-20 w-64 h-64 sm:w-96 sm:h-96 bg-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black mb-4 sm:mb-6 leading-tight tracking-tight">
+              <span className="bg-gradient-to-r from-purple-500 to-pink-600 bg-clip-text text-transparent">
+                From invisible to industry leader.
+              </span>
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-purple-500/50 transition-all duration-300 transform hover:scale-105">
+              <div className="text-center">
+                <div className="text-3xl sm:text-4xl font-bold text-purple-400 mb-4">120+</div>
+                <p className="text-lg sm:text-xl text-white font-semibold mb-2">entrepreneurs on our waitlist</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-purple-500/50 transition-all duration-300 transform hover:scale-105">
+              <div className="text-center">
+                <div className="text-3xl sm:text-4xl font-bold text-purple-400 mb-4">3x</div>
+                <p className="text-lg sm:text-xl text-white font-semibold mb-2">engagement in 30 days for early clients</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-purple-500/50 transition-all duration-300 transform hover:scale-105">
+              <div className="text-center">
+                <div className="text-3xl sm:text-4xl font-bold text-purple-400 mb-4">₹3.5L</div>
+                <p className="text-lg sm:text-xl text-white font-semibold mb-2">client closed via LinkedIn in 2 months</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
+      {/* Section 6: About Us */}
+      <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-10 w-48 h-48 sm:w-72 sm:h-72 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-32 right-20 w-64 h-64 sm:w-96 sm:h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12 sm:mb-16 lg:mb-20">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black mb-4 sm:mb-6 leading-tight tracking-tight">
               <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                Why LinkedIn?
+                Built by entrepreneurs, for entrepreneurs.
               </span>
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed px-4">
-              LinkedIn is the world&apos;s largest professional network with over 950 million users. It&apos;s the go-to
-              platform for building your personal brand, connecting with industry leaders, and unlocking new career and
-              business opportunities.
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 shadow-lg">
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">Grow Your Network</h3>
-              <p className="text-sm sm:text-base text-slate-300">
-                Connect with professionals, recruiters, and decision-makers from around the world. Every connection is a
-                new opportunity.
-              </p>
-            </div>
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 shadow-lg">
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">Showcase Your Expertise</h3>
-              <p className="text-sm sm:text-base text-slate-300">
-                Share your achievements, insights, and thought leadership through posts, articles, and engaging content.
-              </p>
-            </div>
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 shadow-lg sm:col-span-2 lg:col-span-1">
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">Unlock Opportunities</h3>
-              <p className="text-sm sm:text-base text-slate-300">
-                Attract recruiters, clients, and collaborators by maintaining an active and optimized LinkedIn presence.
-              </p>
-            </div>
-          </div>
-          <div className="mt-12 sm:mt-16 text-center">
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-6 sm:mb-8">Did You Know?</h3>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              <div className="flex items-center bg-slate-900/80 border-l-4 border-blue-500 rounded-xl px-4 sm:px-6 py-4 shadow-md">
-                <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 mr-3 flex-shrink-0" />
-                <span className="text-slate-100 font-semibold text-left text-sm sm:text-base">
-                  99% of recruiters use LinkedIn to find talent.
-                </span>
-              </div>
-              <div className="flex items-center bg-slate-900/80 border-l-4 border-blue-500 rounded-xl px-4 sm:px-6 py-4 shadow-md">
-                <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 mr-3 flex-shrink-0" />
-                <span className="text-slate-100 font-semibold text-left text-sm sm:text-base">
-                  Consistent posting (1-2 times a week) leads to higher visibility and more connections.
-                </span>
-              </div>
-              <div className="flex items-center bg-slate-900/80 border-l-4 border-blue-500 rounded-xl px-4 sm:px-6 py-4 shadow-md sm:col-span-2 lg:col-span-1">
-                <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 mr-3 flex-shrink-0" />
-                <span className="text-slate-100 font-semibold text-left text-sm sm:text-base">
-                  LinkedIn is the #1 platform for B2B lead generation.
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4 sm:mb-6 leading-tight">
-              Why Choose
-              <span className="block bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                LinkZup?
-              </span>
-            </h2>
-            <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed px-4">
-              We combine expertise, innovation, and dedication to deliver exceptional results for our clients.
-            </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center mb-4 sm:mb-6">
-                <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 border border-slate-700/50">
+              <div className="text-center">
+                <p className="text-lg sm:text-xl text-slate-300 mb-6">
+                  Founded by Prashant Kulkarni, LinkZup was born out of a simple belief:
+                </p>
+                <blockquote className="text-2xl sm:text-3xl font-bold text-blue-400 mb-6 italic">
+                  "Every entrepreneur deserves a powerful LinkedIn presence."
+                </blockquote>
+                <p className="text-lg sm:text-xl text-slate-300">
+                  Backed by LinkedIn growth strategists, content experts, and a scalable ops team, we help professionals turn profiles into profit.
+                </p>
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">Expert Team</h3>
-              <p className="text-sm sm:text-base text-slate-300">
-                Our team consists of industry experts with years of experience in digital marketing and personal
-                branding.
-              </p>
             </div>
-
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center mb-4 sm:mb-6">
-                <Zap className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">Fast Results</h3>
-              <p className="text-sm sm:text-base text-slate-300">
-                We deliver quick, measurable results that help you achieve your business goals faster.
-              </p>
-            </div>
-
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 transform transition-all duration-300 hover:scale-105 hover:shadow-xl sm:col-span-2 lg:col-span-1">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center mb-4 sm:mb-6">
-                <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">Proven Success</h3>
-              <p className="text-sm sm:text-base text-slate-300">
-                Our track record speaks for itself, with numerous success stories and satisfied clients.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-10 right-20 w-48 h-48 sm:w-72 sm:h-72 bg-blue-400/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 left-10 w-64 h-64 sm:w-96 sm:h-96 bg-purple-400/20 rounded-full blur-3xl"></div>
-        </div>
-
-        <div className="max-w-5xl mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 sm:mb-8 leading-tight">
-            Ready to Transform Your
-            <span className="block bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent mt-2 pb-3">
-              Digital Presence?
-            </span>
-          </h2>
-          <p className="text-lg sm:text-xl text-slate-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
-            Join hundreds of professionals and businesses who have elevated their online presence with our services.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center">
-            <Link href="/services">
-              <Button
-                size="lg"
-                className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 sm:px-10 py-4 sm:py-6 text-base sm:text-lg font-bold rounded-full transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
-              >
-                GET STARTED TODAY
-              </Button>
-            </Link>
-            <Link href="/about">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full sm:w-auto border-2 border-white/20 text-white hover:bg-white/10 px-8 sm:px-10 py-4 sm:py-6 text-base sm:text-lg font-bold rounded-full backdrop-blur-sm transform transition-all duration-300 hover:scale-105 bg-transparent"
-              >
-                LEARN ABOUT US
-              </Button>
-            </Link>
           </div>
         </div>
       </section>
