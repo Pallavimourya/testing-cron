@@ -28,7 +28,7 @@ export default function Footer() {
           <div className="space-y-4 sm:space-y-6 sm:col-span-2 lg:col-span-1">
             <Link href="/" className="inline-block">
               <Image
-                src="/zuper-logo.png"
+                src="/linkzup_cut.jpeg"
                 alt="Linkzup Logo"
                 width={64}
                 height={64}

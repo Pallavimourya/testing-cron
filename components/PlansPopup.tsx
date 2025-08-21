@@ -4,9 +4,11 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Check, Star, Zap, Crown, Loader2, CreditCard, X } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Check, X, ChevronDown, ChevronUp, Loader2, Sparkles, Crown, Zap, Star, CreditCard } from "lucide-react"
 import { toast } from "sonner"
 import { PLANS, formatPrice, type PlanType } from "@/lib/razorpay"
+import { openRazorpayWithFocus } from "@/lib/razorpay-focus"
 
 declare global {
   interface Window {
@@ -154,7 +156,7 @@ export default function PlansPopup({
       const orderData = await orderResponse.json()
       console.log("✅ Order created successfully:", orderData)
 
-      // Hide the plans popup before opening Razorpay
+      // Close the plans popup before opening Razorpay
       onOpenChange(false)
 
       // Configure Razorpay options
@@ -164,7 +166,7 @@ export default function PlansPopup({
         currency: orderData.currency,
         name: "LinkZup",
         description: `${orderData.planName} Plan Subscription`,
-        image: "https://your-domain.com/zuper-logo.png", // Use absolute URL to avoid mixed content
+        image: "/linkzup_cut.jpeg",
         order_id: orderData.orderId,
         prefill: {
           name: session.user.name || "User",
@@ -241,7 +243,15 @@ export default function PlansPopup({
         onOpenChange(true) // Reopen plans popup on failure
       })
 
-      razorpay.open()
+      // Open Razorpay with proper focus management
+      try {
+        openRazorpayWithFocus(razorpay)
+      } catch (error) {
+        console.error("Razorpay open error:", error)
+        toast.error("Failed to open payment modal. Please try again.")
+        setProcessingPlan(null)
+        onOpenChange(true)
+      }
     } catch (error) {
       console.error("❌ Payment error:", error)
       const errorMessage = error instanceof Error ? error.message : "Failed to initiate payment. Please try again."

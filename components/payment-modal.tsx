@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Check, CreditCard, Loader2, Sparkles, Shield, ArrowRight } from "lucide-react"
 import { PLANS, formatPrice, type PlanType } from "@/lib/razorpay"
 import { useToast } from "@/hooks/use-toast"
+import { openRazorpayWithFocus } from "@/lib/razorpay-focus"
 
 interface Plan {
   id: string
@@ -57,12 +58,13 @@ export function PaymentModal({
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
 
-  // Focus management
+  // Focus management for Razorpay
   useEffect(() => {
     if (isOpen && buttonRef.current) {
-      // Don't auto-focus the button to prevent focus jumping
-      buttonRef.current.blur()
+      // Focus the button initially for accessibility
+      buttonRef.current.focus()
     }
   }, [isOpen])
 
@@ -135,7 +137,7 @@ export function PaymentModal({
         name: "LinkZup",
         description: `${plan.name} Plan - ${plan.durationDays} days`,
         order_id: orderData.orderId,
-        image: "/zuper-logo.png",
+        image: "/linkzup_cut.jpeg",
         handler: async (response: any) => {
           try {
             // Verify payment with plan information
@@ -187,16 +189,20 @@ export function PaymentModal({
         modal: {
           ondismiss: () => {
             setIsLoading(false)
-            // Don't close our modal when Razorpay is dismissed
+            // Reopen our modal when Razorpay is dismissed
+            onClose()
           },
         },
       }
 
       const razorpay = new window.Razorpay(options)
       
-      // Open Razorpay modal directly without closing our modal first
+      // Close our modal before opening Razorpay
+      onClose()
+      
+      // Open Razorpay modal with proper focus management
       try {
-        razorpay.open()
+        openRazorpayWithFocus(razorpay)
       } catch (error) {
         console.error("Razorpay open error:", error)
         toast({
@@ -204,6 +210,8 @@ export function PaymentModal({
           description: "Failed to open payment modal. Please try again.",
           variant: "destructive",
         })
+        // Reopen our modal if Razorpay fails to open
+        onClose()
       }
     } catch (error) {
       console.error("Payment error:", error)
@@ -225,8 +233,15 @@ export function PaymentModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
+        ref={dialogRef}
         className="sm:max-w-lg" 
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        onOpenAutoFocus={(e) => {
+          // Allow focus but manage it properly
+          e.preventDefault()
+          if (buttonRef.current) {
+            buttonRef.current.focus()
+          }
+        }}
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader className="text-center">

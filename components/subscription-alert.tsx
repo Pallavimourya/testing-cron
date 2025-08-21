@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Crown, Star, Zap, AlertCircle, CheckCircle, ArrowRight, Lock, Sparkles } from "lucide-react"
+import { Lock, AlertCircle, Check, Crown, Zap, Star, Sparkles, ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { openRazorpayWithFocus } from "@/lib/razorpay-focus"
 
 interface Plan {
   id: string
@@ -182,7 +183,14 @@ export default function SubscriptionAlert({
       }
 
       const razorpay = new (window as any).Razorpay(options)
-      razorpay.open()
+      
+      // Open Razorpay with proper focus management
+      try {
+        openRazorpayWithFocus(razorpay)
+      } catch (error) {
+        console.error("Razorpay open error:", error)
+        toast.error("Failed to open payment modal. Please try again.")
+      }
     } catch (error) {
       console.error("Payment error:", error)
       toast.error("Failed to initiate payment. Please try again.")
@@ -259,7 +267,7 @@ export default function SubscriptionAlert({
                   <div className="space-y-3 mb-6">
                     {plan.features.slice(0, 5).map((feature, index) => (
                       <div key={index} className="flex items-start gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                         <span className="text-sm text-gray-700">{feature}</span>
                       </div>
                     ))}

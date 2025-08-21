@@ -22,6 +22,11 @@ export default function RootLayout({
         <ClientLayout>
           {children}
         </ClientLayout>
+        <Script 
+          src="/razorpay-auto-focus.js" 
+          strategy="afterInteractive"
+          id="razorpay-auto-focus"
+        />
       </body>
     </html>
   )

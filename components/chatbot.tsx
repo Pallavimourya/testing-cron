@@ -36,6 +36,7 @@ import {
   Shield
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface Message {
   id: string
@@ -151,6 +152,7 @@ export default function Chatbot({ className }: ChatbotProps) {
   const [plansLoaded, setPlansLoaded] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const isMobile = useIsMobile()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -178,6 +180,19 @@ export default function Chatbot({ className }: ChatbotProps) {
   useEffect(() => {
     fetchPricingPlans()
   }, [])
+
+  // Handle mobile viewport and prevent body scroll when chatbot is open
+  useEffect(() => {
+    if (isMobile && isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isMobile, isOpen])
 
   const generateResponse = async (userMessage: string): Promise<string> => {
     const lowerMessage = userMessage.toLowerCase()
@@ -509,44 +524,75 @@ Feel free to ask me anything specific about LinkZup!`
 
   return (
     <>
+      {/* Mobile Overlay */}
+      {isOpen && isMobile && (
+        <div 
+          className="fixed inset-0 bg-black/20 z-40"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       {/* Chatbot Toggle Button */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300",
+          "fixed z-50 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300",
+          // Mobile: larger button, bottom center
+          isMobile 
+            ? "bottom-4 left-1/2 transform -translate-x-1/2 h-16 w-16 sm:h-14 sm:w-14" 
+            : "bottom-6 right-6 h-14 w-14",
           isOpen && "scale-110"
         )}
+        aria-label={isOpen ? "Close chatbot" : "Open chatbot"}
       >
-        {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+        {isOpen ? <X className="h-6 w-6 sm:h-5 sm:w-5" /> : <MessageCircle className="h-6 w-6 sm:h-5 sm:w-5" />}
       </Button>
 
       {/* Chatbot Interface */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-96 h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col">
+        <div className={cn(
+          "fixed z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col",
+          // Mobile: full screen with proper spacing
+          isMobile 
+            ? "inset-1 bottom-20 max-h-[calc(100vh-5rem)] sm:inset-2" // Better mobile sizing with responsive margins
+            : "bottom-24 right-6 w-96 h-[600px]"
+        )}>
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-t-2xl">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-t-2xl flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Bot className="h-8 w-8" />
+                <div className={cn(
+                  "bg-white/20 rounded-full flex items-center justify-center",
+                  isMobile ? "w-10 h-10" : "w-12 h-12"
+                )}>
+                  <Bot className={isMobile ? "h-6 w-6" : "h-8 w-8"} />
                 </div>
                 <div>
-                  <h3 className="font-semibold">LinkZup Assistant</h3>
+                  <h3 className={cn(
+                    "font-semibold",
+                    isMobile ? "text-sm" : "text-base"
+                  )}>LinkZup Assistant</h3>
+                  {isMobile && (
+                    <p className="text-xs text-white/80 mt-1">Tap outside to close</p>
+                  )}
                 </div>
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size={isMobile ? "sm" : "sm"}
                 onClick={() => setIsOpen(false)}
-                className="text-white hover:bg-white/20"
+                className={cn(
+                  "text-white hover:bg-white/20",
+                  isMobile ? "h-10 w-10 p-0" : ""
+                )}
               >
-                <X className="h-4 w-4" />
+                <X className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
               </Button>
             </div>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -557,10 +603,12 @@ Feel free to ask me anything specific about LinkZup!`
               >
                 <div
                   className={cn(
-                    "max-w-[80%] rounded-2xl px-4 py-3",
+                    "rounded-2xl px-4 py-3",
                     message.type === "user"
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-900"
+                      : "bg-gray-100 text-gray-900",
+                    // Mobile: adjust max width for better readability
+                    isMobile ? "max-w-[85%] sm:max-w-[80%]" : "max-w-[80%]"
                   )}
                 >
                   <div className="flex items-start space-x-2">
@@ -569,7 +617,10 @@ Feel free to ask me anything specific about LinkZup!`
                     )}
                     <div className="flex-1">
                       <div 
-                        className="prose prose-sm max-w-none"
+                        className={cn(
+                          "prose max-w-none",
+                          isMobile ? "prose-xs sm:prose-sm" : "prose-sm"
+                        )}
                         dangerouslySetInnerHTML={{
                           __html: message.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                             .replace(/\n/g, '<br>')
@@ -590,7 +641,12 @@ Feel free to ask me anything specific about LinkZup!`
                           variant="outline"
                           size="sm"
                           onClick={() => handleSuggestionClick(suggestion)}
-                          className="w-full text-left justify-start text-xs h-auto py-2 px-3 bg-white/50 hover:bg-white/80"
+                          className={cn(
+                            "w-full text-left justify-start bg-white/50 hover:bg-white/80 transition-colors",
+                            isMobile 
+                              ? "text-xs h-auto py-3 px-3 sm:py-2" // Larger touch target on mobile
+                              : "text-xs h-auto py-2 px-3"
+                          )}
                         >
                           {suggestion}
                         </Button>
@@ -621,7 +677,7 @@ Feel free to ask me anything specific about LinkZup!`
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-gray-200 flex-shrink-0">
             <div className="flex space-x-2">
               <Input
                 ref={inputRef}
@@ -629,14 +685,20 @@ Feel free to ask me anything specific about LinkZup!`
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask me anything about LinkZup..."
-                className="flex-1"
+                className={cn(
+                  "flex-1",
+                  isMobile ? "h-12 text-base sm:h-10" : "h-10" // Larger input on mobile
+                )}
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={!inputValue.trim() || isTyping}
-                className="bg-blue-600 hover:bg-blue-700"
+                className={cn(
+                  "bg-blue-600 hover:bg-blue-700 transition-colors",
+                  isMobile ? "h-12 w-12 p-0 sm:h-10 sm:w-auto sm:px-4" : "h-10" // Larger button on mobile
+                )}
               >
-                <Send className="h-4 w-4" />
+                <Send className={isMobile ? "h-5 w-5 sm:h-4 sm:w-4" : "h-4 w-4"} />
               </Button>
             </div>
           </div>
