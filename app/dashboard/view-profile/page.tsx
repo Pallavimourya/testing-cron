@@ -45,6 +45,7 @@ import {
   Heart,
   Shield,
   Phone,
+  Linkedin,
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -114,13 +115,54 @@ export default function ViewProfilePage() {
   const [showAvatarOptions, setShowAvatarOptions] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
+  // LinkedIn connection states
+  const [linkedinStatus, setLinkedinStatus] = useState<{ isConnected: boolean; linkedinName?: string; linkedinEmail?: string; linkedinProfileUrl?: string; profilePicture?: string; connectedAt?: string; lastSync?: string; serviceStatus?: "online" | "offline" | "unknown"; linkedinId?: string; tokenExpired?: boolean; connectionsCount?: number; postsCount?: number; followersCount?: number; profileViews?: number }>({ isConnected: false })
+  const [disconnectingLinkedIn, setDisconnectingLinkedIn] = useState(false)
+  
   // Editable form data
   const [editableBaseStory, setEditableBaseStory] = useState<any>({})
   const [editableCustomization, setEditableCustomization] = useState<any>({})
 
   useEffect(() => {
     loadProfileData()
+    checkLinkedInStatus()
   }, [])
+
+  // Check LinkedIn connection status
+  const checkLinkedInStatus = async () => {
+    try {
+      const response = await fetch("/api/linkedin/status")
+      if (response.ok) {
+        const data = await response.json()
+        setLinkedinStatus(data)
+      } else {
+        console.error("Failed to check LinkedIn status")
+      }
+    } catch (error) {
+      console.error("Error checking LinkedIn status:", error)
+    }
+  }
+
+  // Disconnect LinkedIn account
+  const handleDisconnectLinkedIn = async () => {
+    try {
+      setDisconnectingLinkedIn(true)
+      const response = await fetch("/api/linkedin/disconnect", { method: "POST" })
+
+      if (response.ok) {
+        setLinkedinStatus({ isConnected: false })
+        toast.success("LinkedIn account disconnected successfully")
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || "Failed to disconnect LinkedIn account")
+      }
+    } catch (error) {
+      console.error("Error disconnecting LinkedIn:", error)
+      toast.error("Failed to disconnect LinkedIn account")
+    } finally {
+      setDisconnectingLinkedIn(false)
+    }
+  }
 
   const loadProfileData = async () => {
     try {
@@ -897,6 +939,90 @@ export default function ViewProfilePage() {
                     </Badge>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* LinkedIn Connection */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-2xl rounded-3xl">
+              <CardHeader className="pb-6">
+                <CardTitle className="flex items-center gap-3 text-2xl">
+                  <div className="p-3 bg-blue-100 rounded-xl">
+                    <Linkedin className="h-6 w-6 text-blue-600" />
+                  </div>
+                  LinkedIn Connection
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {linkedinStatus.isConnected ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm text-gray-500 font-medium">Connection Status</p>
+                        <Badge className="bg-green-100 text-green-800 text-sm px-3 py-1">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Connected
+                        </Badge>
+                      </div>
+                      {linkedinStatus.linkedinName && (
+                        <p className="text-gray-900 font-semibold">{linkedinStatus.linkedinName}</p>
+                      )}
+                      {linkedinStatus.linkedinEmail && (
+                        <p className="text-sm text-gray-600">{linkedinStatus.linkedinEmail}</p>
+                      )}
+                      {linkedinStatus.connectedAt && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          Connected since {new Date(linkedinStatus.connectedAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                    
+                    {linkedinStatus.linkedinProfileUrl && (
+                      <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl">
+                        <p className="text-sm text-gray-500 font-medium mb-2">Profile URL</p>
+                        <a 
+                          href={linkedinStatus.linkedinProfileUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm break-all"
+                        >
+                          {linkedinStatus.linkedinProfileUrl}
+                        </a>
+                      </div>
+                    )}
+
+                    <Button
+                      onClick={handleDisconnectLinkedIn}
+                      disabled={disconnectingLinkedIn}
+                      variant="destructive"
+                      className="w-full"
+                    >
+                      {disconnectingLinkedIn ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Disconnecting...
+                        </>
+                      ) : (
+                        <>
+                          <X className="h-4 w-4 mr-2" />
+                          Disconnect LinkedIn
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl mb-4">
+                      <Linkedin className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-600 font-medium mb-2">LinkedIn Not Connected</p>
+                      <p className="text-sm text-gray-500">
+                        Connect your LinkedIn account to enable automatic posting and analytics.
+                      </p>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      LinkedIn connection is required for posting content and viewing analytics.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

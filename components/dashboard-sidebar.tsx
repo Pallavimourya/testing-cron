@@ -108,13 +108,14 @@ export function DashboardSidebar({
       description: "Manage scheduled content",
       color: "blue",
     },
-    {
-      path: "/dashboard/linkedin",
-      icon: Linkedin,
-      label: "LinkedIn",
-      description: "Connection & Analytics",
-      color: "blue",
-    },
+    // LinkedIn tab hidden - functionality moved to profile page
+    // {
+    //   path: "/dashboard/linkedin",
+    //   icon: Linkedin,
+    //   label: "LinkedIn",
+    //   description: "Connection & Analytics",
+    //   color: "blue",
+    // },
 
     {
       path: "/dashboard/billing",
