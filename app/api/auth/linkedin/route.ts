@@ -29,6 +29,8 @@ export async function GET() {
       clientId: clientId.substring(0, 8) + "...",
       redirectUri,
       environment: process.env.NODE_ENV,
+      envRedirectUri: process.env.LINKEDIN_REDIRECT_URI,
+      nextAuthUrl: process.env.NEXTAUTH_URL,
     })
 
     // Generate state parameter for security
