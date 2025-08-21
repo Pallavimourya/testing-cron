@@ -1187,34 +1187,34 @@ export default function ApprovedContentPage() {
           </CardContent>
         </Card>
 
-        {/* View Dialog - Simplified */}
+        {/* View Dialog - Mobile Responsive */}
         <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                <Eye className="w-5 h-5" />
+          <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <DialogHeader className="mb-4">
+              <DialogTitle className="text-lg sm:text-xl font-bold flex items-center gap-2">
+                <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                 Content Preview
               </DialogTitle>
             </DialogHeader>
             {selectedContent && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Image Section */}
                 {selectedContent.imageUrl && (
                   <div className="flex justify-center">
-                    <div className="relative">
+                    <div className="relative w-full max-w-sm sm:max-w-md">
                       <Image 
                         src={selectedContent.imageUrl || "/placeholder.svg"} 
                         alt="Content image" 
                         width={400}
                         height={250}
-                        className="w-full max-w-md h-auto object-cover rounded-xl border shadow-lg"
+                        className="w-full h-auto object-cover rounded-xl border shadow-lg"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = "/placeholder.svg?height=250&width=400&text=Image+Not+Found";
                         }}
                       />
                       {selectedContent.imageGenerated && (
-                        <div className="absolute top-3 right-3 bg-blue-500 text-white text-xs px-3 py-1 rounded-full font-medium">
+                        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-blue-500 text-white text-xs px-2 sm:px-3 py-1 rounded-full font-medium">
                           AI Generated
                         </div>
                       )}
@@ -1223,20 +1223,22 @@ export default function ApprovedContentPage() {
                 )}
 
                 {/* Content Section */}
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-xl">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">{selectedContent.topicTitle}</h3>
-                  <div className="flex items-center gap-3 mb-4">
-                    <Badge className={`${getStatusColor(selectedContent.status)} flex items-center gap-1`}>
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 sm:p-6 rounded-xl">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 break-words">{selectedContent.topicTitle}</h3>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <Badge className={`${getStatusColor(selectedContent.status)} flex items-center gap-1 text-xs sm:text-sm`}>
                       {getStatusIcon(selectedContent.status)}
-                      {selectedContent.status}
+                      <span className="hidden sm:inline">{selectedContent.status}</span>
+                      <span className="sm:hidden">{selectedContent.status}</span>
                     </Badge>
-                    <Badge className={`${getContentTypeColor(selectedContent.contentType)} flex items-center gap-1`}>
+                    <Badge className={`${getContentTypeColor(selectedContent.contentType)} flex items-center gap-1 text-xs sm:text-sm`}>
                       {getContentTypeIcon(selectedContent.contentType)}
-                      {getContentTypeLabel(selectedContent.contentType)}
+                      <span className="hidden sm:inline">{getContentTypeLabel(selectedContent.contentType)}</span>
+                      <span className="sm:hidden">{getContentTypeLabel(selectedContent.contentType)}</span>
                     </Badge>
                   </div>
                   <div className="prose max-w-none">
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-base">
+                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">
                       {selectedContent.content}
                     </p>
                   </div>
@@ -1245,10 +1247,10 @@ export default function ApprovedContentPage() {
                 {/* Hashtags */}
                 {selectedContent.hashtags && selectedContent.hashtags.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Hashtags</h4>
-                    <div className="flex flex-wrap gap-2">
+                    <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Hashtags</h4>
+                    <div className="flex flex-wrap gap-1 sm:gap-2">
                       {selectedContent.hashtags.map((hashtag, idx) => (
-                        <span key={idx} className="bg-blue-100 text-blue-800 px-3 py-2 rounded-full text-sm font-medium">
+                        <span key={idx} className="bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium">
                           #{hashtag}
                         </span>
                       ))}
@@ -1259,30 +1261,32 @@ export default function ApprovedContentPage() {
                 {/* Key Points */}
                 {selectedContent.keyPoints && selectedContent.keyPoints.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Key Points</h4>
-                    <ul className="list-disc list-inside space-y-2 text-gray-700">
+                    <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Key Points</h4>
+                    <ul className="list-disc list-inside space-y-1 sm:space-y-2 text-gray-700">
                       {selectedContent.keyPoints.map((point, idx) => (
-                        <li key={idx} className="text-base">{point}</li>
+                        <li key={idx} className="text-sm sm:text-base">{point}</li>
                       ))}
                     </ul>
                   </div>
                 )}
 
                 {/* Actions */}
-                <div className="flex gap-3 pt-4 border-t border-gray-200">
-                  <Button onClick={() => copyToClipboard(selectedContent.content)} className="flex-1">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-gray-200">
+                  <Button onClick={() => copyToClipboard(selectedContent.content)} className="flex-1 text-sm sm:text-base">
                     <Copy className="w-4 h-4 mr-2" />
-                    Copy Content
+                    <span className="hidden sm:inline">Copy Content</span>
+                    <span className="sm:hidden">Copy</span>
                   </Button>
                   <Button 
                     variant="outline" 
                     onClick={() => handlePostToLinkedIn(selectedContent.id)}
-                    className="flex-1"
+                    className="flex-1 text-sm sm:text-base"
                   >
                     <Linkedin className="w-4 h-4 mr-2" />
-                    Post to LinkedIn
+                    <span className="hidden sm:inline">Post to LinkedIn</span>
+                    <span className="sm:hidden">Post</span>
                   </Button>
-                  <Button variant="outline" onClick={() => setShowViewDialog(false)}>
+                  <Button variant="outline" onClick={() => setShowViewDialog(false)} className="text-sm sm:text-base">
                     Close
                   </Button>
                 </div>

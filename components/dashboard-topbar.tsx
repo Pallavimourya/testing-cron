@@ -133,35 +133,7 @@ export default function DashboardTopbar({
           </Button>
         )}
         
-        <div className="hidden sm:block">
-          <Badge
-            variant={isConnected ? "default" : "destructive"}
-            className={`${isConnected ? "bg-green-500" : ""} text-xs sm:text-sm`}
-          >
-            {isConnected ? (
-              <>
-                <Check className="mr-1 h-3 w-3" /> Content Generation Connected
-              </>
-            ) : (
-              "Disconnected"
-            )}
-          </Badge>
-        </div>
-        {/* Mobile version - shorter text */}
-        <div className="block sm:hidden">
-          <Badge
-            variant={isConnected ? "default" : "destructive"}
-            className={`${isConnected ? "bg-green-500" : ""} text-xs`}
-          >
-            {isConnected ? (
-              <>
-                <Check className="mr-1 h-2 w-2" /> Connected
-              </>
-            ) : (
-              "Offline"
-            )}
-          </Badge>
-        </div>
+
       </div>
       <div className="flex items-center gap-2 sm:gap-3">
         {!linkedinConnected ? (

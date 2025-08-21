@@ -26,7 +26,7 @@ export default function ContactPage() {
       title: "LinkedIn",
       description: "Connect with us on LinkedIn for professional networking.",
       icon: <Linkedin className="h-6 w-6" />,
-      link: "https://www.linkedin.com/in/prashant-kumar-a00000000/",
+      link: "https://www.linkedin.com/in/zuperprashant/?originalSubdomain=in",
       buttonText: "Connect on LinkedIn"
     },
     {
@@ -236,7 +236,7 @@ export default function ContactPage() {
                 <p className="mb-6 text-white/90">
                   For urgent inquiries, reach out via LinkedIn for the fastest response.
                 </p>
-                <Link href="https://www.linkedin.com/in/prashant-kumar-a00000000/" target="_blank">
+                <Link href="https://www.linkedin.com/in/zuperprashant/?originalSubdomain=in" target="_blank">
                   <Button className="w-full bg-white text-blue-600 hover:bg-gray-100 transition-all duration-300">
                     <Linkedin className="h-4 w-4 mr-2" />
                     Connect on LinkedIn
