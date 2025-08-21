@@ -37,7 +37,7 @@ export default function Topbar({ userProfile }: TopbarProps) {
     <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-lg border-b border-slate-200 flex items-center justify-between px-8 py-3 h-16 w-full shadow-sm">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3">
-          <Image src="/linkzup_cut.jpeg" alt="LinkZup Logo" width={32} height={32} className="h-8 w-auto" />
+          <Image src="/zuper-logo.png" alt="LinkZup Logo" width={32} height={32} className="h-8 w-auto" />
           <div>
             <span className="font-bold text-lg text-slate-900">LinkZup</span>
             <div className="flex items-center gap-2">

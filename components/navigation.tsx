@@ -61,7 +61,7 @@ export default function Navigation() {
             {/* Logo */}
             <Link href="/" className="flex items-center group">
               <Image
-                src="/linkzup_cut.jpeg"
+                src="/zuper-logo.png"
                 alt="Linkzup Logo"
                 width={56}
                 height={56}
