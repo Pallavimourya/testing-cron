@@ -16,8 +16,8 @@ export async function GET() {
     // Dynamic redirect URI based on environment
     let redirectUri = process.env.LINKEDIN_REDIRECT_URI
     if (!redirectUri) {
-      const baseUrl = process.env.NEXTAUTH_URL || "https://www.linkzup.in/"
-      redirectUri = `${baseUrl}/api/auth/linkedin/callback`
+      // Use production URL by default since LinkedIn app is configured for it
+      redirectUri = "https://www.linkzup.in/api/auth/linkedin/callback"
     }
 
     if (!clientId) {
