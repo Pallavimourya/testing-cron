@@ -120,7 +120,7 @@ export function DashboardSidebar({
     {
       path: "/dashboard/billing",
       icon: Crown,
-      label: "Premium",
+      label: "Billing",
       description: "Upgrade your plan",
       color: "blue",
     },
