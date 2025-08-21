@@ -154,7 +154,7 @@ export default function HomePage() {
           </div>
 
           <p className="text-lg sm:text-xl lg:text-2xl mb-8 sm:mb-12 text-slate-300 max-w-3xl mx-auto leading-relaxed animate-fade-in px-4">
-            Your profile, content, engagement & DMs — managed end-to-end so you can focus on business.
+            Your profile, content, engagement — managed end-to-end so you can focus on business.
           </p>
 
           {/* Video Section */}
@@ -340,101 +340,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Section 4: Plans & Pricing */}
-      <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black mb-4 sm:mb-6 leading-tight tracking-tight">
-              <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                Choose your growth plan.
-              </span>
-            </h2>
-          </div>
 
-          <div className="grid sm:grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105">
-              <div className="text-center">
-                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">Starter</h3>
-                <div className="text-3xl sm:text-4xl font-bold text-blue-400 mb-4">₹25,000<span className="text-lg text-slate-400">/month</span></div>
-                <ul className="space-y-3 mb-8 text-left">
-                  <li className="flex items-center text-slate-300">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
-                    <span>Profile revamp</span>
-                  </li>
-                  <li className="flex items-center text-slate-300">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
-                    <span>8 posts/month</span>
-                  </li>
-                </ul>
-                <Link href="/signin">
-                  <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border-2 border-blue-500/50 hover:border-blue-400/50 transition-all duration-300 transform hover:scale-105 relative">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold">Most Popular</span>
-              </div>
-              <div className="text-center">
-                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">Growth</h3>
-                <div className="text-3xl sm:text-4xl font-bold text-blue-400 mb-4">₹50,000<span className="text-lg text-slate-400">/month</span></div>
-                <ul className="space-y-3 mb-8 text-left">
-                  <li className="flex items-center text-slate-300">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
-                    <span>Profile revamp</span>
-                  </li>
-                  <li className="flex items-center text-slate-300">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
-                    <span>16 posts/month</span>
-                  </li>
-                  <li className="flex items-center text-slate-300">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
-                    <span>DM management</span>
-                  </li>
-                </ul>
-                <Link href="/signin">
-                  <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105">
-              <div className="text-center">
-                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">Premium</h3>
-                <div className="text-3xl sm:text-4xl font-bold text-blue-400 mb-4">₹1,00,000<span className="text-lg text-slate-400">/month</span></div>
-                <ul className="space-y-3 mb-8 text-left">
-                  <li className="flex items-center text-slate-300">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
-                    <span>Full DFY service</span>
-                  </li>
-                  <li className="flex items-center text-slate-300">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
-                    <span>PR</span>
-                  </li>
-                  <li className="flex items-center text-slate-300">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
-                    <span>Lead Gen</span>
-                  </li>
-                </ul>
-                <Link href="/signin">
-                  <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center mt-8">
-            <p className="text-slate-300 text-lg">👉 All plans include analytics & dedicated support.</p>
-          </div>
-        </div>
-      </section>
 
       {/* Section 5: Results & Case Studies */}
       <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
