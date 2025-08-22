@@ -5,6 +5,9 @@ import User from "@/models/User"
 import mongoose from "mongoose"
 
 export async function GET(request: NextRequest) {
+  // LinkedIn OAuth 2.0 configuration - Updated with your credentials
+  const baseUrl = "https://www.linkzup.in" // Your website base URL
+  
   try {
     const { searchParams } = new URL(request.url)
     const code = searchParams.get("code")
@@ -18,12 +21,12 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error("❌ LinkedIn OAuth error:", error, errorDescription)
       const errorParam = error === "user_cancelled_login" ? "user_cancelled" : "linkedin_auth_failed"
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard/linkedin?error=${errorParam}`)
+      return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?error=${errorParam}`)
     }
 
     if (!code || !state) {
       console.error("❌ Missing required parameters:", { code: !!code, state: !!state })
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard/linkedin?error=missing_params`)
+      return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?error=missing_params`)
     }
 
     // Verify state parameter
@@ -33,28 +36,26 @@ export async function GET(request: NextRequest) {
       console.log("✅ State verified:", { userId: stateData.userId })
     } catch (stateError) {
       console.error("❌ Invalid state parameter:", stateError)
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard/linkedin?error=invalid_state`)
+      return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?error=invalid_state`)
     }
 
     const { userId } = stateData
 
     if (!userId) {
       console.error("❌ No userId in state")
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard/linkedin?error=invalid_state`)
+      return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?error=invalid_state`)
     }
 
     console.log("🔄 Exchanging code for access token...")
 
-    // Dynamic redirect URI based on environment
-    let redirectUri = process.env.LINKEDIN_REDIRECT_URI
-    if (!redirectUri) {
-      // Use production URL by default since LinkedIn app is configured for it
-      redirectUri = "https://www.linkzup.in/api/auth/linkedin/callback"
-    }
+    // LinkedIn OAuth 2.0 configuration - Updated with your credentials
+    const clientId = "778o02fugomgrp" // Your LinkedIn Client ID
+    const clientSecret = "YOUR_LINKEDIN_CLIENT_SECRET_HERE" // Replace with your actual client secret
+    const redirectUri = "https://www.linkzup.in/api/auth/linkedin/callback" // Your LinkedIn Redirect URI
 
     console.log("🔍 Token exchange details:", {
-      clientId: process.env.LINKEDIN_CLIENT_ID ? "✅ Set" : "❌ Missing",
-      clientSecret: process.env.LINKEDIN_CLIENT_SECRET ? "✅ Set" : "❌ Missing",
+      clientId: clientId ? "✅ Set" : "❌ Missing",
+      clientSecret: clientSecret ? "✅ Set" : "❌ Missing",
       redirectUri,
       codeLength: code?.length || 0,
       code: code?.substring(0, 10) + "...", // Show first 10 chars for debugging
@@ -69,8 +70,8 @@ export async function GET(request: NextRequest) {
       body: new URLSearchParams({
         grant_type: "authorization_code",
         code,
-        client_id: process.env.LINKEDIN_CLIENT_ID!,
-        client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
+        client_id: clientId,
+        client_secret: clientSecret,
         redirect_uri: redirectUri,
       }),
     })
@@ -81,12 +82,12 @@ export async function GET(request: NextRequest) {
       console.error("❌ Token exchange request details:", {
         url: "https://www.linkedin.com/oauth/v2/accessToken",
         method: "POST",
-        clientId: process.env.LINKEDIN_CLIENT_ID,
+        clientId: clientId,
         redirectUri,
         responseStatus: tokenResponse.status,
         responseText: tokenError,
       })
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard/linkedin?error=token_exchange_failed`)
+      return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?error=token_exchange_failed`)
     }
 
     const tokenData = await tokenResponse.json()
@@ -109,12 +110,12 @@ export async function GET(request: NextRequest) {
       // Handle specific error cases
       if (profileResponse.status === 429) {
         console.error("❌ LinkedIn API rate limit exceeded")
-        return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard/linkedin?error=rate_limit_exceeded`)
+        return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?error=rate_limit_exceeded`)
       } else if (profileResponse.status === 401) {
         console.error("❌ LinkedIn API unauthorized")
-        return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard/linkedin?error=unauthorized`)
+        return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?error=unauthorized`)
       } else {
-        return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard/linkedin?error=profile_fetch_failed`)
+        return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?error=profile_fetch_failed`)
       }
     }
 
@@ -149,7 +150,7 @@ export async function GET(request: NextRequest) {
 
     if (!updatedUser) {
       console.error("❌ User not found for update:", userId)
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard/linkedin?error=user_not_found`)
+      return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?error=user_not_found`)
     }
 
     // Also save to linkedindetails collection for backward compatibility
@@ -183,9 +184,9 @@ export async function GET(request: NextRequest) {
     console.log("✅ LinkedIn connection successful for user:", updatedUser.email)
 
     // Redirect back to LinkedIn dashboard with success
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard/linkedin?linkedin=connected`)
+    return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?linkedin=connected`)
   } catch (error) {
     console.error("❌ LinkedIn callback error:", error)
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard/linkedin?error=callback_failed`)
+    return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?error=callback_failed`)
   }
 }

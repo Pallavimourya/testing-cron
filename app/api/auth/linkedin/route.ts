@@ -10,27 +10,14 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // LinkedIn OAuth 2.0 configuration
-    const clientId = process.env.LINKEDIN_CLIENT_ID
-
-    // Dynamic redirect URI based on environment
-    let redirectUri = process.env.LINKEDIN_REDIRECT_URI
-    if (!redirectUri) {
-      // Use production URL by default since LinkedIn app is configured for it
-      redirectUri = "https://www.linkzup.in/api/auth/linkedin/callback"
-    }
-
-    if (!clientId) {
-      console.error("LinkedIn client ID not found in environment variables")
-      return NextResponse.json({ error: "LinkedIn client ID not configured" }, { status: 500 })
-    }
+    // LinkedIn OAuth 2.0 configuration - Updated with your credentials
+    const clientId = "778o02fugomgrp" // Your LinkedIn Client ID
+    const redirectUri = "https://www.linkzup.in/api/auth/linkedin/callback" // Your LinkedIn Redirect URI
 
     console.log("🔗 LinkedIn OAuth config:", {
       clientId: clientId.substring(0, 8) + "...",
       redirectUri,
       environment: process.env.NODE_ENV,
-      envRedirectUri: process.env.LINKEDIN_REDIRECT_URI,
-      nextAuthUrl: process.env.NEXTAUTH_URL,
     })
 
     // Generate state parameter for security

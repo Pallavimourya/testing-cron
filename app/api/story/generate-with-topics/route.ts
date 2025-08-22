@@ -138,36 +138,86 @@ async function generateStoryWithOpenAI(
     const targetAudience = customizationData?.target_audience || customizationData?.targetAudience || "professionals"
     const industry = user?.industry || "business"
 
-    const prompt = `Create a compelling professional story based on the user's background and preferences. Write in ${contentLanguage} language.
+    const prompt = `You are a human, conversational LinkedIn ghostwriter. Use the Humanization Rules and Global Controls below.
 
-**User Background:**
-- Current Work: ${baseStoryData?.currentWork || "Not specified"}
-- Biggest Challenge: ${baseStoryData?.biggestChallenge || "Not specified"}
-- Turning Point: ${baseStoryData?.turningPoint || "Not specified"}
-- Core Values: ${baseStoryData?.coreValues || "Not specified"}
-- Unique Approach: ${baseStoryData?.uniqueApproach || "Not specified"}
-- Proud Achievement: ${baseStoryData?.proudAchievement || "Not specified"}
-- Powerful Lesson: ${baseStoryData?.powerfulLesson || "Not specified"}
+🌍 Global Controls:
+[LANGUAGE]: ${contentLanguage}
+[AUDIENCE]: ${targetAudience}
+[AGE_RANGE]: 25-44 (default professional range)
+[GOAL]: Build Authority / Generate Leads / Educate Audience
+[TONE]: Professional / Conversational
+[LENGTH]: Medium (200-400 words)
+[UNIQUENESS]: Balanced
+[TOPIC]: Professional growth and career development
+[STORY_SNIPPET]: ${baseStoryData?.turningPoint || baseStoryData?.biggestChallenge || "Career transformation"}
+[NUMBER]: 3-5 key insights
+[OUTCOME]: ${baseStoryData?.proudAchievement || "Professional growth and success"}
+[AVOID_NEGATIVE_WORDS]: Yes
+
+✅ Humanization Rules (apply to every style):
+Write in ${contentLanguage} for ${targetAudience} with Professional/Conversational tone.
+
+Sound like a real person: contractions, natural pauses, occasional rhetorical questions.
+
+1-2 line paragraphs, add whitespace.
+
+Use specifics (names, moments, small details) from the story snippet.
+
+Prefer positive framing. Replace words like "fail, dumb, worst, never" with positive/neutral alternatives ("learned, tricky, challenging, not ideal").
+
+0-2 emojis max, if any.
+
+No hashtags unless explicitly asked.
+
+Keep to Medium length (200-400 words) and Balanced uniqueness.
+
+🔟 Master Prompt - Storytelling / Narrative Style:
+STYLE: Storytelling / Narrative
+OBJECTIVE: Build Authority / Generate Leads / Educate Audience
+TOPIC: Professional growth and career development
+UNIQUENESS: Balanced
+AVOID_NEGATIVE_WORDS: Yes
+TONE: Professional / Conversational
+LENGTH: Medium (200-400 words)
+AUDIENCE: ${targetAudience}, 25-44
+STORY: ${baseStoryData?.turningPoint || baseStoryData?.biggestChallenge || "Career transformation"}
+
+**User Background Context:**
+- Current Work: ${baseStoryData?.currentWork || "Professional role"}
+- Biggest Challenge: ${baseStoryData?.biggestChallenge || "Career obstacle"}
+- Turning Point: ${baseStoryData?.turningPoint || "Key moment of change"}
+- Core Values: ${baseStoryData?.coreValues || "Professional values"}
+- Unique Approach: ${baseStoryData?.uniqueApproach || "Personal methodology"}
+- Proud Achievement: ${baseStoryData?.proudAchievement || "Career milestone"}
+- Powerful Lesson: ${baseStoryData?.powerfulLesson || "Key learning"}
 
 **Profile Context:**
-- Target Audience: ${targetAudience}
 - Industry: ${industry}
-- Content Language: ${contentLanguage}
-- Experience: ${profile?.experience || "Not specified"}
-- Expertise: ${profile?.expertise || "Not specified"}
-- Goals: ${profile?.goals || "Not specified"}
+- Experience: ${profile?.experience || "Professional background"}
+- Expertise: ${profile?.expertise || "Areas of specialization"}
+- Goals: ${profile?.goals || "Career objectives"}
 
-**Requirements:**
-1. Create a cohesive, engaging professional story
-2. Write in ${contentLanguage} language
-3. Make it personal and authentic
-4. Include specific details and experiences
-5. Focus on growth, challenges, and lessons learned
-6. Make it relevant to ${targetAudience} in ${industry}
-7. Keep it professional but relatable
-8. Include a clear narrative arc with beginning, middle, and end
+FOLLOW THIS STRUCTURE EXACTLY (keep headings invisible in output):
+[HOOK] → 1 line. Curiosity, not clickbait.
+[SCENE] → 1-2 lines. Set time/place. Tiny concrete detail.
+[CHALLENGE] → What wasn't working (positively framed).
+[TURNING_POINT] → Decision/insight/moment that shifted things.
+[ACTION] → What you actually did (1-3 short steps).
+[RESULT] → Tangible outcome or lesson. Keep it modest, real.
+[TAKEAWAY] → 1 line, plain language, transferable insight.
+[CTA] → 1 friendly question inviting their perspective.
 
-Generate a compelling professional story:`
+OUTPUT TEMPLATE:
+[HOOK]
+[SCENE]
+[CHALLENGE]
+[TURNING_POINT]
+[ACTION]
+[RESULT]
+[TAKEAWAY]
+[CTA]
+
+Generate a compelling professional story using the above structure:`
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -180,7 +230,7 @@ Generate a compelling professional story:`
         messages: [
           {
             role: "system",
-            content: `You are an expert storyteller who creates compelling professional narratives. Always write in ${contentLanguage} language and make stories authentic and engaging.`,
+            content: `You are a human, conversational LinkedIn ghostwriter who creates compelling professional narratives using the Storytelling/Narrative style. Always write in ${contentLanguage} language, follow the Humanization Rules, and create authentic, engaging stories that build authority and generate leads.`,
           },
           {
             role: "user",
@@ -225,7 +275,28 @@ async function generateTopicsFromStory(
     const targetAudience = customizationData?.target_audience || customizationData?.targetAudience || "professionals"
     const industry = user?.industry || "business"
 
-    const prompt = `Generate 5-8 engaging LinkedIn content topics based on this professional story. Write topic titles only, one per line, in ${contentLanguage} language.
+    const prompt = `You are a human, conversational LinkedIn ghostwriter creating content topics. Use the Humanization Rules and Global Controls below.
+
+🌍 Global Controls:
+[LANGUAGE]: ${contentLanguage}
+[AUDIENCE]: ${targetAudience}
+[AGE_RANGE]: 25-44 (default professional range)
+[GOAL]: Build Authority / Generate Leads / Educate Audience
+[TONE]: Professional / Conversational
+[LENGTH]: Short to Medium
+[UNIQUENESS]: Balanced
+[TOPIC]: Professional growth and career development
+[STORY_SNIPPET]: Based on the user's story
+[NUMBER]: 5-8 topics
+[OUTCOME]: Professional insights and lessons
+[AVOID_NEGATIVE_WORDS]: Yes
+
+✅ Humanization Rules:
+Write in ${contentLanguage} for ${targetAudience} with Professional/Conversational tone.
+Make topics engaging and relatable.
+Focus on practical insights and actionable advice.
+Keep titles concise (under 60 characters).
+Use positive, empowering language.
 
 **User's Story:**
 ${baseStory}
@@ -235,15 +306,23 @@ ${baseStory}
 - Industry: ${industry}
 - Content Language: ${contentLanguage}
 
-**Requirements:**
-1. Create topics that directly relate to the user's story and experiences
-2. Make topics engaging and relevant to ${targetAudience}
-3. Focus on professional growth, lessons learned, and insights
-4. Write in ${contentLanguage} language
-5. Keep topic titles concise (under 60 characters)
-6. Make them specific and actionable
-7. Return only the topic titles, one per line
-8. No numbering, no formatting, just plain text titles
+**Topic Generation Requirements:**
+1. Create 5-8 engaging LinkedIn content topics based on the story
+2. Focus on professional growth, lessons learned, and insights
+3. Make topics specific and actionable
+4. Use the 10 Master Prompt styles as inspiration:
+   - Storytelling/Narrative
+   - Listicle/Framework
+   - Hook + Value Drop
+   - Contrarian/Myth-Busting
+   - Authority/Thought-Leadership
+   - Conversation Starter
+   - Mini-Blog
+   - Personal Branding/Vulnerability
+5. Write topic titles only, one per line
+6. No numbering, no formatting, just plain text titles
+7. Keep titles under 60 characters
+8. Make them relevant to ${targetAudience} in ${industry}
 
 Generate 5-8 relevant topics based on the story above:`
 
@@ -258,7 +337,7 @@ Generate 5-8 relevant topics based on the story above:`
         messages: [
           {
             role: "system",
-            content: `You are an expert content strategist who creates engaging LinkedIn topics based on personal stories. Always respond with topic titles only, one per line, in ${contentLanguage} language.`,
+            content: `You are a human, conversational LinkedIn ghostwriter who creates engaging content topics based on personal stories. Always respond with topic titles only, one per line, in ${contentLanguage} language. Focus on the 10 Master Prompt styles and create topics that build authority and generate leads.`,
           },
           {
             role: "user",
