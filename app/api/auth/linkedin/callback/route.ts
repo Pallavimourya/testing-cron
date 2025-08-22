@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     // LinkedIn OAuth 2.0 configuration - Updated with your credentials
     const clientId = "778o02fugomgrp" // Your LinkedIn Client ID
-    const clientSecret = "YOUR_LINKEDIN_CLIENT_SECRET_HERE" // Replace with your actual client secret
+    const clientSecret = "WPL_AP1.3oByOZLCy2XOKFYO.k/ldRw==" // Your LinkedIn Client Secret
     const redirectUri = "https://www.linkzup.in/api/auth/linkedin/callback" // Your LinkedIn Redirect URI
 
     console.log("🔍 Token exchange details:", {
@@ -87,7 +87,18 @@ export async function GET(request: NextRequest) {
         responseStatus: tokenResponse.status,
         responseText: tokenError,
       })
-      return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?error=token_exchange_failed`)
+      
+      // Provide more specific error messages
+      let errorType = "token_exchange_failed"
+      if (tokenResponse.status === 400) {
+        errorType = "invalid_request"
+      } else if (tokenResponse.status === 401) {
+        errorType = "invalid_client"
+      } else if (tokenResponse.status === 403) {
+        errorType = "access_denied"
+      }
+      
+      return NextResponse.redirect(`${baseUrl}/dashboard/linkedin?error=${errorType}`)
     }
 
     const tokenData = await tokenResponse.json()
