@@ -5,9 +5,116 @@ export interface LinkedInPostResult {
   error?: string
 }
 
+export interface LinkedInAnalytics {
+  likes: number
+  comments: number
+  shares: number
+  impressions: number
+  clicks: number
+}
+
 export class LinkedInService {
   constructor() {
     // No logger dependency needed
+  }
+
+  async validateToken(accessToken: string): Promise<boolean> {
+    try {
+      const response = await fetch("https://api.linkedin.com/v2/me", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "X-Restli-Protocol-Version": "2.0.0",
+        },
+      })
+      return response.ok
+    } catch (error) {
+      console.error("Token validation error:", error)
+      return false
+    }
+  }
+
+  async getPostAnalytics(postId: string, accessToken: string): Promise<LinkedInAnalytics | null> {
+    const analytics: LinkedInAnalytics = {
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      impressions: 0,
+      clicks: 0,
+    }
+
+    try {
+      // Try UGC Posts endpoint first (most comprehensive)
+      const ugcResponse = await fetch(
+        `https://api.linkedin.com/v2/ugcPosts/${postId}?projection=(shareStatistics,likesSummary,commentsSummary)`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "X-Restli-Protocol-Version": "2.0.0",
+          },
+        },
+      )
+
+      if (ugcResponse.ok) {
+        const data = await ugcResponse.json()
+        
+        if (data.likesSummary) {
+          analytics.likes = data.likesSummary.totalLikes || 0
+        }
+        if (data.commentsSummary) {
+          analytics.comments = data.commentsSummary.totalComments || 0
+        }
+        if (data.shareStatistics) {
+          analytics.shares = data.shareStatistics.shareCount || 0
+          analytics.impressions = data.shareStatistics.impressionCount || 0
+          analytics.clicks = data.shareStatistics.clickCount || 0
+        }
+        
+        return analytics
+      }
+
+      // Fallback to social actions endpoint
+      const socialResponse = await fetch(
+        `https://api.linkedin.com/v2/socialActions/${postId}?projection=(likesSummary,commentsSummary)`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "X-Restli-Protocol-Version": "2.0.0",
+          },
+        },
+      )
+
+      if (socialResponse.ok) {
+        const data = await socialResponse.json()
+        analytics.likes = data.likesSummary?.totalLikes || 0
+        analytics.comments = data.commentsSummary?.totalComments || 0
+        return analytics
+      }
+
+      // Try shares endpoint for additional metrics
+      const sharesResponse = await fetch(
+        `https://api.linkedin.com/v2/shares/${postId}?projection=(shareStatistics)`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "X-Restli-Protocol-Version": "2.0.0",
+          },
+        },
+      )
+
+      if (sharesResponse.ok) {
+        const data = await sharesResponse.json()
+        if (data.shareStatistics) {
+          analytics.shares = data.shareStatistics.shareCount || analytics.shares
+          analytics.impressions = data.shareStatistics.impressionCount || analytics.impressions
+          analytics.clicks = data.shareStatistics.clickCount || analytics.clicks
+        }
+      }
+
+      return analytics
+    } catch (error) {
+      console.error("Error fetching post analytics:", error)
+      return null
+    }
   }
 
   async postToLinkedIn(

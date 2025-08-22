@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 import {
   Home,
-  Sparkles,
   Calendar,
   Users,
   Linkedin,
@@ -18,14 +17,10 @@ import {
   FileText,
   Target,
   ChevronRight,
-  Bell,
   Crown,
-  Menu,
   ChevronLeft,
 } from "lucide-react"
 import { toast } from "sonner"
-
-
 
 interface LinkedInStatus {
   isConnected: boolean
@@ -49,12 +44,12 @@ interface DashboardSidebarProps {
   onToggleCollapse?: () => void
 }
 
-export function DashboardSidebar({ 
-  onClose, 
-  isOpen = true, 
-  className, 
+export function DashboardSidebar({
+  onClose,
+  isOpen = true,
+  className,
   isCollapsed = false,
-  onToggleCollapse 
+  onToggleCollapse,
 }: DashboardSidebarProps) {
   const { data: session } = useSession()
   const router = useRouter()
@@ -63,11 +58,6 @@ export function DashboardSidebar({
   const [connecting, setConnecting] = useState(false)
   const [loading, setLoading] = useState(false)
   const [hasShownConnectionNotification, setHasShownConnectionNotification] = useState(false)
-
-
-
-
-
 
   const isActive = (path: string) => pathname === path
 
@@ -108,14 +98,6 @@ export function DashboardSidebar({
       description: "Manage scheduled content",
       color: "blue",
     },
-    // LinkedIn tab hidden - functionality moved to profile page
-    // {
-    //   path: "/dashboard/linkedin",
-    //   icon: Linkedin,
-    //   label: "LinkedIn",
-    //   description: "Connection & Analytics",
-    //   color: "blue",
-    // },
 
     {
       path: "/dashboard/billing",
@@ -172,7 +154,7 @@ export function DashboardSidebar({
   // Check LinkedIn connection status on mount and periodically
   useEffect(() => {
     checkLinkedInStatus()
-    const interval = setInterval(checkLinkedInStatus, 300000) // Check every 5 minutes instead of 2 minutes
+    const interval = setInterval(checkLinkedInStatus, 3600000) // Check every hour
     return () => clearInterval(interval)
   }, [])
 
@@ -278,18 +260,13 @@ export function DashboardSidebar({
   return (
     <>
       {/* Mobile overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={onClose}
-        />
-      )}
-      
+      {isOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" onClick={onClose} />}
+
       <aside
         className={`
         fixed lg:static inset-y-0 left-0 z-50 h-screen bg-white border-r border-gray-200 shadow-lg flex flex-col
         transform transition-all duration-300 ease-in-out
-        ${isCollapsed ? 'w-16' : 'w-64 sm:w-72 lg:w-80'}
+        ${isCollapsed ? "w-16" : "w-64 sm:w-72 lg:w-80"}
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         ${className || ""}
       `}
@@ -345,7 +322,9 @@ export function DashboardSidebar({
         <nav className="flex-1 px-2 sm:px-3 py-3 sm:py-4 space-y-1 overflow-y-auto">
           {!isCollapsed && (
             <div className="mb-3 sm:mb-4">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 sm:mb-3 px-2">Navigation</h3>
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 sm:mb-3 px-2">
+                Navigation
+              </h3>
             </div>
           )}
 
@@ -385,12 +364,16 @@ export function DashboardSidebar({
                           </Badge>
                         )}
                       </div>
-                      <span className={`text-xs truncate hidden sm:block ${active ? "text-white/80" : "text-gray-500"}`}>
+                      <span
+                        className={`text-xs truncate hidden sm:block ${active ? "text-white/80" : "text-gray-500"}`}
+                      >
                         {description}
                       </span>
                     </div>
                   )}
-                  {active && !isCollapsed && <ChevronRight className="h-2 w-2 sm:h-3 sm:w-3 text-white/60 flex-shrink-0" />}
+                  {active && !isCollapsed && (
+                    <ChevronRight className="h-2 w-2 sm:h-3 sm:w-3 text-white/60 flex-shrink-0" />
+                  )}
                 </Button>
                 {/* Tooltip for collapsed state */}
                 {isCollapsed && (
