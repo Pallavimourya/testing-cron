@@ -76,6 +76,7 @@ interface LinkedInPost {
   engagementRate: number
   reach: number
   type: "text" | "image" | "video" | "article"
+  isRealData?: boolean
 }
 
 interface LinkedInAnalytics {
@@ -105,6 +106,8 @@ interface LinkedInAnalytics {
     averagePostsPerWeek: number
     engagementTrend: "up" | "down" | "stable"
   }
+  realDataPosts?: number
+  message?: string
 }
 
 export default function LinkedInDashboard() {
@@ -119,6 +122,11 @@ export default function LinkedInDashboard() {
   const [filterStatus, setFilterStatus] = useState("all")
   const [rateLimitMessage, setRateLimitMessage] = useState("")
   const [sortBy, setSortBy] = useState("date")
+
+  // Redirect to dashboard since LinkedIn page is hidden
+  useEffect(() => {
+    window.location.href = "/dashboard"
+  }, [])
 
   // Check LinkedIn connection status
   const checkLinkedInStatus = async () => {
@@ -655,6 +663,19 @@ export default function LinkedInDashboard() {
               </CardContent>
             </Card>
 
+            {/* Real Data Message */}
+            {analytics?.message && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <div>
+                    <h3 className="text-sm font-medium text-green-800">Real LinkedIn Data</h3>
+                    <p className="text-sm text-green-700 mt-1">{analytics.message}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Analytics Dashboard */}
             {analytics && (
               <Tabs defaultValue="overview" className="space-y-6">
@@ -906,6 +927,12 @@ export default function LinkedInDashboard() {
                                   <Badge variant="outline" className="capitalize">
                                     {post.type}
                                   </Badge>
+                                  {post.isRealData && (
+                                    <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Real Data
+                                    </Badge>
+                                  )}
                                 </div>
                               </div>
 

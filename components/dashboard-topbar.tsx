@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Menu, Check, LogOut, Eye, Linkedin, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Menu, LogOut, Eye, Linkedin, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,11 +25,11 @@ interface DashboardTopbarProps {
   className?: string
 }
 
-export default function DashboardTopbar({ 
-  onMenuClick, 
-  onToggleCollapse, 
-  isCollapsed = false, 
-  className 
+export default function DashboardTopbar({
+  onMenuClick,
+  onToggleCollapse,
+  isCollapsed = false,
+  className,
 }: DashboardTopbarProps) {
   const { data: session } = useSession()
   const router = useRouter()
@@ -74,9 +74,29 @@ export default function DashboardTopbar({
     }
   }
 
+  const disconnectLinkedIn = async () => {
+    try {
+      setLinkedinConnecting(true)
+      const response = await fetch("/api/linkedin/disconnect", { method: "POST" })
+
+      if (response.ok) {
+        setLinkedinConnected(false)
+        toast.success("LinkedIn account disconnected successfully")
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || "Failed to disconnect LinkedIn account")
+      }
+    } catch (error) {
+      console.error("Error disconnecting LinkedIn:", error)
+      toast.error("Failed to disconnect LinkedIn account")
+    } finally {
+      setLinkedinConnecting(false)
+    }
+  }
+
   useEffect(() => {
     // Only check LinkedIn status if we're on the dashboard page
-    if (window.location.pathname === '/dashboard') {
+    if (window.location.pathname === "/dashboard") {
       checkLinkedInStatus()
     }
 
@@ -115,7 +135,7 @@ export default function DashboardTopbar({
         >
           <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
-        
+
         {/* Desktop collapse toggle button */}
         {onToggleCollapse && (
           <Button
@@ -132,8 +152,6 @@ export default function DashboardTopbar({
             )}
           </Button>
         )}
-        
-
       </div>
       <div className="flex items-center gap-2 sm:gap-3">
         {!linkedinConnected ? (
@@ -156,14 +174,25 @@ export default function DashboardTopbar({
             )}
           </Button>
         ) : (
-          <Badge className="bg-blue-100 text-blue-700 hidden sm:flex">
-            <Linkedin className="mr-1 h-3 w-3" />
-            LinkedIn Connected
-          </Badge>
+          <div className="flex items-center gap-2 hidden sm:flex">
+            <Badge className="bg-blue-100 text-blue-700">
+              <Linkedin className="mr-1 h-3 w-3" />
+              LinkedIn Connected
+            </Badge>
+            <Button
+              onClick={disconnectLinkedIn}
+              disabled={linkedinConnecting}
+              size="sm"
+              variant="outline"
+              className="text-red-600 border-red-200 hover:bg-red-50"
+            >
+              Disconnect
+            </Button>
+          </div>
         )}
 
-        {/* Mobile LinkedIn button */}
-        {!linkedinConnected && (
+        {/* Mobile LinkedIn buttons */}
+        {!linkedinConnected ? (
           <Button
             onClick={connectLinkedIn}
             disabled={linkedinConnecting}
@@ -172,6 +201,22 @@ export default function DashboardTopbar({
           >
             {linkedinConnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Linkedin className="h-4 w-4" />}
           </Button>
+        ) : (
+          <div className="flex items-center gap-1 sm:hidden">
+            <Badge className="bg-blue-100 text-blue-700 text-xs">
+              <Linkedin className="mr-1 h-2 w-2" />
+              Connected
+            </Badge>
+            <Button
+              onClick={disconnectLinkedIn}
+              disabled={linkedinConnecting}
+              size="icon"
+              variant="outline"
+              className="text-red-600 border-red-200 hover:bg-red-50 h-8 w-8"
+            >
+              {linkedinConnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <span className="text-xs">×</span>}
+            </Button>
+          </div>
         )}
 
         <DropdownMenu>
@@ -199,6 +244,18 @@ export default function DashboardTopbar({
               <Eye className="mr-2 h-4 w-4" />
               View Profile
             </DropdownMenuItem>
+            {linkedinConnected && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={disconnectLinkedIn}
+                  className="text-red-600 hover:bg-red-50 cursor-pointer"
+                >
+                  <Linkedin className="mr-2 h-4 w-4" />
+                  Disconnect LinkedIn
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => handleSignOut(router)}

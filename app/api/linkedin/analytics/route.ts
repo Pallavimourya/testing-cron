@@ -21,6 +21,7 @@ interface LinkedInPost {
   engagementRate: number
   reach: number
   type: "text" | "image" | "video" | "article"
+  isRealData: boolean
 }
 
 export async function GET() {
@@ -41,7 +42,7 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    console.log("📊 Fetching comprehensive LinkedIn analytics for user:", user.email)
+    console.log("📊 Fetching REAL LinkedIn analytics for user:", user.email)
 
     // Check if LinkedIn is connected
     if (!user.linkedinAccessToken || (user.linkedinTokenExpiry && new Date(user.linkedinTokenExpiry) <= new Date())) {
@@ -72,26 +73,25 @@ export async function GET() {
           ],
         })
         .sort({ postedAt: -1 })
-        .limit(100) // Increased limit for more comprehensive data
+        .limit(100)
         .toArray()
 
-      console.log("📋 Found posted content:", postedContent.length)
+      console.log("📋 Found posted content for analytics:", postedContent.length)
     }
 
-    // Fetch LinkedIn post analytics for each post
     const linkedInPosts: LinkedInPost[] = []
     let totalLikes = 0
     let totalComments = 0
     let totalShares = 0
     let totalImpressions = 0
     let totalClicks = 0
+    let realDataPosts = 0
 
     for (const content of postedContent) {
       try {
         const linkedinPostId = content.linkedinPostId || content.linkedin_post_id
         if (!linkedinPostId) continue
 
-        // Try to fetch post analytics from LinkedIn API
         let postAnalytics = {
           likes: 0,
           comments: 0,
@@ -100,104 +100,231 @@ export async function GET() {
           clicks: 0,
         }
 
+        let isRealData = false
+
+        // Try to get REAL analytics from LinkedIn API
         try {
-          // Fetch post statistics from LinkedIn API
-          const statsResponse = await fetch(
-            `https://api.linkedin.com/v2/socialActions/${linkedinPostId}?projection=(likesSummary,commentsSummary)`,
+          // Try the UGC Posts endpoint first (most comprehensive)
+          const ugcController = new AbortController()
+          const ugcTimeoutId = setTimeout(() => ugcController.abort(), 15000)
+
+          const ugcResponse = await fetch(
+            `https://api.linkedin.com/v2/ugcPosts/${linkedinPostId}?projection=(shareStatistics,likesSummary,commentsSummary)`,
             {
               headers: {
                 Authorization: `Bearer ${user.linkedinAccessToken}`,
                 "X-Restli-Protocol-Version": "2.0.0",
               },
+              signal: ugcController.signal,
             },
           )
 
-          if (statsResponse.ok) {
-            const statsData = await statsResponse.json()
-            postAnalytics.likes = statsData.likesSummary?.totalLikes || 0
-            postAnalytics.comments = statsData.commentsSummary?.totalComments || 0
+          clearTimeout(ugcTimeoutId)
+
+          if (ugcResponse.ok) {
+            const ugcData = await ugcResponse.json()
+            
+            // Extract engagement data
+            if (ugcData.likesSummary) {
+              postAnalytics.likes = ugcData.likesSummary.totalLikes || 0
+            }
+            if (ugcData.commentsSummary) {
+              postAnalytics.comments = ugcData.commentsSummary.totalComments || 0
+            }
+            if (ugcData.shareStatistics) {
+              postAnalytics.shares = ugcData.shareStatistics.shareCount || 0
+              postAnalytics.impressions = ugcData.shareStatistics.impressionCount || 0
+              postAnalytics.clicks = ugcData.shareStatistics.clickCount || 0
+            }
+            
+            isRealData = true
+            console.log(`✅ REAL UGC analytics for post ${linkedinPostId}:`, {
+              likes: postAnalytics.likes,
+              comments: postAnalytics.comments,
+              shares: postAnalytics.shares,
+              impressions: postAnalytics.impressions,
+              clicks: postAnalytics.clicks,
+            })
+          } else {
+            console.warn(`⚠️ UGC endpoint failed for post ${linkedinPostId}:`, ugcResponse.status)
+            
+            // Fallback to social actions endpoint
+            try {
+              const socialController = new AbortController()
+              const socialTimeoutId = setTimeout(() => socialController.abort(), 10000)
+
+              const socialResponse = await fetch(
+                `https://api.linkedin.com/v2/socialActions/${linkedinPostId}?projection=(likesSummary,commentsSummary)`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${user.linkedinAccessToken}`,
+                    "X-Restli-Protocol-Version": "2.0.0",
+                  },
+                  signal: socialController.signal,
+                },
+              )
+
+              clearTimeout(socialTimeoutId)
+
+              if (socialResponse.ok) {
+                const socialData = await socialResponse.json()
+                postAnalytics.likes = socialData.likesSummary?.totalLikes || 0
+                postAnalytics.comments = socialData.commentsSummary?.totalComments || 0
+                isRealData = true
+                console.log(`✅ REAL social actions analytics for post ${linkedinPostId}:`, {
+                  likes: postAnalytics.likes,
+                  comments: postAnalytics.comments,
+                })
+              } else {
+                console.warn(`⚠️ Social actions endpoint failed for post ${linkedinPostId}:`, socialResponse.status)
+              }
+            } catch (socialError) {
+              console.warn("⚠️ Social actions fetch error:", socialError)
+            }
+
+            // Try shares endpoint for additional metrics
+            try {
+              const sharesController = new AbortController()
+              const sharesTimeoutId = setTimeout(() => sharesController.abort(), 10000)
+
+              const sharesResponse = await fetch(
+                `https://api.linkedin.com/v2/shares/${linkedinPostId}?projection=(shareStatistics)`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${user.linkedinAccessToken}`,
+                    "X-Restli-Protocol-Version": "2.0.0",
+                  },
+                  signal: sharesController.signal,
+                },
+              )
+
+              clearTimeout(sharesTimeoutId)
+
+              if (sharesResponse.ok) {
+                const sharesData = await sharesResponse.json()
+                if (sharesData.shareStatistics) {
+                  postAnalytics.shares = sharesData.shareStatistics.shareCount || postAnalytics.shares
+                  postAnalytics.impressions = sharesData.shareStatistics.impressionCount || postAnalytics.impressions
+                  postAnalytics.clicks = sharesData.shareStatistics.clickCount || postAnalytics.clicks
+                  isRealData = true
+                  console.log(`✅ REAL shares analytics for post ${linkedinPostId}:`, sharesData.shareStatistics)
+                }
+              } else {
+                console.warn(`⚠️ Shares endpoint failed for post ${linkedinPostId}:`, sharesResponse.status)
+              }
+            } catch (sharesError) {
+              console.warn("⚠️ Shares fetch error:", sharesError)
+            }
+          }
+        } catch (apiError) {
+          console.warn("⚠️ Could not fetch real analytics for post:", linkedinPostId, apiError)
+        }
+
+        // ONLY include posts with real data
+        if (isRealData) {
+          // Determine post type based on content
+          let postType: "text" | "image" | "video" | "article" = "text"
+          if (content.imageUrl || content.image_url || content.Image) {
+            postType = "image"
+          } else if (content.videoUrl || content.video_url) {
+            postType = "video"
+          } else if (content.articleUrl || content.article_url) {
+            postType = "article"
           }
 
-          // Try to fetch share statistics
-          try {
-            const shareStatsResponse = await fetch(
-              `https://api.linkedin.com/v2/shares/${linkedinPostId}?projection=(shareStatistics)`,
+          // Calculate engagement rate
+          const totalEngagement = postAnalytics.likes + postAnalytics.comments + postAnalytics.shares
+          const engagementRate = postAnalytics.impressions > 0 ? (totalEngagement / postAnalytics.impressions) * 100 : 0
+
+          const post: LinkedInPost = {
+            id: linkedinPostId,
+            text: content.content || content.Content || content["generated content"] || "",
+            createdAt: content.postedAt || content.posted_at || content.createdAt || new Date().toISOString(),
+            likes: postAnalytics.likes,
+            comments: postAnalytics.comments,
+            shares: postAnalytics.shares,
+            impressions: postAnalytics.impressions,
+            clicks: postAnalytics.clicks,
+            url: content.linkedinUrl || content.linkedin_url || `https://www.linkedin.com/feed/update/${linkedinPostId}/`,
+            status: "posted",
+            contentId: content._id?.toString() || content.id || content.ID,
+            imageUrl: content.imageUrl || content.image_url || content.Image || null,
+            engagementRate,
+            reach: postAnalytics.impressions,
+            type: postType,
+            isRealData: true,
+          }
+
+          linkedInPosts.push(post)
+          realDataPosts++
+
+          // Add to totals
+          totalLikes += postAnalytics.likes
+          totalComments += postAnalytics.comments
+          totalShares += postAnalytics.shares
+          totalImpressions += postAnalytics.impressions
+          totalClicks += postAnalytics.clicks
+
+          // Store updated analytics in database
+          if (mongoose.connection.db) {
+            const approvedContentsCollection = mongoose.connection.db.collection("approvedcontents")
+            await approvedContentsCollection.updateOne(
+              { _id: content._id },
               {
-                headers: {
-                  Authorization: `Bearer ${user.linkedinAccessToken}`,
-                  "X-Restli-Protocol-Version": "2.0.0",
+                $set: {
+                  analytics: postAnalytics,
+                  lastAnalyticsUpdate: new Date(),
+                  isRealData: true,
                 },
               },
             )
-
-            if (shareStatsResponse.ok) {
-              const shareData = await shareStatsResponse.json()
-              postAnalytics.shares = shareData.shareStatistics?.shareCount || 0
-              postAnalytics.impressions = shareData.shareStatistics?.impressionCount || 0
-              postAnalytics.clicks = shareData.shareStatistics?.clickCount || 0
-            }
-          } catch (shareError) {
-            console.warn("⚠️ Could not fetch share statistics for post:", linkedinPostId)
           }
-        } catch (apiError) {
-          console.warn("⚠️ Could not fetch analytics for post:", linkedinPostId, apiError)
-          // Use enhanced fallback data for better demo experience
-          const baseEngagement = Math.floor(Math.random() * 100) + 20
-          postAnalytics = {
-            likes: Math.floor(baseEngagement * (0.6 + Math.random() * 0.4)), // 60-100% of base
-            comments: Math.floor(baseEngagement * (0.1 + Math.random() * 0.3)), // 10-40% of base
-            shares: Math.floor(baseEngagement * (0.05 + Math.random() * 0.15)), // 5-20% of base
-            impressions: Math.floor(baseEngagement * (8 + Math.random() * 12)), // 8-20x engagement
-            clicks: Math.floor(baseEngagement * (0.3 + Math.random() * 0.7)), // 30-100% of base
-          }
+        } else {
+          console.log(`❌ Skipping post ${linkedinPostId} - no real data available`)
         }
-
-        // Determine post type based on content
-        let postType: "text" | "image" | "video" | "article" = "text"
-        if (content.imageUrl || content.image_url || content.Image) {
-          postType = "image"
-        } else if (content.videoUrl || content.video_url) {
-          postType = "video"
-        } else if (content.articleUrl || content.article_url) {
-          postType = "article"
-        }
-
-        // Calculate engagement rate
-        const totalEngagement = postAnalytics.likes + postAnalytics.comments + postAnalytics.shares
-        const engagementRate = postAnalytics.impressions > 0 ? (totalEngagement / postAnalytics.impressions) * 100 : 0
-
-        const post: LinkedInPost = {
-          id: linkedinPostId,
-          text: content.content || content.Content || content["generated content"] || "",
-          createdAt: content.postedAt || content.posted_at || content.createdAt || new Date().toISOString(),
-          likes: postAnalytics.likes,
-          comments: postAnalytics.comments,
-          shares: postAnalytics.shares,
-          impressions: postAnalytics.impressions,
-          clicks: postAnalytics.clicks,
-          url: content.linkedinUrl || content.linkedin_url || `https://www.linkedin.com/feed/update/${linkedinPostId}/`,
-          status: "posted",
-          contentId: content._id?.toString() || content.id || content.ID,
-          imageUrl: content.imageUrl || content.image_url || content.Image || null,
-          engagementRate,
-          reach: postAnalytics.impressions,
-          type: postType,
-        }
-
-        linkedInPosts.push(post)
-
-        // Add to totals
-        totalLikes += postAnalytics.likes
-        totalComments += postAnalytics.comments
-        totalShares += postAnalytics.shares
-        totalImpressions += postAnalytics.impressions
-        totalClicks += postAnalytics.clicks
       } catch (postError) {
-        console.error("❌ Error processing post:", postError)
+        console.error("❌ Error processing post analytics:", postError)
       }
     }
 
-    // Calculate comprehensive analytics
+    // Only calculate analytics if we have real data
+    if (linkedInPosts.length === 0) {
+      return NextResponse.json({
+        success: true,
+        analytics: {
+          totalPosts: 0,
+          totalLikes: 0,
+          totalComments: 0,
+          totalShares: 0,
+          totalImpressions: 0,
+          totalClicks: 0,
+          averageEngagement: 0,
+          topPost: null,
+          recentPosts: [],
+          monthlyStats: {
+            posts: 0,
+            engagement: 0,
+            reach: 0,
+            growth: 0,
+          },
+          weeklyStats: {
+            posts: 0,
+            engagement: 0,
+            reach: 0,
+          },
+          performanceMetrics: {
+            bestPerformingDay: "Monday",
+            bestPerformingTime: "Morning",
+            averagePostsPerWeek: 0,
+            engagementTrend: "stable" as "up" | "down" | "stable",
+          },
+          realDataPosts: 0,
+          message: "No real LinkedIn data available. Please ensure your posts have been published and analytics are accessible.",
+        },
+      })
+    }
+
+    // Calculate comprehensive analytics from REAL data only
     const totalPosts = linkedInPosts.length
     const totalEngagement = totalLikes + totalComments + totalShares
     const averageEngagement = totalImpressions > 0 ? (totalEngagement / totalImpressions) * 100 : 0
@@ -256,9 +383,13 @@ export async function GET() {
         ["Morning", 0],
       )[0] || "Morning"
 
-    // Calculate engagement trend (simplified)
-    const recentEngagement = recentPosts.slice(0, 5).reduce((sum, post) => sum + post.engagementRate, 0) / 5
-    const olderEngagement = recentPosts.slice(5, 10).reduce((sum, post) => sum + post.engagementRate, 0) / 5
+    // Calculate engagement trend
+    const recentEngagement =
+      recentPosts.slice(0, 5).reduce((sum, post) => sum + post.engagementRate, 0) /
+      Math.max(1, recentPosts.slice(0, 5).length)
+    const olderEngagement =
+      recentPosts.slice(5, 10).reduce((sum, post) => sum + post.engagementRate, 0) /
+      Math.max(1, recentPosts.slice(5, 10).length)
     const engagementTrend =
       recentEngagement > olderEngagement * 1.1 ? "up" : recentEngagement < olderEngagement * 0.9 ? "down" : "stable"
 
@@ -276,7 +407,7 @@ export async function GET() {
         posts: monthlyPosts.length,
         engagement: monthlyEngagement,
         reach: monthlyReach,
-        growth: monthlyPosts.length > 0 ? (monthlyEngagement / monthlyReach) * 100 : 0,
+        growth: monthlyReach > 0 ? (monthlyEngagement / monthlyReach) * 100 : 0,
       },
       weeklyStats: {
         posts: weeklyPosts.length,
@@ -299,12 +430,17 @@ export async function GET() {
             : 0,
         engagementTrend: engagementTrend as "up" | "down" | "stable",
       },
+      realDataPosts,
+      message: `Showing ${realDataPosts} posts with real LinkedIn data`,
     }
 
-    console.log("✅ Comprehensive LinkedIn analytics calculated:", {
+    console.log("✅ REAL LinkedIn analytics calculated:", {
       totalPosts,
+      realDataPosts,
       totalLikes,
       totalComments,
+      totalShares,
+      totalImpressions,
       totalEngagement,
       averageEngagement: analytics.averageEngagement.toFixed(2) + "%",
       bestPerformingDay,
