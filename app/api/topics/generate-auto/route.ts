@@ -112,12 +112,25 @@ async function generateAutoTopicsWithOpenAI(
       return generateFallbackAutoTopics(baseStoryData, customizationData)
     }
 
+    // Get previously generated topics to avoid repetition
+    const existingTopics = await Topic.find({ 
+      userId: user._id, 
+      source: "auto" 
+    }).sort({ createdAt: -1 }).limit(10)
+    
+    const existingTopicTitles = existingTopics.map(t => t.title).join(", ")
+
+    // Create multiple unique seeds for better randomness
     const uniqueId = `${Date.now()}-${Math.floor(Math.random() * 10000)}`
+    const randomSeed = Math.floor(Math.random() * 1000000)
+    const timestamp = new Date().toISOString()
     const contentLanguage = customizationData?.content_language || customizationData?.contentLanguage || "English"
 
-    const topicPrompt = `Generate exactly 2 unique content topics based SPECIFICALLY on the user's story. Write in ${contentLanguage} language.
+    // Create different prompt variations for variety
+    const promptVariations = [
+      `Generate exactly 2 unique content topics based SPECIFICALLY on the user's story. Write in ${contentLanguage} language.
 
-**Uniqueness Seed:** ${uniqueId}
+**Uniqueness Seeds:** ${uniqueId}, ${randomSeed}, ${timestamp}
 
 **User's Complete Story:**
 ${baseStory || "Professional story not available"}
@@ -141,6 +154,9 @@ ${baseStory || "Professional story not available"}
 - Mentor: ${baseStoryData?.mentor || "Not specified"}
 - Almost Gave Up: ${baseStoryData?.almostGaveUp || "Not specified"}
 
+**Previously Generated Topics (AVOID THESE):**
+${existingTopicTitles || "No previous topics"}
+
 **CRITICAL REQUIREMENTS:**
 1. Generate exactly 2 topics in ${contentLanguage} language
 2. Each topic MUST reference specific elements from the story above
@@ -150,13 +166,97 @@ ${baseStory || "Professional story not available"}
 6. Reference specific details from their story (names, situations, outcomes)
 7. Make topics actionable and relatable to their target audience
 8. Each topic should be unique and focus on different story aspects
+9. DO NOT generate topics similar to the previously generated ones listed above
+10. Use the uniqueness seeds to ensure variety
 
 **Examples of good story-based topics:**
 - If story mentions "mentor Sarah taught me patience" → "The Patience Lesson My Mentor Sarah Taught Me That Changed My Leadership Style"
 - If story mentions "failed startup in 2019" → "How My Failed Startup in 2019 Became My Greatest Teacher"
 - If story mentions "switched from engineering to marketing" → "Why I Left Engineering for Marketing: The Decision That Defined My Career"
 
-Return only the topic titles in ${contentLanguage}, one per line, without numbering or bullet points.`
+Return only the topic titles in ${contentLanguage}, one per line, without numbering or bullet points.`,
+
+      `Create exactly 2 fresh content topics inspired by this professional story. Write in ${contentLanguage} language.
+
+**Randomization Factors:** ${uniqueId}, ${randomSeed}, ${timestamp}
+
+**User's Story:**
+${baseStory || "Professional story not available"}
+
+**Context:**
+- Audience: ${customizationData?.target_audience || customizationData?.targetAudience || "professionals"}
+- Tone: ${customizationData?.content_tone || customizationData?.contentTone || "professional"}
+- Goal: ${customizationData?.content_goal || customizationData?.contentGoal || "build authority"}
+- Language: ${contentLanguage}
+- Industry: ${user?.industry || "business"}
+- Role: ${user?.jobTitle || "professional"}
+
+**Key Story Elements:**
+- Work: ${baseStoryData?.currentWork || "Not specified"}
+- Challenge: ${baseStoryData?.biggestChallenge || "Not specified"}
+- Turning Point: ${baseStoryData?.turningPoint || "Not specified"}
+- Values: ${baseStoryData?.coreValues || "Not specified"}
+- Approach: ${baseStoryData?.uniqueApproach || "Not specified"}
+- Achievement: ${baseStoryData?.proudAchievement || "Not specified"}
+- Lesson: ${baseStoryData?.powerfulLesson || "Not specified"}
+- Mentor: ${baseStoryData?.mentor || "Not specified"}
+- Struggle: ${baseStoryData?.almostGaveUp || "Not specified"}
+
+**Avoid These Previous Topics:**
+${existingTopicTitles || "No previous topics"}
+
+**Requirements:**
+1. Generate exactly 2 unique topics in ${contentLanguage}
+2. Focus on different aspects of the story than previous topics
+3. Make them engaging and discussion-worthy
+4. Reference specific story details
+5. Ensure they're actionable for the target audience
+6. Use the randomization factors to create variety
+
+Return only topic titles, one per line, no formatting.`,
+
+      `Generate exactly 2 new content topics from this professional journey. Language: ${contentLanguage}
+
+**Variety Seeds:** ${uniqueId}, ${randomSeed}, ${timestamp}
+
+**Professional Story:**
+${baseStory || "Professional story not available"}
+
+**Profile Details:**
+- Target: ${customizationData?.target_audience || customizationData?.targetAudience || "professionals"}
+- Style: ${customizationData?.content_tone || customizationData?.contentTone || "professional"}
+- Objective: ${customizationData?.content_goal || customizationData?.contentGoal || "build authority"}
+- Language: ${contentLanguage}
+- Field: ${user?.industry || "business"}
+- Position: ${user?.jobTitle || "professional"}
+
+**Story Highlights:**
+- Current Role: ${baseStoryData?.currentWork || "Not specified"}
+- Major Challenge: ${baseStoryData?.biggestChallenge || "Not specified"}
+- Key Moment: ${baseStoryData?.turningPoint || "Not specified"}
+- Core Values: ${baseStoryData?.coreValues || "Not specified"}
+- Unique Method: ${baseStoryData?.uniqueApproach || "Not specified"}
+- Proud Moment: ${baseStoryData?.proudAchievement || "Not specified"}
+- Key Learning: ${baseStoryData?.powerfulLesson || "Not specified"}
+- Influential Person: ${baseStoryData?.mentor || "Not specified"}
+- Tough Time: ${baseStoryData?.almostGaveUp || "Not specified"}
+
+**Previously Created Topics (DO NOT REPEAT):**
+${existingTopicTitles || "No previous topics"}
+
+**Instructions:**
+1. Create exactly 2 fresh topics in ${contentLanguage}
+2. Focus on unexplored angles from the story
+3. Make them engaging and shareable
+4. Reference specific story elements
+5. Ensure they're relevant to the target audience
+6. Use variety seeds to ensure uniqueness
+
+Return topic titles only, one per line.`
+    ]
+
+    // Randomly select a prompt variation
+    const selectedPrompt = promptVariations[Math.floor(Math.random() * promptVariations.length)]
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -169,17 +269,17 @@ Return only the topic titles in ${contentLanguage}, one per line, without number
         messages: [
           {
             role: "system",
-            content: `You are an expert content strategist who creates personalized, engaging topics based on user stories and professional experiences. Always respond in ${contentLanguage} language.`,
+            content: `You are an expert content strategist who creates personalized, engaging topics based on user stories and professional experiences. Always respond in ${contentLanguage} language. IMPORTANT: Never repeat topics that have been generated before. Always create fresh, unique content.`,
           },
           {
             role: "user",
-            content: topicPrompt,
+            content: selectedPrompt,
           },
         ],
         max_tokens: 300,
-        temperature: 0.8,
-        presence_penalty: 0.6,
-        frequency_penalty: 0.4,
+        temperature: 0.9, // Increased temperature for more variety
+        presence_penalty: 0.8, // Increased presence penalty to avoid repetition
+        frequency_penalty: 0.6, // Increased frequency penalty
       }),
     })
 
@@ -196,6 +296,7 @@ Return only the topic titles in ${contentLanguage}, one per line, without number
 
         if (topics.length === 2) {
           console.log("✅ Generated auto topics with OpenAI")
+          console.log("🎲 Used prompt variation and seeds for variety")
           return topics
         }
       }
@@ -211,12 +312,47 @@ Return only the topic titles in ${contentLanguage}, one per line, without number
 function generateFallbackAutoTopics(baseStoryData?: any, customizationData?: any) {
   const timestamp = Date.now()
   const randomSeed = Math.floor(Math.random() * 1000)
+  const randomSuffix = Math.floor(Math.random() * 10000)
 
-  const fallbackTopics = [
-    `My Journey in ${baseStoryData?.currentWork || "Professional Life"}: Key Lessons`,
-    `How I Handle ${baseStoryData?.biggestChallenge || "Challenges"} in My Career`,
+  // Create multiple fallback topic templates for variety
+  const topicTemplates = [
+    [
+      `My Journey in ${baseStoryData?.currentWork || "Professional Life"}: Key Lessons Learned`,
+      `How I Overcame ${baseStoryData?.biggestChallenge || "Major Challenges"} in My Career`,
+    ],
+    [
+      `The Turning Point: ${baseStoryData?.turningPoint || "What Changed Everything"} in My Professional Life`,
+      `Lessons from ${baseStoryData?.mentor || "My Mentor"}: What I Learned About Success`,
+    ],
+    [
+      `My Core Values: ${baseStoryData?.coreValues || "What Drives Me"} in Business and Life`,
+      `The Achievement I'm Most Proud Of: ${baseStoryData?.proudAchievement || "My Greatest Success"}`,
+    ],
+    [
+      `When I Almost Gave Up: ${baseStoryData?.almostGaveUp || "My Biggest Struggle"} and How I Persevered`,
+      `My Unique Approach to ${baseStoryData?.currentWork || "Professional Challenges"}: What Sets Me Apart`,
+    ],
+    [
+      `The Powerful Lesson That Changed Everything: ${baseStoryData?.powerfulLesson || "What I Learned the Hard Way"}`,
+      `From Challenge to Opportunity: How I Transformed ${baseStoryData?.biggestChallenge || "My Biggest Obstacle"}`,
+    ]
   ]
 
-  console.log(`✅ Generated fallback auto topics with seed: ${timestamp}-${randomSeed}`)
+  // Randomly select a template set
+  const selectedTemplate = topicTemplates[randomSeed % topicTemplates.length]
+  
+  // Add some randomization to the selected topics
+  const fallbackTopics = selectedTemplate.map(topic => {
+    const variations = [
+      topic,
+      topic.replace("My", "The"),
+      topic.replace("I", "We"),
+      topic + ` (Part ${randomSuffix % 3 + 1})`,
+      topic.replace(":", " - "),
+    ]
+    return variations[randomSuffix % variations.length]
+  })
+
+  console.log(`✅ Generated fallback auto topics with seed: ${timestamp}-${randomSeed}-${randomSuffix}`)
   return fallbackTopics
 }
