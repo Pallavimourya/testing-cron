@@ -116,7 +116,6 @@ UserProfileSchema.pre("save", function (next) {
 })
 
 // Indexes for better performance
-UserProfileSchema.index({ email: 1 })
 UserProfileSchema.index({ subscriptionStatus: 1 })
 
 export default mongoose.models.UserProfile || mongoose.model("UserProfile", UserProfileSchema)

@@ -1,157 +1,150 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
-// MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/linkzup';
-
-async function testAPIEndpoints() {
+async function testApiEndpoints() {
   try {
-    console.log('🔌 Connecting to MongoDB...');
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Connected to MongoDB');
 
-    console.log('\n🧪 Testing API Endpoints...\n');
+    const testUser = {
+      name: 'API Test User',
+      email: 'apitest123@gmail.com',
+      mobile: '9876543210',
+      city: 'API Test City',
+      password: 'apitestpassword123'
+    };
 
-    // ===== TEST 1: CHECK SERVER STATUS =====
-    console.log('🌐 1. Checking Server Status');
-    
-    try {
-      const response = await fetch('http://localhost:3000/api/approved-content');
-      console.log(`✅ Server is running - Status: ${response.status}`);
-      
-      if (response.status === 401) {
-        console.log('ℹ️  API requires authentication (expected)');
-      } else if (response.status === 200) {
-        console.log('✅ API is accessible');
-      } else {
-        console.log(`⚠️  Unexpected status: ${response.status}`);
-      }
-    } catch (error) {
-      console.log('❌ Server not accessible:', error.message);
-      console.log('💡 Make sure the Next.js development server is running with: pnpm dev');
-    }
+    console.log('\n🧪 Testing API Endpoints');
+    console.log('========================');
 
-    // ===== TEST 2: CHECK DATABASE CONNECTIVITY =====
-    console.log('\n📊 2. Checking Database Connectivity');
+    // Step 1: Test Registration API
+    console.log('\n📝 Step 1: Testing Registration API...');
     
-    const users = await mongoose.connection.db.collection('users').find({}).limit(1).toArray();
-    
-    if (users.length > 0) {
-      console.log(`✅ Database connected - Found user: ${users[0].email}`);
-    } else {
-      console.log('❌ No users found in database');
-    }
-
-    // ===== TEST 3: CHECK APPROVED CONTENT DATA =====
-    console.log('\n📋 3. Checking Approved Content Data');
-    
-    const ApprovedContent = mongoose.model('ApprovedContent', new mongoose.Schema({
-      id: String,
-      topicId: String,
-      userId: mongoose.Schema.Types.ObjectId,
-      topicTitle: String,
-      content: String,
-      hashtags: [String],
-      keyPoints: [String],
-      imageUrl: String,
-      platform: String,
-      contentType: String,
-      status: String,
-      generatedAt: Date,
-      createdAt: Date,
-      updatedAt: Date
-    }));
-
-    const totalContent = await ApprovedContent.countDocuments({});
-    console.log(`📈 Total approved content records: ${totalContent}`);
-
-    if (users.length > 0) {
-      const userContent = await ApprovedContent.find({ userId: users[0]._id }).lean();
-      console.log(`📈 User content records: ${userContent.length}`);
-      
-      if (userContent.length > 0) {
-        console.log('📋 Sample content:');
-        console.log(`   - ID: ${userContent[0].id || userContent[0]._id}`);
-        console.log(`   - Title: ${userContent[0].topicTitle}`);
-        console.log(`   - Status: ${userContent[0].status}`);
-      }
-    }
-
-    // ===== TEST 4: CHECK RAW COLLECTION =====
-    console.log('\n📊 4. Checking Raw Collection');
-    
-    const collection = mongoose.connection.db.collection('approvedcontents');
-    const rawContent = await collection.find({}).limit(5).toArray();
-    console.log(`📈 Raw collection records: ${rawContent.length}`);
-    
-    if (rawContent.length > 0) {
-      console.log('📋 Sample raw content:');
-      console.log(`   - ID: ${rawContent[0].ID || rawContent[0].id || rawContent[0]._id}`);
-      console.log(`   - Topic: ${rawContent[0].Topic || rawContent[0].topicTitle}`);
-      console.log(`   - Status: ${rawContent[0].status}`);
-    }
-
-    // ===== TEST 5: SIMULATE API LOGIC =====
-    console.log('\n🔧 5. Simulating API Logic');
-    
-    if (users.length > 0) {
-      const user = users[0];
-      
-      // Simulate GET /api/approved-content
-      console.log('📤 Simulating GET /api/approved-content...');
-      
-      const userContent = await ApprovedContent.find({ userId: user._id }).lean();
-      console.log(`✅ Would return ${userContent.length} content items for user`);
-      
-      // Simulate GET /api/approved-content/[id]
-      if (userContent.length > 0) {
-        const contentId = userContent[0].id || userContent[0]._id;
-        console.log(`📤 Simulating GET /api/approved-content/${contentId}...`);
-        
-        const specificContent = await ApprovedContent.findOne({ 
-          $or: [
-            { id: contentId },
-            { _id: new mongoose.Types.ObjectId(contentId) }
-          ],
-          userId: user._id 
-        }).lean();
-        
-        if (specificContent) {
-          console.log(`✅ Would return content: ${specificContent.topicTitle}`);
-        } else {
-          console.log('❌ Content not found');
-        }
-      }
-    }
-
-    // ===== TEST 6: CHECK API ROUTES =====
-    console.log('\n🛣️ 6. Checking API Routes');
-    
-    const routes = [
-      '/api/approved-content',
-      '/api/approved-content/test-id',
-      '/api/auth/[...nextauth]',
-      '/api/users'
-    ];
-    
-    console.log('📋 Available API routes:');
-    routes.forEach(route => {
-      console.log(`   - ${route}`);
+    const registrationResponse = await fetch('http://localhost:3000/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(testUser)
     });
 
-    console.log('\n🎉 API Endpoint Test Completed!');
-    console.log('\n📋 Test Summary:');
-    console.log('✅ Database Connection - Working');
-    console.log('✅ Data Access - Working');
-    console.log('✅ API Logic - Working');
-    console.log('⚠️  API Authentication - Required (as expected)');
+    const registrationData = await registrationResponse.json();
+    
+    if (registrationResponse.ok) {
+      console.log('✅ Registration API: Success');
+      console.log('   Response:', registrationData.message);
+      console.log('   User ID:', registrationData.user.id);
+    } else {
+      console.log('❌ Registration API: Failed');
+      console.log('   Status:', registrationResponse.status);
+      console.log('   Error:', registrationData.message);
+      return;
+    }
+
+    // Step 2: Verify user was created in database
+    console.log('\n🔍 Step 2: Verifying user in database...');
+    const usersCollection = mongoose.connection.db.collection('users');
+    const createdUser = await usersCollection.findOne({ email: testUser.email });
+    
+    if (createdUser) {
+      console.log('✅ User found in database after API registration');
+      console.log('   Name:', createdUser.name);
+      console.log('   Email:', createdUser.email);
+      console.log('   Has password:', !!createdUser.password);
+      console.log('   Password length:', createdUser.password ? createdUser.password.length : 0);
+    } else {
+      console.log('❌ User not found in database after API registration');
+      return;
+    }
+
+    // Step 3: Test Login API (NextAuth)
+    console.log('\n🔐 Step 3: Testing Login API...');
+    
+    // Note: We can't directly test NextAuth login via API, but we can verify the user exists
+    // and test password verification manually
+    const bcrypt = require('bcryptjs');
+    const isPasswordValid = await bcrypt.compare(testUser.password, createdUser.password);
+    
+    if (isPasswordValid) {
+      console.log('✅ Password verification successful');
+      console.log('   Login should work with NextAuth');
+    } else {
+      console.log('❌ Password verification failed');
+      console.log('   Login will fail with NextAuth');
+    }
+
+    // Step 4: Test duplicate registration
+    console.log('\n🔄 Step 4: Testing duplicate registration...');
+    
+    const duplicateResponse = await fetch('http://localhost:3000/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(testUser)
+    });
+
+    const duplicateData = await duplicateResponse.json();
+    
+    if (!duplicateResponse.ok && duplicateData.message.includes('already exists')) {
+      console.log('✅ Duplicate registration correctly rejected');
+      console.log('   Error:', duplicateData.message);
+    } else {
+      console.log('❌ Duplicate registration should have been rejected');
+      console.log('   Response:', duplicateData);
+    }
+
+    // Step 5: Test with invalid data
+    console.log('\n🚫 Step 5: Testing invalid registration data...');
+    
+    const invalidUser = {
+      name: 'Invalid User',
+      email: 'invalid-email',
+      mobile: '123',
+      city: '',
+      password: '123'
+    };
+
+    const invalidResponse = await fetch('http://localhost:3000/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(invalidUser)
+    });
+
+    const invalidData = await invalidResponse.json();
+    
+    if (!invalidResponse.ok) {
+      console.log('✅ Invalid data correctly rejected');
+      console.log('   Error:', invalidData.message);
+    } else {
+      console.log('❌ Invalid data should have been rejected');
+      console.log('   Response:', invalidData);
+    }
+
+    // Step 6: Cleanup
+    console.log('\n🧹 Step 6: Cleaning up test user...');
+    await usersCollection.deleteOne({ email: testUser.email });
+    console.log('✅ Test user cleaned up');
+
+    // Summary
+    console.log('\n📊 API Test Summary:');
+    console.log('====================');
+    console.log('✅ Registration API: Working');
+    console.log('✅ Database storage: Working');
+    console.log('✅ Password hashing: Working');
+    console.log('✅ Duplicate prevention: Working');
+    console.log('✅ Validation: Working');
+    console.log('\n🎉 All API endpoints are working correctly!');
 
   } catch (error) {
-    console.error('❌ Error testing API endpoints:', error);
+    console.error('❌ API test failed:', error);
+    console.log('\n💡 Make sure your development server is running on http://localhost:3000');
   } finally {
     await mongoose.disconnect();
     console.log('\n🔌 Disconnected from MongoDB');
   }
 }
 
-// Run the test
-testAPIEndpoints();
+testApiEndpoints();

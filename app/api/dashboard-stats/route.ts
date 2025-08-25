@@ -5,6 +5,7 @@ import User from "@/models/User"
 import Topic from "@/models/Topic"
 import ApprovedContent from "@/models/ApprovedContent"
 import ScheduledPost from "@/models/ScheduledPost"
+import Plan from "@/models/Plan"
 import mongoose from "mongoose"
 
 const PLAN_LIMITS = {
@@ -105,7 +106,19 @@ export async function GET(request: Request) {
     console.log("📊 Fetching dashboard stats for user:", user.email, minimal ? "(minimal)" : "(full)")
 
     const userPlan = user.subscriptionPlan || "free"
-    const planLimits = PLAN_LIMITS[userPlan as keyof typeof PLAN_LIMITS] || PLAN_LIMITS.free
+    
+    // Get plan from database instead of hardcoded limits
+    let planLimits = PLAN_LIMITS.free // fallback
+    if (userPlan !== "free") {
+      const plan = await Plan.findOne({ slug: userPlan, isActive: true })
+      if (plan) {
+        planLimits = {
+          imageLimit: plan.imageLimit,
+          contentLimit: plan.contentLimit,
+          duration: plan.durationDays,
+        }
+      }
+    }
 
     const planStartDate = getPlanDateRange(user, planLimits)
     const userFilter = { userId: user._id }
@@ -131,7 +144,9 @@ export async function GET(request: Request) {
     const postedScheduled = await ScheduledPost.countDocuments({ userId: user._id, status: "posted" })
     const failedScheduled = await ScheduledPost.countDocuments({ userId: user._id, status: "failed" })
 
+    // Get user's actual usage from User model (same as subscription check API)
     const imagesGenerated = user.imagesGenerated || 0
+    const contentGenerated = user.contentGenerated || 0
 
     // Only process additional collections if not minimal mode
     if (!minimal) {
@@ -206,14 +221,67 @@ export async function GET(request: Request) {
 
     const engagementRate = totalContent > 0 ? Math.round((postedContent / totalContent) * 100) : 0
 
-    // For minimal mode, use simplified data
+    // Always fetch recent activity data (both minimal and full mode)
     let weeklyData = []
     let recentTopics = []
     let recentContent = []
     let weeklyGrowth = 0
 
-    if (!minimal) {
-      // Get weekly data
+    // Get recent activity - always needed for dashboard
+    recentTopics = await Topic.find(userFilter).sort({ createdAt: -1 }).limit(5).select("title status createdAt")
+
+    recentContent = await ApprovedContent.find(userFilter)
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("topicTitle status createdAt")
+
+    // Get additional content from other collections
+    if (mongoose.connection.db) {
+      const allRecentContent = [...recentContent]
+      const collections = ["approvedcontents", "linkdin-content-generation", "generatedcontents"]
+
+      for (const collectionName of collections) {
+        try {
+          const collection = mongoose.connection.db.collection(collectionName)
+          const rawRecentContent = await collection
+            .find({
+              $or: [
+                { userId: user._id },
+                { userId: user._id.toString() },
+                { "user id": user._id },
+                { "user id": user._id.toString() },
+              ],
+            })
+            .sort({ timestamp: -1, createdAt: -1, _id: -1 })
+            .limit(10)
+            .toArray()
+
+          // Transform and add to recent content
+          const transformedContent = rawRecentContent.map((item) => ({
+            topicTitle: item.Topic || item.topicTitle || item.title || item["Topic Title"] || "Untitled",
+            status: item.status || item.Status || "generated",
+            createdAt: item.timestamp || item.createdAt || item.created_at || item["created at"] || new Date(),
+          }))
+
+          allRecentContent.push(...transformedContent)
+        } catch (error) {
+          console.error(`Error getting recent content from ${collectionName}:`, error)
+        }
+      }
+
+      // Remove duplicates based on topicTitle and createdAt, then sort and take the 5 most recent
+      const uniqueContent = allRecentContent.filter((content, index, self) => 
+        index === self.findIndex(c => 
+          c.topicTitle === content.topicTitle && 
+          new Date(c.createdAt).getTime() === new Date(content.createdAt).getTime()
+        )
+      )
+      
+      uniqueContent.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      recentContent = uniqueContent.slice(0, 5)
+    }
+
+    // Always get weekly data (both minimal and full mode)
     for (let i = 6; i >= 0; i--) {
       const date = new Date()
       date.setDate(date.getDate() - i)
@@ -226,7 +294,7 @@ export async function GET(request: Request) {
       })
 
       if (mongoose.connection.db) {
-          const collections = ["approvedcontents", "linkdin-content-generation", "generatedcontents"]
+        const collections = ["approvedcontents", "linkdin-content-generation", "generatedcontents"]
         for (const collectionName of collections) {
           try {
             const collection = mongoose.connection.db.collection(collectionName)
@@ -262,69 +330,12 @@ export async function GET(request: Request) {
       })
     }
 
-    const lastWeekContent = weeklyData.slice(0, 3).reduce((sum, day) => sum + day.content, 0)
-    const thisWeekContent = weeklyData.slice(4, 7).reduce((sum, day) => sum + day.content, 0)
+    // Calculate weekly growth only in full mode
+    if (!minimal) {
+      const lastWeekContent = weeklyData.slice(0, 3).reduce((sum, day) => sum + day.content, 0)
+      const thisWeekContent = weeklyData.slice(4, 7).reduce((sum, day) => sum + day.content, 0)
       weeklyGrowth =
-      lastWeekContent > 0 ? Math.round(((thisWeekContent - lastWeekContent) / lastWeekContent) * 100) : 0
-
-      // Get recent activity
-      recentTopics = await Topic.find(userFilter).sort({ createdAt: -1 }).limit(5).select("title status createdAt")
-
-      recentContent = await ApprovedContent.find(userFilter)
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select("topicTitle status createdAt")
-
-    if (mongoose.connection.db) {
-      const allRecentContent = [...recentContent]
-        const collections = ["approvedcontents", "linkdin-content-generation", "generatedcontents"]
-
-      for (const collectionName of collections) {
-        try {
-          const collection = mongoose.connection.db.collection(collectionName)
-          const rawRecentContent = await collection
-            .find({
-              $or: [
-                { userId: user._id },
-                { userId: user._id.toString() },
-                { "user id": user._id },
-                { "user id": user._id.toString() },
-              ],
-            })
-            .sort({ timestamp: -1, createdAt: -1, _id: -1 })
-            .limit(10)
-            .toArray()
-
-          // Transform and add to recent content
-          const transformedContent = rawRecentContent.map((item) => ({
-            topicTitle: item.Topic || item.topicTitle || item.title || item["Topic Title"] || "Untitled",
-            status: item.status || item.Status || "generated",
-            createdAt: item.timestamp || item.createdAt || item.created_at || item["created at"] || new Date(),
-          }))
-
-          allRecentContent.push(...transformedContent)
-        } catch (error) {
-          console.error(`Error getting recent content from ${collectionName}:`, error)
-        }
-      }
-
-      // Sort all content by date and take the 5 most recent
-      allRecentContent.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      recentContent = allRecentContent.slice(0, 5)
-    }
-    } else {
-      // Minimal mode - use default data
-      weeklyData = [
-        { name: "Mon", content: 0 },
-        { name: "Tue", content: 0 },
-        { name: "Wed", content: 0 },
-        { name: "Thu", content: 0 },
-        { name: "Fri", content: 0 },
-        { name: "Sat", content: 0 },
-        { name: "Sun", content: 0 },
-      ]
-      recentTopics = []
-      recentContent = []
+        lastWeekContent > 0 ? Math.round(((thisWeekContent - lastWeekContent) / lastWeekContent) * 100) : 0
     }
 
     const stats = {
@@ -342,6 +353,11 @@ export async function GET(request: Request) {
         used: imagesGenerated,
         limit: planLimits.imageLimit,
         remaining: Math.max(0, planLimits.imageLimit - imagesGenerated),
+      },
+      contentStats: {
+        used: contentGenerated,
+        limit: planLimits.contentLimit,
+        remaining: Math.max(0, planLimits.contentLimit - contentGenerated),
       },
       planInfo: {
         name: userPlan,
@@ -376,6 +392,14 @@ export async function GET(request: Request) {
       },
     }
 
+    // Debug logging for recent activity
+    console.log("🔍 Recent Activity Debug:", {
+      topicsCount: recentTopics.length,
+      contentCount: recentContent.length,
+      topics: recentTopics.map(t => ({ title: t.title, status: t.status, createdAt: t.createdAt })),
+      content: recentContent.map(c => ({ topicTitle: c.topicTitle, status: c.status, createdAt: c.createdAt }))
+    })
+
     // Cache the results
     setCachedStats(user._id.toString(), minimal, stats)
 
@@ -385,7 +409,9 @@ export async function GET(request: Request) {
       monthlyContent,
       plan: userPlan,
       minimal,
-      cached: false
+      cached: false,
+      recentTopicsCount: recentTopics.length,
+      recentContentCount: recentContent.length
     })
 
     return NextResponse.json({

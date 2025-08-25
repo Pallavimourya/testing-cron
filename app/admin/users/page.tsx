@@ -104,7 +104,10 @@ export default function UsersPage() {
   }
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return
+    const user = users.find(u => u._id === userId)
+    const userName = user?.name || 'this user'
+    
+    if (!confirm(`Are you sure you want to delete ${userName}? This will permanently delete:\n\n• User account\n• All generated content\n• All approved content\n• All topics\n• All scheduled posts\n• All stories\n• All payments and orders\n• All voice notes\n• All LinkedIn connections\n• All user data\n\nThis action cannot be undone.`)) return
 
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
@@ -112,19 +115,21 @@ export default function UsersPage() {
       })
 
       if (response.ok) {
+        const data = await response.json()
         toast({
           title: "Success",
-          description: "User deleted successfully",
+          description: data.message || "User and all associated data deleted successfully",
         })
         fetchUsers()
       } else {
-        throw new Error("Failed to delete user")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to delete user")
       }
     } catch (error) {
       console.error("Delete user error:", error)
       toast({
         title: "Error",
-        description: "Failed to delete user",
+        description: error instanceof Error ? error.message : "Failed to delete user",
         variant: "destructive",
       })
     }

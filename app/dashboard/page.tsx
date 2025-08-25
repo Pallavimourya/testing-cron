@@ -19,6 +19,7 @@ import {
   Plus,
   RefreshCw,
   Loader2,
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -42,6 +43,16 @@ interface DashboardStats {
   remainingContent: number
   engagementRate: number
   weeklyGrowth: number
+  imageStats: {
+    used: number
+    limit: number
+    remaining: number
+  }
+  contentStats: {
+    used: number
+    limit: number
+    remaining: number
+  }
   recentActivity: {
     topics: Array<{
       title: string
@@ -197,6 +208,10 @@ export default function DashboardPage() {
     return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800"
   }
 
+  const getContentLimitText = (limit: number) => {
+    return limit === -1 ? "Unlimited" : `${limit}`
+  }
+
   return (
     <>
       <PerformanceMonitor componentName="Dashboard" />
@@ -260,33 +275,29 @@ export default function DashboardPage() {
 
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Monthly Usage</CardTitle>
-              <Calendar className="h-4 w-4 text-purple-600" />
+              <CardTitle className="text-sm font-medium text-gray-600">Image Generations</CardTitle>
+              <Sparkles className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900">
-                {stats.monthlyContent}/{stats.monthlyLimit}
+                {stats.imageStats?.used || 0} / {getContentLimitText(stats.imageStats?.limit || 0)}
               </div>
-              <Progress value={stats.monthlyProgress} className="mt-2" />
-              <p className="text-xs text-gray-500 mt-1">{stats.remainingContent} remaining</p>
+              <Progress value={stats.imageStats?.limit > 0 ? Math.round((stats.imageStats.used / stats.imageStats.limit) * 100) : 0} className="mt-2" />
+              <p className="text-xs text-gray-500 mt-1">{stats.imageStats?.remaining || 0} remaining</p>
             </CardContent>
           </Card>
 
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Engagement Rate</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">Content Generations</CardTitle>
               <TrendingUp className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{stats.engagementRate}%</div>
-              <div className="flex items-center text-xs text-gray-500 mt-1">
-                {stats.weeklyGrowth >= 0 ? (
-                  <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
-                ) : (
-                  <ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
-                )}
-                {Math.abs(stats.weeklyGrowth)}% from last week
+              <div className="text-2xl font-bold text-gray-900">
+                {stats.contentStats?.used || 0} / {getContentLimitText(stats.contentStats?.limit || 0)}
               </div>
+              <Progress value={stats.contentStats?.limit > 0 ? Math.round((stats.contentStats.used / stats.contentStats.limit) * 100) : 0} className="mt-2" />
+              <p className="text-xs text-gray-500 mt-1">{stats.contentStats?.remaining || 0} remaining</p>
             </CardContent>
           </Card>
         </div>

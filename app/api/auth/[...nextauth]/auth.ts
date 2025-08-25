@@ -15,20 +15,27 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        console.log("🔐 Auth attempt for email:", credentials?.email)
+        
         if (!credentials?.email || !credentials?.password) {
+          console.log("❌ Missing credentials")
           return null
         }
 
         try {
           await connectDB()
+          console.log("✅ Database connected")
 
           // First check if it's an admin user
           const admin = await Admin.findOne({ email: credentials.email }).select("+password")
+          console.log("👑 Admin check:", admin ? "Found" : "Not found")
           
           if (admin && admin.isActive) {
             const isPasswordValid = await admin.comparePassword(credentials.password)
+            console.log("🔑 Admin password valid:", isPasswordValid)
             
             if (isPasswordValid) {
+              console.log("✅ Admin login successful")
               return {
                 id: admin._id.toString(),
                 email: admin.email,
@@ -41,14 +48,29 @@ export const authOptions: NextAuthOptions = {
 
           // If not admin, check regular user
           const user = await User.findOne({ email: credentials.email }).select("+password")
+          console.log("👤 User check:", user ? "Found" : "Not found")
 
-          if (!user || !user.password) {
+          if (!user) {
+            console.log("❌ User not found")
+            return null
+          }
+
+          if (!user.password) {
+            console.log("❌ User has no password")
             return null
           }
 
           const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+          console.log("🔑 User password valid:", isPasswordValid)
 
           if (!isPasswordValid) {
+            console.log("❌ Invalid password")
+            return null
+          }
+
+          // Check if user is blocked
+          if (user.blocked) {
+            console.log("❌ User is blocked")
             return null
           }
 
@@ -56,6 +78,7 @@ export const authOptions: NextAuthOptions = {
           const userProfile = await UserProfile.findOne({ userId: user._id })
           const profileImage = userProfile?.profilePhoto || user.profilePicture || ""
 
+          console.log("✅ User login successful")
           return {
             id: user._id.toString(),
             email: user.email,
@@ -64,7 +87,7 @@ export const authOptions: NextAuthOptions = {
             image: profileImage,
           }
         } catch (error) {
-          console.error("Auth error:", error)
+          console.error("❌ Auth error:", error)
           return null
         }
       },

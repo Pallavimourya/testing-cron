@@ -288,7 +288,7 @@ export function DashboardSidebar({
               {!isCollapsed && (
                 <div className="min-w-0 flex-1">
                   <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate">LinkZup</h1>
-                  <p className="text-xs text-gray-500 truncate">AI Content Platform</p>
+                  <p className="text-xs text-gray-500 truncate">LinkedIn Content Management</p>
                 </div>
               )}
             </div>

@@ -98,13 +98,51 @@ export default function DashboardCharts({ stats }: DashboardChartsProps) {
           <div className="h-64 lg:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="content" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#6b7280' }}
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#6b7280' }}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                  formatter={(value: any) => [`${value} content items`, 'Generated']}
+                  labelFormatter={(label) => `${label}`}
+                />
+                <Bar 
+                  dataKey="content" 
+                  fill="#3B82F6" 
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={50}
+                />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+          {/* Weekly Summary */}
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Total this week:</span>
+              <span className="font-semibold text-gray-900">
+                {weeklyData.reduce((sum, day) => sum + day.content, 0)} content items
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm mt-1">
+              <span className="text-gray-600">Most active day:</span>
+              <span className="font-semibold text-gray-900">
+                {weeklyData.reduce((max, day) => day.content > max.content ? day : max, weeklyData[0]).name}
+              </span>
+            </div>
           </div>
         </CardContent>
       </Card>

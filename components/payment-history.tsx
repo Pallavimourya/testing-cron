@@ -47,6 +47,47 @@ const getPlanDisplayName = (planName: string): string => {
   }
 }
 
+// Payment status mapping
+const getPaymentStatusInfo = (status: string) => {
+  switch (status) {
+    case "paid":
+      return {
+        label: "Completed",
+        color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+        icon: CheckCircle,
+        bgColor: "from-emerald-500 to-green-600"
+      }
+    case "failed":
+      return {
+        label: "Failed",
+        color: "bg-red-100 text-red-800 border-red-200",
+        icon: XCircle,
+        bgColor: "from-red-500 to-red-600"
+      }
+    case "cancelled":
+      return {
+        label: "Cancelled",
+        color: "bg-gray-100 text-gray-800 border-gray-200",
+        icon: XCircle,
+        bgColor: "from-gray-500 to-gray-600"
+      }
+    case "pending":
+      return {
+        label: "Pending",
+        color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        icon: Clock,
+        bgColor: "from-yellow-500 to-orange-600"
+      }
+    default:
+      return {
+        label: "Unknown",
+        color: "bg-gray-100 text-gray-800 border-gray-200",
+        icon: Clock,
+        bgColor: "from-gray-500 to-gray-600"
+      }
+  }
+}
+
 export function PaymentHistory() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
@@ -62,16 +103,15 @@ export function PaymentHistory() {
   const fetchPayments = async (pageNum = 1) => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/payments/history?page=${pageNum}&limit=10&status=paid`)
+      const response = await fetch(`/api/payments/history?page=${pageNum}&limit=10&status=all`)
 
       if (!response.ok) {
         throw new Error("Failed to fetch payment history")
       }
 
       const data: PaymentHistoryResponse = await response.json()
-      // Filter to show only completed payments
-      const completedPayments = data.payments.filter(payment => payment.status === "paid")
-      setPayments(completedPayments)
+      // Show all payments with different statuses
+      setPayments(data.payments)
       setPagination(data.pagination)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -143,7 +183,7 @@ export function PaymentHistory() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-gray-900">
           <Receipt className="h-5 w-5" />
-          Completed Payments
+          Payment History
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -152,8 +192,8 @@ export function PaymentHistory() {
             <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-500 rounded-2xl flex items-center justify-center text-white mx-auto mb-4">
               <CreditCard className="h-8 w-8" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Completed Payments</h3>
-            <p className="text-gray-600">Your completed payment history will appear here once you make your first successful purchase.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Payment History</h3>
+            <p className="text-gray-600">Your payment history will appear here once you make your first purchase.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -163,10 +203,16 @@ export function PaymentHistory() {
                 className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200 hover:scale-[1.02]"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center text-white">
-                      <CheckCircle className="h-6 w-6" />
-                    </div>
+                                  <div className="flex items-center space-x-4">
+                  {(() => {
+                    const statusInfo = getPaymentStatusInfo(payment.status);
+                    const IconComponent = statusInfo.icon;
+                    return (
+                      <div className={`w-12 h-12 bg-gradient-to-br ${statusInfo.bgColor} rounded-xl flex items-center justify-center text-white`}>
+                        <IconComponent className="h-6 w-6" />
+                      </div>
+                    );
+                  })()}
                     <div>
                       <h4 className="font-semibold text-gray-900">{getPlanDisplayName(payment.planName)}</h4>
                       <div className="flex items-center space-x-2 text-sm text-gray-600 mt-1">
@@ -193,10 +239,16 @@ export function PaymentHistory() {
                   </div>
                   <div className="text-right">
                     <div className="font-bold text-lg text-gray-900">{formatPrice(payment.amount)}</div>
-                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 border mt-1">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Completed
-                    </Badge>
+                    {(() => {
+                      const statusInfo = getPaymentStatusInfo(payment.status);
+                      const IconComponent = statusInfo.icon;
+                      return (
+                        <Badge className={`${statusInfo.color} border mt-1`}>
+                          <IconComponent className="h-3 w-3 mr-1" />
+                          {statusInfo.label}
+                        </Badge>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -256,6 +308,16 @@ export function PaymentHistory() {
                         <span className="text-gray-600">Duration:</span>
                         <span className="font-medium">{payment.planDuration} days</span>
                       </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Status:</span>
+                        <span className="font-medium capitalize">{payment.status}</span>
+                      </div>
+                      {payment.failureReason && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">Failure Reason:</span>
+                          <span className="font-medium text-red-600">{payment.failureReason}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

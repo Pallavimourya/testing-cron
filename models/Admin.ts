@@ -65,7 +65,6 @@ const AdminSchema = new Schema<IAdmin>(
 )
 
 // Indexes
-AdminSchema.index({ email: 1 })
 AdminSchema.index({ isActive: 1 })
 
 // Pre-save middleware to hash password

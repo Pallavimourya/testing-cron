@@ -737,27 +737,6 @@ export default function BillingPage() {
               })}
             </CardContent>
           </Card>
-
-          {/* Quick Actions */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full bg-transparent">
-                <FileText className="h-4 w-4 mr-2" />
-                Download Invoice
-              </Button>
-              <Button variant="outline" className="w-full bg-transparent">
-                <Eye className="h-4 w-4 mr-2" />
-                View Billing History
-              </Button>
-              <Button variant="outline" className="w-full bg-transparent">
-                <Shield className="h-4 w-4 mr-2" />
-                Payment Methods
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
 
